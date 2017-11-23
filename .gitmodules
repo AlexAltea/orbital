@@ -1,0 +1,6 @@
+[submodule "orbital-qemu"]
+	path = orbital-qemu
+	url = https://github.com/AlexAltea/orbital-qemu
+[submodule "orbital-grub"]
+	path = orbital-grub
+	url = https://github.com/AlexAltea/orbital-grub
