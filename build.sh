@@ -20,5 +20,5 @@ make
 # Generate GRUB image
 cd ${path_orbital}
 ${path_grub}/grub-mkimage -d ${path_grub}/grub-core \
-  -O i386-pc -o bin/boot.img -p /boot/grub -c boot.cfg \
+  -O i386-pc -o bin/boot.img -p /boot/grub -c resources/boot.cfg \
   biosdisk part_msdos part_gpt gfxterm_menu fat bsd
