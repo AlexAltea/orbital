@@ -230,7 +230,7 @@ def create_section_dynamic(elf):
     section.name = ".dynamic"
     section.type = lief.ELF.SECTION_TYPES.DYNAMIC
     section.flags = lief.ELF.SECTION_FLAGS.WRITE | lief.ELF.SECTION_FLAGS.ALLOC
-    section.link = 0
+    section.link = INDEX_DYNSTR
     section.information = 0
     section.alignment = 8
     section.entry_size = 0x10
