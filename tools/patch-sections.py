@@ -8,9 +8,13 @@ import struct
 
 # Indices
 INDEX_NULL = 0
-INDEX_SYMTAB = 1
-INDEX_STRTAB = 2
-INDEX_SHSTRTAB = 3
+INDEX_INTERP = 1
+INDEX_HASH = 2
+INDEX_DYNSYM = 3
+INDEX_DYNSTR = 4
+INDEX_TEXT = 5
+INDEX_DYNAMIC = 6
+INDEX_SHSTRTAB = 7
 
 # Utilities
 class Section(object):
@@ -76,18 +80,82 @@ def patch_i64(stream, offset, value):
     stream.seek(offset)
     stream.write(data)
 
+def read_i32(elf, addr):
+    data = bytes(elf.get_content_from_virtual_address(addr, 4))
+    value = struct.unpack('I', data)[0]
+    return value
+
+def get_load_segment(elf, index=0):
+    for segment in elf.segments:
+        if segment.type != lief.ELF.SEGMENT_TYPES.LOAD:
+            continue
+        if index == 0:
+            return segment
+        index -= 1
+    raise Exception("Segment not found")
+
+def get_dynamic_entry(elf, tag):
+    for de in elf.dynamic_entries:
+        if de.tag == tag:
+            return de
+    raise Exception("Segment not found")
+
 
 # Sections
 def create_section_null():
     return Section()
 
 
-def create_section_symtab(elf):
+def create_section_interp(elf):
     section = Section()
-    section.name = ".symtab"
-    section.type = lief.ELF.SECTION_TYPES.SYMTAB
-    section.flags = lief.ELF.SECTION_FLAGS.NONE
-    section.link = INDEX_STRTAB
+    section.name = ".interp"
+    section.type = lief.ELF.SECTION_TYPES.PROGBITS
+    section.flags = lief.ELF.SECTION_FLAGS.ALLOC
+    section.link = 0
+    section.information = 0
+    section.alignment = 1
+    section.entry_size = 0
+    section.size = len(elf.dynamic_entries) * section.entry_size
+    
+    # Assume it appears after Ehdr+Phdr's of the first LOAD segment
+    hdr = elf.header
+    assert hdr.header_size == hdr.program_header_offset
+    segment = get_load_segment(elf, index=0)
+    section.virtual_address = segment.virtual_address
+    section.virtual_address += hdr.header_size
+    section.virtual_address += hdr.numberof_segments * hdr.program_header_size
+    section.offset = elf.virtual_address_to_offset(segment.virtual_address)
+    # Assume it appears before the .hash section
+    hash_vaddr = get_dynamic_entry(elf, lief.ELF.DYNAMIC_TAGS.HASH).value
+    assert hash_vaddr > section.virtual_address
+    section.size = hash_vaddr - section.virtual_address
+    return section
+
+
+def create_section_hash(elf):
+    section = Section()
+    section.name = ".hash"
+    section.type = lief.ELF.SECTION_TYPES.HASH
+    section.flags = lief.ELF.SECTION_FLAGS.ALLOC
+    section.link = INDEX_DYNSYM
+    section.information = 0
+    section.alignment = 8
+    section.entry_size = 4
+
+    section.virtual_address = get_dynamic_entry(elf, lief.ELF.DYNAMIC_TAGS.HASH).value
+    section.offset = elf.virtual_address_to_offset(section.virtual_address)
+    hash_nbucket = read_i32(elf, section.virtual_address + 0x0)
+    hash_nchain  = read_i32(elf, section.virtual_address + 0x4)
+    section.size = 8 + (hash_nbucket + hash_nchain) * 4
+    return section
+
+
+def create_section_dynsym(elf):
+    section = Section()
+    section.name = ".dynsym"
+    section.type = lief.ELF.SECTION_TYPES.DYNSYM
+    section.flags = lief.ELF.SECTION_FLAGS.ALLOC
+    section.link = INDEX_DYNSTR
     section.information = 0
     section.alignment = 8
     section.offset = 0
@@ -104,7 +172,6 @@ def create_section_symtab(elf):
         raise Exception("No dynamic entries for symbols")
     assert section.entry_size == 0x18
 
-    section.size = section.entry_size
     while True:
         symdata = bytes(elf.get_content_from_virtual_address(
             section.virtual_address + section.size,
@@ -115,11 +182,11 @@ def create_section_symtab(elf):
     return section
 
 
-def create_section_strtab(elf):
+def create_section_dynstr(elf):
     section = Section()
-    section.name = ".strtab"
+    section.name = ".dynstr"
     section.type = lief.ELF.SECTION_TYPES.STRTAB
-    section.flags = lief.ELF.SECTION_FLAGS.NONE
+    section.flags = lief.ELF.SECTION_FLAGS.ALLOC
     section.link = 0
     section.information = 0
     section.alignment = 1
@@ -136,6 +203,43 @@ def create_section_strtab(elf):
 
     if not section.offset and not section.size:
         raise Exception("No dynamic entries for strings")
+    return section
+
+
+def create_section_text(elf):
+    section = Section()
+    section.name = ".text"
+    section.type = lief.ELF.SECTION_TYPES.PROGBITS
+    section.flags = lief.ELF.SECTION_FLAGS.ALLOC | lief.ELF.SECTION_FLAGS.EXECINSTR
+    section.link = 0
+    section.information = 0
+    section.alignment = 16
+    section.entry_size = 0
+    section.size = len(elf.dynamic_entries) * section.entry_size
+
+    # TODO
+    segment = get_load_segment(elf, index=0)
+    section.virtual_address = segment.virtual_address
+    section.offset = elf.virtual_address_to_offset(section.virtual_address)
+    section.size = segment.virtual_size
+    return section
+
+
+def create_section_dynamic(elf):
+    section = Section()
+    section.name = ".dynamic"
+    section.type = lief.ELF.SECTION_TYPES.DYNAMIC
+    section.flags = lief.ELF.SECTION_FLAGS.WRITE | lief.ELF.SECTION_FLAGS.ALLOC
+    section.link = 0
+    section.information = 0
+    section.alignment = 8
+    section.entry_size = 0x10
+    section.size = len(elf.dynamic_entries) * section.entry_size
+
+    # Assume .dynamic appears at the beginning of the second LOAD segment
+    segment = get_load_segment(elf, index=1)
+    section.virtual_address = segment.virtual_address
+    section.offset = elf.virtual_address_to_offset(segment.virtual_address)
     return section
 
 
@@ -165,8 +269,12 @@ def patch_sections(path_in, path_out):
     assert len(elf.sections) == 0, "Expected an executable without sections"
     sections = []
     sections.append(create_section_null())
-    sections.append(create_section_symtab(elf))
-    sections.append(create_section_strtab(elf))
+    sections.append(create_section_interp(elf))
+    sections.append(create_section_hash(elf))
+    sections.append(create_section_dynsym(elf))
+    sections.append(create_section_dynstr(elf))
+    sections.append(create_section_text(elf))
+    sections.append(create_section_dynamic(elf))
     sections.append(create_section_shstrtab(sections))
 
     e_shentsize = 0x40
