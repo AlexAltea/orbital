@@ -7,15 +7,21 @@ path_qemu='./orbital-qemu'
 path_orbital=`pwd`
 
 # Dependencies
-git submodule update --init
-sudo apt-get -qq install kpartx
+sudo apt-get -qq install git
 sudo apt-get -qq install python
+sudo apt-get -qq install libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev
+git submodule update --init
 
 # Build GRUB
 cd ${path_grub}
 ./autogen.sh
 ./configure --target=x86_64
-make
+make -j4
+
+# Build QEMU
+cd ${path_grub}
+./configure --target-list=x86_64-softmmu --enable-sdl --enable-debug
+make -j4
 
 # Generate GRUB image
 cd ${path_orbital}

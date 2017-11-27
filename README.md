@@ -7,5 +7,6 @@ Virtualization-based PlayStation 4 emulator.
 
 - [x] Boot kernel.
 - [x] Kernel debugging with symbols.
-- [ ] Load GDT/GIT and initialize segment registers.
+- [x] Load GDT/GIT and initialize segment registers.
 - [ ] ...
+
