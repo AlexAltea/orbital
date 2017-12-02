@@ -25,6 +25,7 @@ make -j4
 
 # Generate GRUB image
 cd ${path_orbital}
+tar -C resources -cf ${path_bin}/memdisk.tar boot
 ${path_grub}/grub-mkimage -d ${path_grub}/grub-core \
-  -O i386-pc -o bin/boot.img -p /boot/grub -c resources/boot.cfg \
-  biosdisk part_msdos part_gpt gfxterm_menu fat bsd
+  -O i386-pc -o bin/boot.img -m bin/memdisk.tar -c resources/boot/grub/boot.cfg \
+  memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
