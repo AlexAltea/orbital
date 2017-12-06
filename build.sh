@@ -20,7 +20,7 @@ make -j4
 
 # Build QEMU
 cd ${path_grub}
-./configure --target-list=x86_64-softmmu --enable-sdl --enable-debug
+./configure --target-list=ps4-softmmu --enable-sdl --enable-debug
 make -j4
 
 # Generate GRUB image
