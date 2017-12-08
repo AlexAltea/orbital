@@ -7,21 +7,31 @@ path_qemu='./orbital-qemu'
 path_orbital=`pwd`
 
 # Dependencies
-sudo apt-get -qq install git
-sudo apt-get -qq install python
-sudo apt-get -qq install libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev
 git submodule update --init
 
-# Build GRUB
-cd ${path_grub}
-./autogen.sh
-./configure --target=x86_64
-make -j4
+function build_grub() {
+  # Dependencies
+  sudo apt-get -qq install python
+  # Building
+  cd ${path_grub}
+  ./autogen.sh
+  ./configure --target=x86_64
+  make -j4
+}
 
-# Build QEMU
-cd ${path_grub}
-./configure --target-list=ps4-softmmu --enable-sdl --enable-debug
-make -j4
+function build_qemu() {
+  # Dependencies
+  sudo apt-get -qq install git
+  sudo apt-get -qq install zlib1g-dev
+  sudo apt-get -qq install libglib2.0-dev libfdt-dev libpixman-1-dev
+  # Building
+  cd ${path_qemu}
+  ./configure --target-list=ps4-softmmu --enable-sdl --enable-debug
+  make -j4
+}
+
+#build_grub()
+#build_qemu()
 
 # Generate GRUB image
 cd ${path_orbital}
