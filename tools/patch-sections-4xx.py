@@ -4,6 +4,7 @@ import argparse
 import io
 import os
 import struct
+import re
 
 import lief
 import idb
@@ -125,6 +126,15 @@ def get_dynamic_entry(elf, tag):
             return de
     raise Exception("Segment not found")
 
+def parse_map_symbols(path_map):
+    with open(path_map, 'r') as f:
+        for i in range(4):
+            f.readline()
+        for line in f.readlines():
+            match = re.search("[0-9A-F]{8}:([0-9A-F]{16})\s+(.*)", line)
+            if not match: break
+            g = match.groups()
+            yield g[1], int(g[0],16), 0
 
 # Sections
 def create_section_null():
@@ -157,7 +167,7 @@ def create_section_interp(elf):
     return section
 
 
-def create_section_dynsym(elf, path_idb=None):
+def create_section_dynsym(elf, path_idb=None, path_map=None):
     section = Section()
     section.name = ".dynsym"
     section.type = lief.ELF.SECTION_TYPES.DYNSYM
@@ -168,31 +178,42 @@ def create_section_dynsym(elf, path_idb=None):
     section.offset = 0
     section.entry_size = 0
     section.size = 0
-
     section.virtual_address = 0
     section.entry_size = 0x18
-    if not path_idb:
-        return section
-    with idb.from_file(path_idb) as db:
-        api = idb.IDAPython(db)
+
+    index = 1
+    sym = Symbol()
+    if path_idb:
+        with idb.from_file(path_idb) as db:
+            api = idb.IDAPython(db)
+            for ea in api.idautils.Functions():
+                print(hex(ea), api.idc.GetFunctionName(ea)) 
+                name = api.idc.GetFunctionName(ea)
+                sym.name = index
+                sym.info = 0x11
+                sym.other = 0
+                sym.shndx = 0x0 # TODO
+                sym.value = ea
+                sym.size = api.idc.GetFunctionSize(ea)
+                section.content += sym.serialize()
+                section.size += section.entry_size
+                index += len(name) + 1
+    elif path_map:
         sym = Symbol()
-        index = 1
-        for ea in api.idautils.Functions():
-            print(hex(ea), api.idc.GetFunctionName(ea)) 
-            name = api.idc.GetFunctionName(ea)
+        for name, addr, size in parse_map_symbols(path_map):
             sym.name = index
-            sym.info = 0x11
+            sym.info = 0x12
             sym.other = 0
             sym.shndx = 0x0 # TODO
-            sym.value = ea
-            sym.size = api.idc.GetFunctionSize(ea)
-            index += len(name) + 1
-            section.content.append(sym.serialize())
+            sym.value = addr
+            sym.size = 0x10000 # TODO
+            section.content += sym.serialize()
             section.size += section.entry_size
+            index += len(name) + 1
     return section
 
 
-def create_section_dynstr(elf, path_idb=None):
+def create_section_dynstr(elf, path_idb=None, path_map=None):
     section = Section()
     section.name = ".dynstr"
     section.type = lief.ELF.SECTION_TYPES.STRTAB
@@ -205,13 +226,17 @@ def create_section_dynstr(elf, path_idb=None):
     section.size = 0
 
     section.virtual_address = 0
-    if not path_idb:
-        return section
-    section.content = b"\x00"
-    with idb.from_file(path_idb) as db:
-        api = idb.IDAPython(db)
-        for ea in api.idautils.Functions():
-            section.content += api.idc.GetFunctionName(ea)
+    if path_idb:
+        section.content = b"\x00"
+        with idb.from_file(path_idb) as db:
+            api = idb.IDAPython(db)
+            for ea in api.idautils.Functions():
+                section.content += api.idc.GetFunctionName(ea).encode('ascii')
+                section.content += b"\x00"
+    elif path_map:
+        section.content = b"\x00"
+        for name, _, _ in parse_map_symbols(path_map):
+            section.content += name.encode('ascii')
             section.content += b"\x00"
     return section
 
@@ -273,14 +298,14 @@ def create_section_shstrtab(sections):
     return section
     
 
-def patch_sections(path_in, path_out, path_idb=None):
+def patch_sections(path_in, path_out, path_idb=None, path_map=None):
     elf = lief.parse(path_in)
     assert len(elf.sections) == 0, "Expected an executable without sections"
     sections = []
     sections.append(create_section_null())
     sections.append(create_section_interp(elf))
-    sections.append(create_section_dynsym(elf, path_idb))
-    sections.append(create_section_dynstr(elf, path_idb))
+    sections.append(create_section_dynsym(elf, path_idb, path_map))
+    sections.append(create_section_dynstr(elf, path_idb, path_map))
     sections.append(create_section_text(elf))
     sections.append(create_section_dynamic(elf))
     sections.append(create_section_shstrtab(sections))
@@ -315,6 +340,9 @@ def main():
     parser.add_argument('--idb',
         metavar='input.idb', help='Path to IDA database',
     )
+    parser.add_argument('--map',
+        metavar='input.map', help='Path to MAP file (fallback)',
+    )
     parser.add_argument('input',
         metavar='input.elf', help='Path to input file',
     )
@@ -322,7 +350,7 @@ def main():
         metavar='output.elf', help='Path to output file',
     )
     args = parser.parse_args()
-    patch_sections(args.input, args.output, args.idb)
+    patch_sections(args.input, args.output, args.idb, args.map)
 
 if __name__ == '__main__':
     main()
