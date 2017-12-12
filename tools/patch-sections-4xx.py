@@ -187,14 +187,13 @@ def create_section_dynsym(elf, path_idb=None, path_map=None):
         with idb.from_file(path_idb) as db:
             api = idb.IDAPython(db)
             for ea in api.idautils.Functions():
-                print(hex(ea), api.idc.GetFunctionName(ea)) 
                 name = api.idc.GetFunctionName(ea)
                 sym.name = index
-                sym.info = 0x11
+                sym.info = 0x12
                 sym.other = 0
                 sym.shndx = 0x0 # TODO
                 sym.value = ea
-                sym.size = api.idc.GetFunctionSize(ea)
+                sym.size = api.idc.GetFunctionAttr(ea, api.idc.FUNCATTR_END) - ea
                 section.content += sym.serialize()
                 section.size += section.entry_size
                 index += len(name) + 1
