@@ -30,8 +30,8 @@ function build_qemu() {
   make -j4
 }
 
-#build_grub()
-#build_qemu()
+#build_grub
+#build_qemu
 
 # Generate GRUB image
 cd ${path_orbital}
