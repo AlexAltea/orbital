@@ -1,2 +1,9 @@
 # Binaries
 bin/
+
+# Executables
+*.sym
+*.elf
+
+# Private
+tools/private
