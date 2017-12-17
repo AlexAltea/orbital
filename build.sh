@@ -6,9 +6,6 @@ path_grub='./orbital-grub'
 path_qemu='./orbital-qemu'
 path_orbital=`pwd`
 
-# Dependencies
-git submodule update --init
-
 function build_grub() {
   # Dependencies
   sudo apt-get -qq install python
