@@ -23,7 +23,8 @@ function build_qemu() {
   sudo apt-get -qq install libglib2.0-dev libfdt-dev libpixman-1-dev
   # Building
   cd ${path_qemu}
-  ./configure --target-list=ps4-softmmu --enable-sdl --enable-debug
+  ./configure --target-list=ps4-softmmu \
+    --enable-sdl --enable-vulkan --enable-debug
   make -j4
 }
 
