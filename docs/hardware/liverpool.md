@@ -3,6 +3,25 @@ Liverpool
 
 ## GC
 
+* 2 micro-engines.
+* 4 pipes.
+* 8 queues.
+* 16 VM IDs.
+
+### MMIO Registers
+
+- Registers instanced by me,pipe,queue (specified by address):
+  + 0xC900 - 0xC990
+  + 0xC20C
+  + ???
+- Registers instanced by vmid (specified by address):
+  + ???
+
+### VM IDs
+
+- 0:
+- 15: SAMU
+
 ### PCI Configuration Space
 
 ```
@@ -98,3 +117,6 @@ e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ```
 
+## References
+
+1. https://www.x.org/wiki/RadeonFeature/
