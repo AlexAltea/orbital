@@ -6,6 +6,7 @@ path_grub='./orbital-grub'
 path_qemu='./orbital-qemu'
 path_orbital=`pwd`
 
+#build_grub
 function build_grub() {
   # Dependencies
   sudo apt-get -qq install python
@@ -16,6 +17,7 @@ function build_grub() {
   make -j4
 }
 
+#build_qemu
 function build_qemu() {
   # Dependencies
   sudo apt-get -qq install git
@@ -27,9 +29,6 @@ function build_qemu() {
     --enable-sdl --enable-vulkan --enable-debug
   make -j4
 }
-
-#build_grub
-#build_qemu
 
 # Generate GRUB image
 cd ${path_orbital}
