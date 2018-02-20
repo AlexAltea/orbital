@@ -5,15 +5,7 @@ Virtualization-based PlayStation 4 emulator.
 
 ## Roadmap
 
-- [x] Boot kernel.
-- [x] Kernel debugging with symbols.
-- [x] Support for Orbis kernels with KASLR.
-- [x] Emulating Aeolia's UART device (partial).
-- [x] Successful driver initialization.
-- [ ] Fix Starsha DCE initialization.
-- [ ] Adding Vulkan support to QEMU.
-- [ ] Process Starsha FIFO commands with a Vulkan backend.
-- [ ] ...
+The roadmap has been relocated to the following Wiki page: https://github.com/AlexAltea/orbital/wiki/Roadmap
 
 ## Remarks
 
@@ -22,9 +14,7 @@ Virtualization-based PlayStation 4 emulator.
 
 ## Status
 
-This is the current state of Orbital on publicly available kernels along with the date in which the tests were made:
+The current state of Orbital at booting decrypted kernels can be followed in the issue tracker:
 
-* __0.82__ (_2017-11-29_): Will run fine until `hrtimer` initialization and then crash.
-* __4.55__ (_2017-12-21_): (Needs testing).
-* __5.00__ (_2017-12-21_): All drivers initialize correctly. Later during system initialization, the kernel gets stuck at an endless loops during `dce_flip_init`.
-
+* [PS4 4.55](https://github.com/AlexAltea/orbital/issues/3)
+* [PS4 5.00](https://github.com/AlexAltea/orbital/issues/4)
