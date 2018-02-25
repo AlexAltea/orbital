@@ -18,3 +18,10 @@ The current state of Orbital at booting decrypted kernels can be followed in the
 
 * [PS4 4.55](https://github.com/AlexAltea/orbital/issues/3)
 * [PS4 5.00](https://github.com/AlexAltea/orbital/issues/4)
+
+## Requirements
+
+* __OS__: Windows, Linux.
+* __Processor__: x86-64 CPU with AVX/AVX2 extensions.
+* __Memory__: 16 GB RAM.
+* __Graphics__: TBD.
