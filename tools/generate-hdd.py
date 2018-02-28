@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import copy
 import re
 import struct
 
@@ -82,6 +83,9 @@ class GPTHeader(object):
         # Arguments
         assert disk_size > 0 and disk_size % LBA_SIZE == 0
         last_lba = (disk_size // LBA_SIZE) - 1
+        last_lba -= 1  # Skip dummy/scratch end sector
+        last_lba -= 32 # Skip backup GPT partitions
+        last_lba -= 1  # Skip backup GPT header
         # Fields
         self.signature = signature
         self.revision = revision
@@ -89,9 +93,9 @@ class GPTHeader(object):
         self.crc = 0
         self.reserved = 0
         self.current_lba = 1
-        self.backup_lba = 1
+        self.backup_lba = last_lba + 1 
         self.first_lba = 34
-        self.last_lba = last_lba - 1
+        self.last_lba = last_lba
         self.disk_guid = disk_guid
         self.parts_lba = 2
         self.parts_count = 0
@@ -122,6 +126,8 @@ class GPTHeader(object):
             self.parts_crc)
 
     def update(self):
+        self.parts_lba = self.current_lba + 1
+        # Allocate partitions
         current_lba = 2048
         self.parts_count = len(self.partitions) * 4
         for part in sorted(self.partitions, key=lambda x: x.part_guid):
@@ -139,19 +145,20 @@ class GPTHeader(object):
         # Update header CRC
         self.crc = 0
         self.crc = crc32(self.serialize()) & 0xFFFFFFFF
+
+    def save(self, f):
+        self.update()
+        f.seek(LBA_SIZE * self.current_lba)
+        f.write(self.serialize())
+        for i in range(len(self.partitions)):
+            partition = self.partitions[i]
+            partition_lba = self.parts_lba + i
+            f.seek(LBA_SIZE * partition_lba)
+            f.write(partition.serialize())
         
 
 # Generate image
-def generate_hdd_mbr(f):
-    f.seek(0x1FE)
-    f.write(b'\x55')
-    f.write(b'\xAA')
-    
-def generate_hdd_gpt(f, size):
-    gpt = GPTHeader(size, sce_guid(0),
-        signature=b"EFI PART", revision=0x10000)
-
-    # Partitions
+def generate_hdd_gpt_partitions(gpt, size):
     gpt.partitions.append(GPTPartition(gpt, '512M',
         GPT_TYPE_GUID_SCE_PREINST,
         sce_guid(0xA)))
@@ -164,6 +171,7 @@ def generate_hdd_gpt(f, size):
     gpt.partitions.append(GPTPartition(gpt, '128M',
         GPT_TYPE_GUID_SCE_EAP_VSH,
         sce_guid(0xD)))
+
     gpt.partitions.append(GPTPartition(gpt, '1G',
         GPT_TYPE_GUID_SCE_SYSTEM,
         sce_guid(0x5), flags=GPT_PART_FLAG_SCE_UNK55))
@@ -175,7 +183,8 @@ def generate_hdd_gpt(f, size):
         sce_guid(0x7), flags=GPT_PART_FLAG_SCE_UNK55))
     gpt.partitions.append(GPTPartition(gpt, '1G',
         GPT_TYPE_GUID_SCE_SYSTEM_EX,
-        sce_guid(0x8)))  
+        sce_guid(0x8)))
+
     gpt.partitions.append(GPTPartition(gpt, '8G',
         GPT_TYPE_GUID_SCE_SWAP,
         sce_guid(0x4)))
@@ -188,6 +197,7 @@ def generate_hdd_gpt(f, size):
     gpt.partitions.append(GPTPartition(gpt, '6G',
         GPT_TYPE_GUID_SCE_UPDATE,
         sce_guid(0xF)))
+
     gpt.partitions.append(GPTPartition(gpt, size - parse_size('36G'),
         GPT_TYPE_GUID_SCE_USER,
         sce_guid(0x3)))
@@ -197,21 +207,41 @@ def generate_hdd_gpt(f, size):
     gpt.partitions.append(GPTPartition(gpt, '6G',
         GPT_TYPE_GUID_SCE_DA0X15,
         sce_guid(0x2)))
+    return gpt
+
+def generate_hdd_mbr(f, size):
+    # Write MBR partition entry
+    last_lba = (size // LBA_SIZE) - 2
+    f.seek(0x1BE)
+    f.write(b'\x00')
+    f.write(b'\x00\x02\x00')
+    f.write(b'\xEE')
+    f.write(b'\xFF\xFF\xFF')
+    f.write(struct.pack('<I', 1))
+    f.write(struct.pack('<I', last_lba))
+    # Magic
+    f.seek(0x1FE)
+    f.write(b'\x55')
+    f.write(b'\xAA')
+
+def generate_hdd_gpt(f, size):
+    gpt = GPTHeader(size, sce_guid(0),
+        signature=b"EFI PART", revision=0x10000)
+    gpt = generate_hdd_gpt_partitions(gpt, size)
+
+    gpt1 = copy.copy(gpt)
+    gpt2 = copy.copy(gpt)
+    gpt2.current_lba = gpt1.backup_lba
+    gpt2.backup_lba = gpt1.current_lba
     
-    # Write changes
-    gpt.update()
-    f.seek(LBA_SIZE * gpt.current_lba)
-    f.write(gpt.serialize())
-    for i in range(len(gpt.partitions)):
-        partition = gpt.partitions[i]
-        partition_lba = 2 + i
-        f.seek(LBA_SIZE * partition_lba)
-        f.write(partition.serialize())
+    # Save changes
+    gpt1.save(f)
+    gpt2.save(f)
     f.seek(gpt.disk_size - 1)
     f.write(b'\x00')
 
 def generate_hdd(f, size):
-    generate_hdd_mbr(f)
+    generate_hdd_mbr(f, size)
     generate_hdd_gpt(f, size)
 
 def main():
