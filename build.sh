@@ -24,7 +24,7 @@ function build_qemu() {
   # Building
   cd ${path_qemu}
   ./configure --target-list=ps4-softmmu \
-    --enable-sdl --enable-vulkan --enable-debug
+    --enable-sdl --enable-vulkan --enable-hax --enable-debug
   make -j4
 }
 
@@ -33,7 +33,7 @@ function build_qemu() {
 
 # Generate GRUB image
 cd ${path_orbital}
-tar -C resources -cf ${path_bin}/memdisk.tar boot
+tar -c -f ${path_bin}/memdisk.tar -C resources boot
 ${path_grub}/grub-mkimage -d ${path_grub}/grub-core \
   -O i386-pc -o bin/boot.img -m bin/memdisk.tar -c resources/boot/grub/boot.cfg \
   memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
