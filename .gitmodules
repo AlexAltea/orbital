@@ -5,3 +5,6 @@
 [submodule "orbital-grub"]
 	path = orbital-grub
 	url = https://github.com/AlexAltea/orbital-grub
+[submodule "orbital-bios"]
+	path = orbital-bios
+	url = https://github.com/AlexAltea/orbital-bios
