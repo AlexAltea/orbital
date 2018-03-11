@@ -1,8 +1,9 @@
 # Binaries
-bin/boot*.img
-bin/memdisk*.tar
+bin/boot*.*
+bin/memdisk*.*
 bin/hdd*.*
 bin/sflash*.*
+bin/ubios*.*
 
 # Executables
 *.sym

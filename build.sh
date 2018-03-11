@@ -10,7 +10,7 @@ path_orbital=`pwd`
 function build_bios() {
   cd ${path_bios}
   make -j4
-  mv out/bios.bin ../${path_bin}/bios.bin
+  mv out/bios.bin ../${path_bin}/ubios.bin
 }
 
 function build_grub() {
