@@ -4,6 +4,7 @@ bin/memdisk*.*
 bin/hdd*.*
 bin/sflash*.*
 bin/ubios*.*
+bin/vbios*.*
 
 # Executables
 *.sym
