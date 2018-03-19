@@ -10,5 +10,8 @@ bin/vbios*.*
 *.sym
 *.elf
 
+# Python
+*.pyc
+
 # Private
 tools/private
