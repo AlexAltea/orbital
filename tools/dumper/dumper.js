@@ -1,7 +1,7 @@
 /* Global */
 var context = {
     // Confirm whether the user actually wants to initiate the dump
-    safety: true,
+    safety: false,
 
     // Socket for the WebSockets server
     socket: undefined,
@@ -128,15 +128,12 @@ function main() {
         switch (version) {
         case '4.55':
             context.base = 'private/455/';
-            document.onclick = start;
             break;
         case '5.00':
             context.base = 'private/500/';
-            document.onclick = start;
             break;
         case '5.01':
             context.base = 'private/500/';
-            document.onclick = start;
             break;
         default:
             alert("This PlayStation 4 sofware version is not supported");

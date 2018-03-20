@@ -10,7 +10,7 @@ Dumper to dump/extract files required by Orbital from an actual PlayStation 4 co
 2. Run the following command.
 
     ```bash
-    python -m http.server 80
+    python server.py
     ```
 
-3. TBD.
+3. Enter your computer's IP address in the PlayStation 4 web browser and follow the instructions on screen.

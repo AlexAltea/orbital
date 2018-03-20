@@ -32,10 +32,8 @@ def main():
     # Handle arguments
     parser = argparse.ArgumentParser(
         description='Create server for Orbital dumper.')
-    parser.add_argument('--port-http', type=int, default=80, required=False,
-        metavar='PORT', help='Port for http server')
-    parser.add_argument('--port-ws', type=int, default=81, required=False,
-        metavar='PORT', help='Port for websockets server')
+    parser.add_argument('-p', '--port', type=int, default=80, required=False,
+        help='Port for HTTP/WS server')
     args = parser.parse_args()
 
     # Create server
@@ -43,7 +41,7 @@ def main():
     app.router.add_get('/', handle_index)
     app.router.add_get('/ws', handle_websocket)
     app.router.add_static('/', path='.')
-    web.run_app(app, port=args.port_http)
+    web.run_app(app, port=args.port)
 
 if __name__ == '__main__':
     main()

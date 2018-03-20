@@ -51,9 +51,8 @@ td {
   height: inherit;
 }
 td .button {
-  height: 100%;
+  height: calc(100% - 50px);
   margin-left: 5px;
-  margin-top: 10px;
 }
 
 .button {
@@ -75,6 +74,7 @@ td .button {
 }
 .button.disabled {
   cursor: not-allowed;
+  color: #888;
 }
 .button.disabled:hover {
   background-color: #555;
@@ -83,7 +83,6 @@ td .button {
 #action {
   font-size: 18pt;
   font-weight: 100;
-  margin-top: 20px;
   margin-bottom: 20px;
   text-align: center;
   animation: floating-text 1s ease-in-out alternate infinite;
