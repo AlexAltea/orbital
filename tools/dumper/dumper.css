@@ -1,4 +1,5 @@
 body {
+  font-family: Arial, Helvetica, sans-serif;
   background-color: #313234;
   margin: 0 auto;
   padding: 0;
@@ -15,27 +16,74 @@ a:visited { color: #DDD; text-decoration: none; }
 a:hover   { color: #DDD; text-decoration: none; }
 a:active  { color: #DDD; text-decoration: none; }
 
+/* Title */
 #title {
-  font-size: 48pt;
+  font-size: 32pt;
   font-weight: 100;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-top: 50px;
+  margin-top: 20px;
 }
 
 #subtitle {
-  font-size: 24pt;
+  font-size: 16pt;
   font-weight: 100;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: 120px;
+  margin-bottom: 20px;
 }
 
-#info {
+/* Information */
+table th {
+  font-size: 16pt;
+  text-align: left;
+}
+tr {
+  height: 1px;
+}
+th {
+  width: 33.33%;
+}
+td {
+  width: 33.33%;
+  height: inherit;
+}
+td .button {
+  height: 100%;
+  margin-left: 5px;
+  margin-top: 10px;
+}
+
+.button {
+  padding: 10px;
+  background-color: #555;
+  border-radius: 10px;
+  user-select: none;
+}
+.button:hover {
+  background-color: #666;
+  cursor: pointer;
+}
+.button:active {
+  background-color: #444;
+  cursor: pointer;
+}
+.button.active {
+  background-color: #444;
+}
+.button.disabled {
+  cursor: not-allowed;
+}
+.button.disabled:hover {
+  background-color: #555;
+}
+
+#action {
   font-size: 18pt;
   font-weight: 100;
+  margin-top: 20px;
   margin-bottom: 20px;
   text-align: center;
   animation: floating-text 1s ease-in-out alternate infinite;
@@ -47,8 +95,8 @@ a:active  { color: #DDD; text-decoration: none; }
     text-shadow: 0px 0px 5px #AAA;
   }
   100% {
-    color: #FFF;
-    text-shadow: 0px 0px 8px #FFF;
+    color: #EEE;
+    text-shadow: 0px 0px 8px #EEE;
   }
 }
 
@@ -58,7 +106,7 @@ a:active  { color: #DDD; text-decoration: none; }
 }
 
 #logs {
-  width: 800px;
+  width: 780px;
   padding: 10px;
   background-color: #212223;
   border-radius: 10px;
@@ -66,6 +114,6 @@ a:active  { color: #DDD; text-decoration: none; }
 }
 
 #logs-internal {
-  height: 300px;
+  height: 200px;
   overflow-y: scroll;
 }

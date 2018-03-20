@@ -9,8 +9,8 @@ Dumper to dump/extract files required by Orbital from an actual PlayStation 4 co
 
 2. Run the following command.
 
-```bash
-python -m http.server 80
-```
+    ```bash
+    python -m http.server 80
+    ```
 
 3. TBD.

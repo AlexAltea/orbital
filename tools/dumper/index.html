@@ -10,8 +10,37 @@
     <div class="content">
       <div id="title">Orbital</div>
       <div id="subtitle">Dumper</div>
-      <div id="info">
-        <span>Press &#x24cd; to start</span>
+
+      <table>
+        <tr>
+          <th style="padding-left: 0px;">About</th>
+          <th style="padding-left: 5px;">Output</th>
+          <th></th>
+        </tr>
+        <tr>
+          <td style="padding-right: 16px">
+            <p>Tool to dump/extract files required by Orbital from an actual PlayStation 4 console.</p>
+            <p>This takes few minutes and might fail/crash ocassionally depending on exploit reliability. If that happens, please restart the browser or the console.</p>
+          </td>
+          <td>
+            <div id="output-usb" class="button" onclick='javascript:transfer_mode("usb")'>
+              <b>USB</b>
+              <p>Dump system files to a connected USB flash drive.</p>
+              <p id="info-usb"></p>
+            </div>
+          </td>
+          <td>
+            <div id="output-ws" class="button" onclick='javascript:transfer_mode("ws")'>
+              <b>Network</b>
+              <p>Dump system files to a WebSockets server.</p>
+              <p id="info-ws"></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <div id="action" class='button' onclick='javascript:start()'>
+        <span>Start</span>
       </div>
       <div id="progress"></div>
       <div id="logs">

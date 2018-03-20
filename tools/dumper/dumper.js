@@ -1,6 +1,10 @@
 /* Global */
 var context = {
-    safety: false,
+    // Confirm whether the user actually wants to initiate the dump
+    safety: true,
+
+    // Socket for the WebSockets server
+    socket: undefined,
 };
 
 /* Logging */
@@ -44,6 +48,55 @@ console.log   = ((msg) => { console._log(msg);   log(msg, 'log'); });
 console.warn  = ((msg) => { console._warn(msg);  log(msg, 'warn'); });
 console.error = ((msg) => { console._error(msg); log(msg, 'error'); });
 
+/* WebSockets */
+function ws_init() {
+    // Handlers
+    var enable_ws = function () {
+        transfer_mode("ws");
+        var info_ws = document.getElementById(`info-ws`);
+        info_ws.innerHTML = `Detected: <i>${context.socket.url}</i>`;
+    }
+    var disable_ws = function () {
+        transfer_mode("usb");
+        var button_ws = document.getElementById(`output-ws`);
+        button_ws.classList.add("disabled");
+    }
+    // Connect to server
+    try {
+        context.socket = new WebSocket(`ws://${window.location.host}/ws`);
+    } catch (e) {
+        disable_ws();
+    }
+    context.socket.onopen = enable_ws;
+    context.socket.onerror = disable_ws;
+    context.socket.binaryType = "arraybuffer";
+}
+
+/* Tranfer */
+function transfer_mode(mode) {
+    context.transfer_mode = mode;
+    var button_usb = document.getElementById(`output-usb`);
+    var button_ws = document.getElementById(`output-ws`);
+    if (mode == 'ws' && !button_ws.classList.contains('disabled')) {
+        button_ws.classList.add("active");
+        button_usb.classList.remove("active");
+    }
+    if (mode == 'usb' && !button_usb.classList.contains('disabled')) {
+        button_usb.classList.add("active");
+        button_ws.classList.remove("active");
+    }
+}
+
+function transfer_blob(name, data) {
+    if (context.transfer_mode == 'ws') {
+        context.socket.send(name);
+        context.socket.send(data);
+    }
+    if (context.transfer_mode == 'usb') {
+        throw 'Unimplemented';
+    }
+}
+
 /* Dumper */
 function start() {
     /* Ask the user for confirmation */
@@ -67,6 +120,7 @@ function start() {
 }
 
 function main() {
+    ws_init();
     var found = navigator.userAgent.match(/PlayStation 4 ([0-9]+\.[0-9]+)/);
     if (found) {
         var version = found[1];
@@ -88,7 +142,7 @@ function main() {
             alert("This PlayStation 4 sofware version is not supported");
         }
     } else {
-        alert("Run this on the target PlayStation 4 machine");
+        console.error("Run this on the target PlayStation 4 machine");
     }
 }
 
