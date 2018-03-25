@@ -1,3 +1,7 @@
+# Temporaries
+build
+dump
+*.bin
+
 # Private
 private
-dump

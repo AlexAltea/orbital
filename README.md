@@ -33,4 +33,4 @@ Kernel ELFs generated from memory dumps will **not** work since writable segment
 
 ## Acknowledgements
 
-Thanks to all people who have directly or indirectly helped in making this possible. In no particular order: *wildcard, flatz, idc, masterzorag, zer0xff, zecoxao, z80, x41*. Also many anonymous folks and others who might have slipped my mind. You know who you are!
+Thanks to all people who have directly or indirectly helped in making this possible. In alphabetical order: *flatz, idc, m0rph3us1987, masterzorag, wildcard, x41, zecoxao, zer0xff, z80*. Also many anonymous folks and others who might have slipped my mind. You know who you are!
