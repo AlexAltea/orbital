@@ -8,6 +8,7 @@ path_qemu='./orbital-qemu'
 path_orbital=`pwd`
 
 function build_bios() {
+  cd ${path_orbital}
   cd ${path_bios}
   make -j4
   mv out/bios.bin ../${path_bin}/ubios.bin
@@ -17,6 +18,7 @@ function build_grub() {
   # Dependencies
   sudo apt-get -qq install python
   # Building
+  cd ${path_orbital}
   cd ${path_grub}
   ./autogen.sh
   ./configure --target=x86_64
@@ -29,6 +31,7 @@ function build_qemu() {
   sudo apt-get -qq install zlib1g-dev
   sudo apt-get -qq install libglib2.0-dev libfdt-dev libpixman-1-dev
   # Building
+  cd ${path_orbital}
   cd ${path_qemu}
   ./configure --target-list=ps4-softmmu \
     --enable-sdl --enable-vulkan --enable-hax --enable-debug

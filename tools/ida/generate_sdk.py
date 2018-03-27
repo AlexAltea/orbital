@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import idc
 import idaapi
+import os
 
 # Configuration
 TYPED_FUNCS_ONLY = True
 TYPED_DATA_ONLY = True
 OUTPUT_NAME = "ksdk"
+OUTPUT_PATH = "."
 XFAST_SYSCALL_SLIDE = 0x1C0
 
 CODE_PREFIX = """/* Auto-generated file. Do not edit */
@@ -16,6 +18,11 @@ CODE_HEADER = """{1}
 #define KERNEL_SDK_H
 
 #include "ps4.h"
+
+#ifdef __GNUC__
+#define __cdecl    __attribute__((cdecl))
+#define __fastcall __attribute__((fastcall))
+#endif
 
 #define KFUNC(slide, name, ret, args) \\
     extern ret (*name) args
@@ -66,6 +73,9 @@ void init_{0}() {{
 """.format(OUTPUT_NAME, CODE_PREFIX, XFAST_SYSCALL_SLIDE)
 
 def generate_sdk(define_funcs, define_data):
+    olddir = os.getcwd()
+    newdir = OUTPUT_PATH
+    os.chdir(newdir)
     with open(OUTPUT_NAME + '.h', 'w') as f:
         f.write(CODE_HEADER)
     with open(OUTPUT_NAME + '.c', 'w') as f:
@@ -84,6 +94,7 @@ def generate_sdk(define_funcs, define_data):
             dname, dslide, dtype = d
             f.write('KDATA(0x{0:08X}, {1}, {2});\n'.format(
                 dslide, dname, dtype))
+    os.chdir(olddir)
 
 def main():
     kbase = min(Segments())
