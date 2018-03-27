@@ -29,7 +29,7 @@
 #ifndef _SYS_ELF64_H_
 #define _SYS_ELF64_H_ 1
 
-#include <sys/elf_common.h>
+#include "elf.h"
 
 /*
  * ELF definitions common to all 64-bit architectures.
