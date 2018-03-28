@@ -30,7 +30,7 @@
 #ifndef MD5_H
 #define MD5_H
 
-#include "../../macros.h"
+#include "ksdk.h"
 
 #define MD5_CBLOCK  64
 #define MD5_DIGEST_LENGTH 16
@@ -58,7 +58,7 @@ extern "C" {
 #endif
 
   void MD5_Init (MD5_CTX*);
-  void MD5_Update (MD5_CTX*, void *, uint32_t);
+  void MD5_Update (MD5_CTX*, const void *, uint32_t);
   void MD5_Final (void*, MD5_CTX*);
 
 #ifdef __cplusplus

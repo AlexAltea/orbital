@@ -26,7 +26,7 @@
   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
-  
+
 #include "md5.h"
 
 #define F(x, y, z) ((z) ^ ((x) & ((y) ^ (z))))
@@ -53,7 +53,7 @@ uint32_t tc (uint32_t i)
  * transform a block of data.
  *
  ************************************************/
-void MD5_Transform (MD5_CTX* ctx) 
+void MD5_Transform (MD5_CTX* ctx)
 {
     uint32_t a, b, c, d, i, t, s;
     uint8_t rotf[]={7,12,17,22};
@@ -66,10 +66,10 @@ void MD5_Transform (MD5_CTX* ctx)
       1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12,
       5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2,
       0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9 };
-    
+
   #ifndef DYNAMIC
   uint32_t tc[64] =
-  { 0xD76AA478, 0xE8C7B756, 0x242070DB, 0xC1BDCEEE, 
+  { 0xD76AA478, 0xE8C7B756, 0x242070DB, 0xC1BDCEEE,
     0xF57C0FAF, 0x4787C62A, 0xA8304613, 0xFD469501,
     0x698098D8, 0x8B44F7AF, 0xFFFF5BB1, 0x895CD7BE,
     0x6B901122, 0xFD987193, 0xA679438E, 0x49B40821,
@@ -85,13 +85,13 @@ void MD5_Transform (MD5_CTX* ctx)
     0x655B59C3, 0x8F0CCC92, 0xFFEFF47D, 0x85845DD1,
     0x6FA87E4F, 0xFE2CE6E0, 0xA3014314, 0x4E0811A1,
     0xF7537E82, 0xBD3AF235, 0x2AD7D2BB, 0xEB86D391 };
-  #endif  
-    
+  #endif
+
     a = ctx->s.w[0];
     b = ctx->s.w[1];
     c = ctx->s.w[2];
     d = ctx->s.w[3];
-    
+
     for (i=0; i<64; i++) {
       #ifdef DYNAMIC
         t=tc(i+1);
@@ -145,23 +145,23 @@ void MD5_Init (MD5_CTX* c) {
  * update state with input
  *
  ************************************************/
-void MD5_Update (MD5_CTX* c, void *in, uint32_t len) {
+void MD5_Update (MD5_CTX* c, const void *in, uint32_t len) {
     uint8_t *p = (uint8_t*)in;
     uint32_t  r, idx;
-    
+
     if (len==0) return;
-    
+
     // get buffer index
     idx = c->len & (MD5_CBLOCK - 1);
-    
+
     // update length
     c->len += len;
-    
+
     while (len > 0) {
       r = MIN(len, (MD5_CBLOCK - idx));
       memcpy (&c->buf.b[idx], p, r);
       if ((idx + r) < MD5_CBLOCK) break;
-      
+
       MD5_Transform (c);
       len -= r;
       idx = 0;
@@ -178,7 +178,7 @@ void MD5_Final (void* dgst, MD5_CTX* c)
 {
     // see what length we have ere..
     uint32_t len=c->len & (MD5_CBLOCK - 1);
-    
+
     memset (&c->buf.b[len], 0, MD5_CBLOCK - len);
     // add the end bit
     c->buf.b[len] = 0x80;

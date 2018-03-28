@@ -6,10 +6,15 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include "ps4.h"
+#define MIN(X, Y) \
+    (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) \
+    (((X) > (Y)) ? (X) : (Y))
 
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define ROTL16(v, n) \
+  ((uint16_t)((v) << (n)) | ((v) >> (16 - (n))))
+#define ROTL32(v, n) \
+  ((uint32_t)((v) << (n)) | ((v) >> (32 - (n))))
 
 #define ALIGN(size, alignment) \
     (((size) + ((alignment) - 1)) & ~((alignment) - 1))
