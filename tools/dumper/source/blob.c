@@ -12,7 +12,7 @@
 #define BLOBS_ADDR  IP(192,168,2,1);
 #define BLOBS_PORT  9021
 
-int blobs_sockfd;
+int blobs_sockfd = 0;
 
 /* blobs */
 blob_t* blob_add(blob_t *blob)

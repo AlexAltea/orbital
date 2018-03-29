@@ -51,6 +51,22 @@ typedef struct sbl_authmgr_load_self_segment_t {
     uint32_t context_id;
 } sbl_authmgr_load_self_segment_t;
 
+typedef struct sbl_authmgr_load_self_block_t {
+    uint32_t function;
+    uint32_t status;
+    uint64_t pages_addr;
+    uint32_t segment_index;
+    uint32_t context_id;
+    uint8_t digest[0x20];
+    uint8_t extent[0x8];
+    uint32_t block_index;
+    uint32_t data_offset;
+    uint32_t data_size;
+    uint64_t data_start_addr;
+    uint64_t data_end_addr;
+    uint32_t zero;
+} sbl_authmgr_load_self_block_t;
+
 /* self */
 typedef struct self_context_t {
     uint32_t format;

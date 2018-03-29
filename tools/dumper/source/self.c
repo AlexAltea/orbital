@@ -30,8 +30,9 @@
 #define SELF_ENDIANNESS 0x1
 
 #define SELF_AUTH_INFO_SIZE 0x88
-#define SELF_CONTENT_ID_SIZE 0x13
 #define SELF_KEY_SIZE 0x10
+#define SELF_DIGEST_SIZE 0x20
+#define SELF_SEGMENT_BLOCK_ALIGNMENT 0x10
 
 /* fields */
 #define SELF_PROPS_ORDERED(B)        B( 0,  0)
@@ -45,20 +46,17 @@
 #define SELF_PROPS_HAS_EXTENTS(B)    B(17, 17)
 #define SELF_PROPS_SEGMENT_INDEX(B)  B(31, 20)
 
-/* format */
-typedef struct self_control_block_t {
-    uint16_t type;
-    union {
-        struct {
-            uint16_t type;
-            uint16_t pad1;
-            uint32_t pad2;
-            uint32_t pad3;
-            uint32_t pad4;
-            char content_id[SELF_CONTENT_ID_SIZE];
-        } npdrm;
-    };
-} self_control_block_t;
+typedef struct self_block_extent_t {
+    uint32_t offset;
+    uint32_t size;
+} self_block_extent_t;
+
+typedef struct self_block_info_t {
+    uint32_t size;
+    uint16_t index;
+    struct self_block_extent_t extent;
+    uint8_t digest[SELF_DIGEST_SIZE];
+} self_block_info_t;
 
 /* debug */
 void trace_self(self_t *self)
@@ -113,20 +111,34 @@ void trace_self(self_t *self)
 /* kernel */
 #define SELF_MAX_CONTEXTS 4
 
-typedef struct self_kmethod_args_t {
+typedef struct self_kdecrypt_segment_args_t {
+    unsigned int segment_idx;
+    unsigned int is_block_table;
+    uint8_t *segment_data_user;
+    size_t segment_data_user_size;
+} self_kdecrypt_segment_args_t;
+
+typedef struct self_kdecrypt_block_args_t {
+    struct self_block_info_t *block;
+    unsigned int segment_idx;
+    uint8_t *blob_data;
+    size_t blob_size;
+} self_kdecrypt_block_args_t;
+
+typedef struct self_kmethod_uap_t {
     void *kmethod;
     self_t *self;
-    uint64_t args[3];
-} self_kmethod_args_t;
+    void *args;
+} self_kmethod_uap_t;
 
 int self_kacquire_context(
-    struct thread *td, struct self_kmethod_args_t *uap)
+    struct thread *td, struct self_kmethod_uap_t *uap)
 {
     return 0;
 }
 
 int self_krelease_context(
-    struct thread *td, struct self_kmethod_args_t *uap)
+    struct thread *td, struct self_kmethod_uap_t *uap)
 {
     int ctx_id;
     self_t *self = uap->self;
@@ -140,7 +152,7 @@ int self_krelease_context(
 }
 
 int self_kverify_header(
-    struct thread *td, struct self_kmethod_args_t *uap)
+    struct thread *td, struct self_kmethod_uap_t *uap)
 {
     int ret, ctx_id;
     char payload[0x80];
@@ -226,7 +238,7 @@ error:
 }
 
 int self_kdecrypt_segment(
-    struct thread *td, struct self_kmethod_args_t *uap)
+    struct thread *td, struct self_kmethod_uap_t *uap)
 {
     int ret;
     char payload[0x80];
@@ -237,26 +249,16 @@ int self_kdecrypt_segment(
     uint64_t chunk_table_gpu_paddr = NULL;
     uint64_t chunk_table_gpu_desc = NULL;
     uint8_t *chunk_table = NULL;
+    self_kdecrypt_segment_args_t *args = uap->args;
+    self_t *self =  uap->self;
     ret = 1;
 
-    /* arguments */
-    unsigned int is_block_table = 1;
-    unsigned int segment_idx;
-    uint8_t *segment_data_user;
-    size_t segment_data_user_size;
-    self_t *self;
-
-    self = uap->self;
-    segment_idx = (int)uap->args[0];
-    segment_data_user = (uint8_t*)uap->args[1];
-    segment_data_user_size = (size_t)uap->args[2];
-
     /* copy segment data */
-    segment_data_size = ALIGN_PAGE(segment_data_user_size);
+    segment_data_size = ALIGN_PAGE(args->segment_data_user_size);
     segment_data = kmalloc(segment_data_size, M_AUTHMGR, 0x102);
     kassert(segment_data);
     memset(segment_data, 0, segment_data_size);
-    memcpy(segment_data, segment_data_user, segment_data_user_size);
+    memcpy(segment_data, args->segment_data_user, args->segment_data_user_size);
 
     /* create chunk table */
     chunk_table = kmalloc(0x4000, M_AUTHMGR, 0x102);
@@ -278,21 +280,21 @@ int self_kdecrypt_segment(
     kassert(chunk_table_gpu_desc);
 
     /* decrypt segment  */
-    sbl_authmgr_load_self_segment_t *args = (void*)&payload[0];
+    sbl_authmgr_load_self_segment_t *cmd = (void*)&payload[0];
     memset(payload, 0, sizeof(payload));
-    args->function = AUTHMGR_CMD_LOAD_SELF_SEGMENT;
-    args->status = 0;
-    args->chunk_table_addr = chunk_table_gpu_paddr;
-    args->segment_index = segment_idx;
-    args->is_block_table = is_block_table;
-    args->context_id = self->auth_ctx_id;
+    cmd->function = AUTHMGR_CMD_LOAD_SELF_SEGMENT;
+    cmd->status = 0;
+    cmd->chunk_table_addr = chunk_table_gpu_paddr;
+    cmd->segment_index = args->segment_idx;
+    cmd->is_block_table = args->is_block_table;
+    cmd->context_id = self->auth_ctx_id;
 
     kdprintf("Sending AUTHMGR_CMD_LOAD_SELF_SEGMENT...\n");
     sceSblServiceMailbox_locked(ret, self->svc_id, &payload, &payload);
     kassert(!ret);
-    kassert(!args->status);
-    kassert(args->function == AUTHMGR_CMD_LOAD_SELF_SEGMENT);
-    memcpy(segment_data_user, segment_data, segment_data_user_size);
+    kassert(!cmd->status);
+    kassert(cmd->function == AUTHMGR_CMD_LOAD_SELF_SEGMENT);
+    memcpy(args->segment_data_user, segment_data, args->segment_data_user_size);
     ret = 0;
 
 error:
@@ -307,10 +309,110 @@ error:
     return ret;
 }
 
-/* functions */
-static void self_allocate_blobs(self_t* self)
+int self_kdecrypt_block(
+    struct thread *td, struct self_kmethod_uap_t *uap)
 {
-    dprintf("self_allocate_blobs: unimplemented");
+    int ret;
+    char payload[0x80];
+    void* input_data = NULL;
+    uint64_t input_size;
+    uint64_t input_mapped = NULL;
+    uint64_t input_mapdesc = NULL;
+    void* output_data = NULL;
+    uint64_t output_size;
+    uint64_t output_mapped = NULL;
+    uint64_t output_mapdesc = NULL;
+    self_kdecrypt_block_args_t *args = uap->args;
+    self_block_info_t *block = args->block;
+    self_t *self =  uap->self;
+    ret = 1;
+
+    /* allocate memory for command */
+    input_size = ALIGN_PAGE(args->blob_size);
+    input_data = kmalloc(input_size, M_AUTHMGR, 0x102);
+    kassert(input_data);
+    memset(input_data, 0, input_size);
+    memcpy(input_data, args->blob_data, args->blob_size);
+    kassert(!sceSblDriverMapPages(&input_mapped, input_data, 1, 0x61, NULL, &input_mapdesc));
+
+    output_size = ALIGN_PAGE(args->blob_size);
+    output_data = kmalloc(output_size, M_AUTHMGR, 0x102);
+    kassert(output_data);
+    memset(output_data, 0, output_size);
+    kassert(!sceSblDriverMapPages(&output_mapped, output_data, 1, 0x61, NULL, &output_mapdesc));
+
+    /* decrypt block  */
+    sbl_authmgr_load_self_block_t *cmd = (void*)&payload[0];
+    memset(payload, 0, sizeof(payload));
+    memcpy(&cmd->digest, &block->digest, sizeof(block->digest));
+    memcpy(&cmd->extent, &block->extent, sizeof(block->extent));
+    cmd->function = AUTHMGR_CMD_LOAD_SELF_BLOCK;
+    cmd->status = 0;
+    cmd->pages_addr = output_mapped;
+    cmd->segment_index = args->segment_idx;
+    cmd->context_id = self->auth_ctx_id;
+    cmd->block_index = block->index;
+    cmd->data_offset = 0;
+    cmd->data_size = args->blob_size;
+    cmd->data_start_addr = input_mapped;
+    cmd->data_end_addr = 0;
+
+    kdprintf("Sending AUTHMGR_CMD_LOAD_SELF_BLOCK...\n");
+    sceSblServiceMailbox_locked(ret, self->svc_id, &payload, &payload);
+    kassert(!ret);
+    kassert(!cmd->status);
+    kassert(cmd->function == AUTHMGR_CMD_LOAD_SELF_BLOCK);
+    memcpy(args->blob_data, output_data, args->blob_size);
+    ret = 0;
+
+error:
+    if (input_mapped)
+        kassert(!sceSblDriverUnmapPages(input_mapdesc));
+    if (output_mapped)
+        kassert(!sceSblDriverUnmapPages(output_mapdesc));
+    if (input_data)
+        kfree(input_data, M_AUTHMGR);
+    if (output_data)
+        kfree(output_data, M_AUTHMGR);
+    return ret;
+}
+
+/* functions */
+static void self_get_block_info(self_t *self, unsigned int target_entry_idx, self_block_info_t *info)
+{
+    struct self_entry_t* table_segment;
+    struct self_entry_t* target_segment;
+    struct self_block_extent_t* extents;
+    const uint8_t* segment_data;
+    unsigned int target_num_blocks;
+    unsigned int i;
+
+    memset(&info->digest, 0, sizeof(info->digest));
+    memset(&info->extent, 0, sizeof(info->extent));
+
+    for (i = 0; i < self->header.num_entries; ++i) {
+        table_segment = &self->entries[i];
+        if (!EXTRACT(table_segment->props, SELF_PROPS_HAS_DIGESTS) &&
+            !EXTRACT(table_segment->props, SELF_PROPS_HAS_EXTENTS))
+            continue;
+        if (EXTRACT(table_segment->props, SELF_PROPS_SEGMENT_INDEX) != target_entry_idx)
+            continue;
+
+        target_segment = &self->entries[target_entry_idx];
+        target_num_blocks = (target_segment->memsz + (info->size - 1)) / info->size;
+        segment_data = &self->data[table_segment->offset];
+        if (EXTRACT(table_segment->props, SELF_PROPS_HAS_DIGESTS)) {
+            memcpy(&info->digest, &segment_data[info->index * sizeof(info->digest)], sizeof(info->digest));
+        }
+        if (EXTRACT(table_segment->props, SELF_PROPS_HAS_EXTENTS)) {
+            if (EXTRACT(table_segment->props, SELF_PROPS_HAS_DIGESTS))
+                extents = (void*)(&segment_data[target_num_blocks * sizeof(info->digest)]);
+            else
+                extents = (void*)(&segment_data[0]);
+            memcpy(&info->extent, &extents[info->index], sizeof(info->extent));
+        }
+        return;
+    }
 }
 
 self_t* self_open(const char* file)
@@ -384,13 +486,18 @@ int self_verify_header(self_t *self)
 
 int self_load_segments(self_t *self)
 {
+    struct self_kdecrypt_segment_args_t args_ds;
+    struct self_kdecrypt_block_args_t args_db;
+    struct self_block_info_t block;
     struct self_entry_t* segment;
     struct blob_t *blob;
     unsigned int this_segment_idx;
     unsigned int that_segment_idx;
     unsigned int num_blocks;
+    unsigned int block_idx_offset;
+    unsigned int block_offset;
+    unsigned int block_size;
     unsigned int i, j;
-    int success = 0;
 
     if (!self->verified)
         goto error;
@@ -407,7 +514,7 @@ int self_load_segments(self_t *self)
             !EXTRACT(segment->props, SELF_PROPS_HAS_EXTENTS))
             continue;
 
-        dprintf("Processing block table @ segment #%u...\n", i);
+        dprintf("Processing block table segment @ entry #%u...\n", i);
         that_segment_idx = EXTRACT(segment->props, SELF_PROPS_SEGMENT_INDEX);
         this_segment_idx = EXTRACT(self->entries[that_segment_idx].props, SELF_PROPS_SEGMENT_INDEX);
         dprintf("  that-segment-idx: %u\n", that_segment_idx);
@@ -419,9 +526,56 @@ int self_load_segments(self_t *self)
         assert(segment->offset + segment->filesz <= self->file_size);
         memcpy(blob->data, &self->data[segment->offset], blob->size);
         blob_hash(blob, blob->data, blob->size);
-        syscall(11, self_kdecrypt_segment, self,
-            this_segment_idx, blob->data, blob->size);
+
+        args_ds.segment_idx = this_segment_idx;
+        args_ds.is_block_table = 1;
+        args_ds.segment_data_user = blob->data;
+        args_ds.segment_data_user_size = blob->size;
+        syscall(11, self_kdecrypt_segment, self, &args_ds);
+        memcpy(&self->data[segment->offset], blob->data, blob->size);
         blob = blob_add(blob);
+    }
+
+    /* load blocked segments */
+    for (i = 0; i < self->header.num_entries; i++) {
+        segment = &self->entries[i];
+        if (!EXTRACT(segment->props, SELF_PROPS_BLOCKED))
+            continue;
+
+        dprintf("Processing blocked segment @ entry #%u...\n", i);
+        memset(&block, 0, sizeof(block));
+        block.size = (1 << (EXTRACT(segment->props, SELF_PROPS_BLOCK_SIZE) + 12));
+        this_segment_idx = EXTRACT(segment->props, SELF_PROPS_SEGMENT_INDEX);
+        num_blocks = (segment->memsz + block.size - 1) / block.size;
+
+        for (j = 0; j < num_blocks; j++) {
+            block.index = j;
+            self_get_block_info(self, i, &block);
+            block_idx_offset = block.extent.offset & ~(block.size - 1);
+            block_offset = block.extent.offset & (block.size - 1);
+            block_size = block.extent.size & ~(SELF_SEGMENT_BLOCK_ALIGNMENT - 1);
+            if (block_size == 0) {
+                block_idx_offset = block.index * block.size;
+                block_size = (block_idx_offset + block.size <= segment->memsz) ?
+                    (block.size) :
+                    (segment->memsz - block_idx_offset);
+            } else if (block.index * block.size + block.extent.size == segment->memsz) {
+                block_size = block.extent.size;
+            }
+
+            blob->size = block_size;
+            blob->data = malloc(blob->size);
+            assert(blob->data);
+            memcpy(blob->data, &self->data[segment->offset + block_idx_offset + block_offset], blob->size);
+            blob_hash(blob, blob->data, blob->size);
+
+            args_db.block = &block;
+            args_db.segment_idx = this_segment_idx;
+            args_db.blob_data = blob->data;
+            args_db.blob_size = blob->size;
+            syscall(11, self_kdecrypt_block, self, &args_db);
+            blob = blob_add(blob);
+        }
     }
     return 0;
 
