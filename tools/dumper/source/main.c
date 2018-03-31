@@ -176,7 +176,7 @@ int _main(struct thread *td)
     syscall(11, kpatch_enablemapself);
 
     /* Dump data */
-    decrypt_self_file("/mini-syscore.elf");
+    decrypt_selfs();
 
     /* Return back to browser */
     dprintf("Dump finished!\n");

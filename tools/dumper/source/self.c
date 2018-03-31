@@ -2,7 +2,7 @@
  * (c) 2017-2018 Alexandro Sanchez Bach.
  * Released under MIT license. Read LICENSE for more details.
  *
- * Based in previous tools and research by: flatz.
+ * Based in previous tools and research by: fail0verflow, flatz.
  */
 
 #include "self.h"
