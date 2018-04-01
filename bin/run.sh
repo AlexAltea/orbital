@@ -5,5 +5,5 @@
     -bios ./ubios.bin \
     -kernel ./boot.img \
     -drive file=hdd.qcow2 \
-    -drive file=fat:rw:sflash/,media=disk \
+    -drive file=fat:sflash/,read-only=off,media=disk \
     -monitor stdio -smp 8 -display orbital
