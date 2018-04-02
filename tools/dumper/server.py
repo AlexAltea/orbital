@@ -38,7 +38,7 @@ def server_blobs():
             if not file_size:
                 break
             file_hash = c.recv(16)
-            file_data = c.recv(file_size)
+            file_data = c.recv(file_size, socket.MSG_WAITALL)
             file_name = 'dump/%s.bin' % file_hash.hex().upper()
             with open(file_name, 'wb') as f:
                 f.write(file_data)

@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Orbital</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css?family=Roboto:100');
+      @import url('https://fonts.googleapis.com/css?family=Orbitron:900');
+      body {
+        background-color: #232742;
+        color: #eee;
+        font-size: 20px;
+      }
+      #content {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 400px;
+        height: 300px;
+        margin-left: -200px;
+        margin-top: -150px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 100;
+        font-size: 120px;
+      }
+      h2 {
+        margin: 0;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+      }
+      a {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 100;
+      }
+      a:link    { color: #eee; text-decoration: none; }
+      a:visited { color: #ddd; text-decoration: none; }
+      a:hover   { color: #fff; text-decoration: none; }
+      a:active  { color: #fff; text-decoration: none; }
+    </style>
+  </head>
+
+  <body>
+    <div id="background"></div>
+    <div id="content">
+      <h1>Orbital</h1>
+      <h2>Coming 2049</h2>
+      <br>
+      <a href="https://github.com/AlexAltea/orbital/">GitHub</a> -
+      <a href="https://discord.me/orbitalemu">Discord</a> -
+      <a href="tools/dumper/">Dumper</a>
+    </div>
+    <script src="//cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+      particlesJS("background", {
+        "particles": {
+          "number": {
+            "value": 160,
+            "density": {
+              "enable": true,
+              "value_area": 800
+            }
+          },
+          "color": { "value": "#fff" },
+          "shape": {
+            "type": "circle",
+            "stroke": { "width": 0, "color": "#000000" },
+            "polygon": { "nb_sides": 5 }
+          },
+          "opacity": {
+            "value": 0.8,
+            "random": true,
+            "anim": {
+              "enable": true,
+              "speed": 1,
+              "opacity_min": 0,
+              "sync": false
+            }
+          },
+          "size": {
+            "value": 3,
+            "random": true,
+            "anim": {
+              "enable": false,
+            }
+          },
+          "line_linked": {
+            "enable": false,
+          },
+          "move": {
+            "enable": true,
+            "speed": 1,
+            "direction": "none",
+            "random": true,
+            "straight": false,
+            "out_mode": "out",
+            "attract": {
+              "enable": false,
+              "rotateX": 600,
+              "rotateY": 1200
+            }
+          }
+        },
+        "interactivity": {
+          "detect_on": "canvas",
+          "events": {
+            "onhover": { "enable": true, "mode": "bubble" },
+            "onclick": { "enable": false },
+            "resize": true
+          },
+          "modes": {
+            "bubble": {
+              "distance": 400,
+              "size": 0,
+              "duration": 2,
+              "opacity": 0.8,
+              "speed": 3
+            }
+          }
+        },
+        "retina_detect": true
+      });
+    </script>
+  </body>
+</html>
