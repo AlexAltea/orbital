@@ -23,12 +23,30 @@ blob_t* blob_add(blob_t *blob)
     return next;
 }
 
-void blob_hash(blob_t *blob, const uint8_t *data, size_t size)
+void blob_set_path(blob_t *blob, const char *path)
 {
+    blob->path = strdup(path);
+}
+
+void blob_set_path_hash(blob_t *blob, const uint8_t *data, size_t size)
+{
+    uint8_t hash[16];
+    char path[256];
+    char *p;
+
     MD5_CTX ctx;
     MD5_Init(&ctx);
     MD5_Update(&ctx, data, size);
-    MD5_Final(blob->hash, &ctx);
+    MD5_Final(hash, &ctx);
+
+    strncpy(path, "crypto/", sizeof(path));
+    p = strrchr(path, '/') + 1;
+    for (size_t i = 0; i < sizeof(hash); i++) {
+        snprintf(p, 3, "%02X", hash[i]);
+        p += 2;
+    }
+    strncpy(p, ".bin", sizeof(path) - (p - &path[0]));
+    blob_set_path(blob, path);
 }
 
 void blob_transfer_init()
@@ -51,8 +69,12 @@ void blob_transfer_close()
 
 static void blob_transfer_via_net(blob_t *blob)
 {
+    size_t path_size;
+
+    path_size = strlen(blob->path);
+    sceNetSend(blobs_sockfd, &path_size, sizeof(path_size), 0);
+    sceNetSend(blobs_sockfd, &blob->path[0], path_size, 0);
     sceNetSend(blobs_sockfd, &blob->size, sizeof(blob->size), 0);
-    sceNetSend(blobs_sockfd, &blob->hash[0], sizeof(blob->hash), 0);
     sceNetSend(blobs_sockfd, &blob->data[0], blob->size, 0);
 }
 

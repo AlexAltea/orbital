@@ -5,7 +5,7 @@
  * Based in previous tools and research by: fail0verflow, flatz.
  */
 
-#include "self.h"
+#include "self_decrypter.h"
 
 #include "ksdk.h"
 #include "blob.h"
@@ -525,7 +525,7 @@ int self_load_segments(self_t *self)
         assert(blob->data);
         assert(segment->offset + segment->filesz <= self->file_size);
         memcpy(blob->data, &self->data[segment->offset], blob->size);
-        blob_hash(blob, blob->data, blob->size);
+        blob_set_path_hash(blob, blob->data, blob->size);
 
         args_ds.segment_idx = this_segment_idx;
         args_ds.is_block_table = 1;
@@ -567,7 +567,7 @@ int self_load_segments(self_t *self)
             blob->data = malloc(blob->size);
             assert(blob->data);
             memcpy(blob->data, &self->data[segment->offset + block_idx_offset + block_offset], blob->size);
-            blob_hash(blob, blob->data, blob->size);
+            blob_set_path_hash(blob, blob->data, blob->size);
 
             args_db.block = &block;
             args_db.segment_idx = this_segment_idx;

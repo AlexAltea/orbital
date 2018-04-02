@@ -31,17 +31,25 @@ def server_blobs():
         c, addr = s.accept()
         print('blobs-server: Client connected: %s:%s' % addr)
         while True:
-            file_size = c.recv(8)
-            if not file_size:
-                break
-            file_size = struct.unpack('Q', file_size)[0]
-            if not file_size:
-                break
-            file_hash = c.recv(16)
-            file_data = c.recv(file_size, socket.MSG_WAITALL)
-            file_name = 'dump/%s.bin' % file_hash.hex().upper()
-            with open(file_name, 'wb') as f:
-                f.write(file_data)
+            # File path
+            path_size = c.recv(8)
+            if not path_size: break
+            path_size = struct.unpack('Q', path_size)[0]
+            if not path_size: break
+            path = c.recv(path_size, socket.MSG_WAITALL)
+            path = os.path.join('dump', path.decode('utf-8'))
+            # File data
+            data_size = c.recv(8)
+            if not data_size: break
+            data_size = struct.unpack('Q', data_size)[0]
+            if not data_size: break
+            data = c.recv(data_size, socket.MSG_WAITALL)
+            # Save file
+            path_dir = os.path.dirname(path)
+            if path_dir and not os.path.exists(path_dir):
+                os.makedirs(path_dir, exist_ok=True)
+            with open(path, 'wb') as f:
+                f.write(data)
         print('blobs-server: Client disconnected: %s:%s' % addr)
         c.close()
     s.close()

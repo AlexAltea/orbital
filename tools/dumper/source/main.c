@@ -11,7 +11,7 @@
 #include "blob.h"
 #include "debug.h"
 #include "ksdk.h"
-#include "self.h"
+#include "self_decrypter.h"
 
 /* kernel payloads */
 int kpatch_getroot(struct thread *td)
