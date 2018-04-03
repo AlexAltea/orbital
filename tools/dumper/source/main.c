@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "ksdk.h"
 #include "self_decrypter.h"
+#include "self_mapper.h"
 
 /* kernel payloads */
 int kpatch_getroot(struct thread *td)
@@ -92,30 +93,7 @@ void kpatch_enablemapself(struct thread *td)
     cpu_enable_wp();
 }
 
-static int decrypt_self_file(const char *file)
-{
-    int err;
-    self_t *self;
-
-    self = self_open(file);
-    if (!self) {
-        return 1;
-    }
-
-    err = self_verify_header(self);
-    if (err)
-        goto fail;
-    err = self_load_segments(self);
-    if (err)
-        goto fail;
-    blob_transfer_all(self->blobs, BLOB_TRANSFER_NET);
-
-fail:
-    self_close(self);
-    return 0;
-}
-
-static int decrypt_selfs_dir(const char *dir, int recursive)
+static int traverse_dir(const char *dir, int recursive, void(*handler)(const char*))
 {
     void *dp;
     struct dirent *entry;
@@ -135,27 +113,87 @@ static int decrypt_selfs_dir(const char *dir, int recursive)
                 continue;
             }
             snprintf(name, sizeof(name), "%s/%s", dir, entry->d_name);
-            decrypt_selfs_dir(name, recursive);
+            traverse_dir(name, recursive, handler);
         }
         if (entry->d_type == DT_REG) {
             snprintf(name, sizeof(name), "%s/%s", dir, entry->d_name);
-            const char *dot = strrchr(name, '.');
-            if (!dot) continue;
-            if (!strcmp(dot, ".self") ||
-                !strcmp(dot, ".sprx") ||
-                !strcmp(dot, ".elf")  ||
-                !strcmp(dot, ".bin")) {
-                decrypt_self_file(name);
-            }
+            handler(name);
         }
     }
     closedir(dp);
     return 0;
 }
 
+static void decrypt_self_to_blobs(const char *file)
+{
+    int err;
+    self_t *self;
+    const char *dot;
+
+    // Check filename and open file
+    dot = strrchr(file, '.');
+    if (!dot) return;
+    if (strcmp(dot, ".self") &&
+        strcmp(dot, ".sprx") &&
+        strcmp(dot, ".elf")  &&
+        strcmp(dot, ".bin")) {
+        return;
+    }
+    dprintf("Decrypting %s to blobs.\n", file);
+    self = self_open(file);
+    if (!self) {
+        return;
+    }
+
+    // Decrypt SELF
+    err = self_verify_header(self);
+    if (err)
+        goto fail;
+    err = self_load_segments(self);
+    if (err)
+        goto fail;
+    blob_transfer_all(self->blobs, BLOB_TRANSFER_NET);
+
+fail:
+    self_close(self);
+    return;
+}
+
+static void decrypt_self_to_elf(const char *file)
+{
+    const char *dot;
+    char path[256];
+    uint8_t *elf_data;
+    size_t elf_size;
+    blob_t blob;
+
+    // Check filename and open file
+    dot = strrchr(file, '.');
+    if (!dot) return;
+    if (strcmp(dot, ".self") &&
+        strcmp(dot, ".sprx") &&
+        strcmp(dot, ".elf")  &&
+        strcmp(dot, ".bin")) {
+        return;
+    }
+    dprintf("Decrypting %s to ELF.\n", file);
+    elf_data = self_decrypt_file(file, &elf_size);
+    if (!elf_data)
+        return;
+
+    blob.next = NULL;
+    blob.data = elf_data;
+    blob.size = elf_size;
+    snprintf(path, sizeof(path), "elfs/%s", file);
+    blob_set_path(&blob, path);
+    blob_transfer(&blob, BLOB_TRANSFER_NET);
+    free(elf_data);
+}
+
 static int decrypt_selfs(void)
 {
-    decrypt_selfs_dir("/", true);
+    traverse_dir("/", true, decrypt_self_to_blobs);
+    traverse_dir("/", true, decrypt_self_to_elf);
     return 0;
 }
 
@@ -176,7 +214,7 @@ int _main(struct thread *td)
     syscall(11, kpatch_enablemapself);
 
     /* Dump data */
-    decrypt_selfs();
+    traverse_dir("/", true, decrypt_self_to_elf);
 
     /* Return back to browser */
     dprintf("Dump finished!\n");

@@ -5,8 +5,8 @@
  * Based in previous tools and research by: fail0verflow, flatz.
  */
 
-#ifndef SELF_H
-#define SELF_H
+#ifndef SELF_DECRYPTER_H
+#define SELF_DECRYPTER_H
 
 #include "ksdk.h"
 
@@ -71,4 +71,4 @@ int self_verify_header(self_t *self);
 int self_load_segments(self_t *self);
 void self_close(self_t *self);
 
-#endif /* SELF_H */
+#endif /* SELF_DECRYPTER_H */
