@@ -34,7 +34,8 @@ function build_qemu() {
   cd ${path_orbital}
   cd ${path_qemu}
   ./configure --target-list=ps4-softmmu \
-    --enable-sdl --enable-vulkan --enable-hax --enable-debug --disable-capstone
+    --enable-sdl --enable-vulkan --enable-debug --disable-capstone \
+    --enable-hax
   make -j4
 }
 
