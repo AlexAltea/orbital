@@ -17,6 +17,8 @@ function build_bios() {
 function build_grub() {
   # Dependencies
   sudo apt-get -qq install python
+  sudo apt-get -qq install dh-autoreconf
+  sudo apt-get -qq install bison flex
   # Building
   cd ${path_orbital}
   cd ${path_grub}
@@ -30,6 +32,7 @@ function build_qemu() {
   sudo apt-get -qq install git
   sudo apt-get -qq install zlib1g-dev
   sudo apt-get -qq install libglib2.0-dev libfdt-dev libpixman-1-dev
+  sudo apt-get -qq install libsdl2-dev libvulkan-dev
   # Building
   cd ${path_orbital}
   cd ${path_qemu}
@@ -39,13 +42,15 @@ function build_qemu() {
   make -j4
 }
 
+function generate_image() {
+    cd ${path_orbital}
+    tar -c -f ${path_bin}/memdisk.tar -C resources boot
+    ${path_grub}/grub-mkimage -d ${path_grub}/grub-core \
+        -O i386-pc -o bin/boot.img -m bin/memdisk.tar -c resources/boot/grub/boot.cfg \
+        memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
+}
+
 build_bios
 build_grub
 build_qemu
-
-# Generate GRUB image
-cd ${path_orbital}
-tar -c -f ${path_bin}/memdisk.tar -C resources boot
-${path_grub}/grub-mkimage -d ${path_grub}/grub-core \
-  -O i386-pc -o bin/boot.img -m bin/memdisk.tar -c resources/boot/grub/boot.cfg \
-  memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
+generate_image
