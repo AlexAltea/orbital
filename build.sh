@@ -10,36 +10,40 @@ path_orbital=`pwd`
 function build_bios() {
   cd ${path_orbital}
   cd ${path_bios}
-  make -j4
+  make -j$(nproc)
   mv out/bios.bin ../${path_bin}/ubios.bin
 }
 
 function build_grub() {
   # Dependencies
-  sudo apt-get -qq install python
-  sudo apt-get -qq install dh-autoreconf
-  sudo apt-get -qq install bison flex
+  if [ -x "$(command -v apt)" ]; then
+    sudo apt-get -qq install python \
+                             dh-autoreconf \
+                             bison flex
+  fi
   # Building
   cd ${path_orbital}
   cd ${path_grub}
   ./autogen.sh
-  ./configure --target=x86_64
-  make -j4
+  ./configure --target=x86_64 --disable-werror
+  make -j$(nproc)
 }
 
 function build_qemu() {
   # Dependencies
-  sudo apt-get -qq install git
-  sudo apt-get -qq install zlib1g-dev
-  sudo apt-get -qq install libglib2.0-dev libfdt-dev libpixman-1-dev
-  sudo apt-get -qq install libsdl2-dev libvulkan-dev
+  if [ -x "$(command -v apt)" ]; then
+    sudo apt -qq install git \
+                         zlib1g-dev \
+                         libglib2.0-dev libfdt-dev libpixman-1-dev \
+                         libsdl2-dev libvulkan-dev
+  fi
   # Building
   cd ${path_orbital}
   cd ${path_qemu}
   ./configure --target-list=ps4-softmmu \
     --enable-sdl --enable-vulkan --enable-debug --disable-capstone \
     --enable-hax
-  make -j4
+  make -j$(nproc)
 }
 
 function generate_image() {
@@ -50,7 +54,19 @@ function generate_image() {
         memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
 }
 
-build_bios
-build_grub
-build_qemu
-generate_image
+if [ "$1" == "clean" ]; then
+  cd ${path_orbital}
+  cd ${path_bios}
+  make clean
+  cd ${path_orbital}
+  cd ${path_grub}
+  make clean
+  cd ${path_orbital}
+  cd ${path_qemu}
+  make clean
+else
+  build_bios
+  build_grub
+  build_qemu
+  generate_image
+fi
