@@ -22,6 +22,20 @@ Liverpool
 - 0:
 - 15: SAMU
 
+### IH IDs
+
+- 0x08: DCE Page Flip 0
+- 0x0A: DCE Page Flip 1
+- 0x0C: DCE Page Flip 2 (unused)
+- 0x0E: DCE Page Flip 3 (unused)
+- 0x10: DCE Page Flip 4 (unused)
+- 0x12: DCE Page Flip 5 (unused)
+- 0x13: DCE CRTC Line
+- 0x34: DCE Scanin
+- 0x35: DCE Scanin
+- 0x98: SAM
+- 0xA2: ACP
+
 ### PCI Configuration Space
 
 ```
