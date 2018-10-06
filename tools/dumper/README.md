@@ -26,3 +26,11 @@ This dumper requires an exploit that listens for payloads in binary format on po
 - `0x926400000`: Arguments (can be changed in `source/main.c`)
 
 Furthermore, the server will listen at port `9021` for incoming blobs, and optionally at `9022` for debug messages.
+
+## Compiling Notes
+
+The dumper currently supports PS4 FW ver 1.76, 4.55, 5.00, 5.05.
+
+By default the build will default to ver 5.00, but in order to compile for a different FW, you must edit the include reference (`#include "ksdk_500.inc"`) found inside `source/ksdk.c` (2 includes to edit) and `source/ksdk.h` (1 include to edit) to match the desired FW.  
+
+If you want to add support for a new FW, use one of the `source/ksdk_XXX.inc` as template and update the required offset to match that of your FW.
