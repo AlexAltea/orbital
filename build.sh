@@ -15,12 +15,6 @@ function build_bios() {
 }
 
 function build_grub() {
-  # Dependencies
-  if [ -x "$(command -v apt)" ]; then
-    sudo apt-get -qq install python \
-                             dh-autoreconf \
-                             bison flex
-  fi
   # Building
   cd ${path_orbital}
   cd ${path_grub}
@@ -30,19 +24,12 @@ function build_grub() {
 }
 
 function build_qemu() {
-  # Dependencies
-  if [ -x "$(command -v apt)" ]; then
-    sudo apt -qq install git \
-                         zlib1g-dev \
-                         libglib2.0-dev libfdt-dev libpixman-1-dev \
-                         libsdl2-dev libvulkan-dev
-  fi
   # Building
   cd ${path_orbital}
   cd ${path_qemu}
   ./configure --target-list=ps4-softmmu \
     --enable-sdl --enable-vulkan --enable-debug --disable-capstone \
-    --enable-hax
+    --enable-hax --disable-stack-protector
   make -j$(nproc)
 }
 
@@ -65,8 +52,11 @@ if [ "$1" == "clean" ]; then
   cd ${path_qemu}
   make clean
 else
-  build_bios
-  build_grub
   build_qemu
-  generate_image
+  if [ $(uname -o) != "Msys" ] 
+  then
+    build_bios
+    build_grub
+    generate_image
+  fi
 fi
