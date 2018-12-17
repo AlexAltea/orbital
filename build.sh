@@ -7,6 +7,9 @@ path_grub='./orbital-grub'
 path_qemu='./orbital-qemu'
 path_orbital=`pwd`
 
+clean="false"
+additional_flags=""
+
 function build_bios() {
   cd ${path_orbital}
   cd ${path_bios}
@@ -15,12 +18,6 @@ function build_bios() {
 }
 
 function build_grub() {
-  # Dependencies
-  if [ -x "$(command -v apt)" ]; then
-    sudo apt-get -qq install python \
-                             dh-autoreconf \
-                             bison flex
-  fi
   # Building
   cd ${path_orbital}
   cd ${path_grub}
@@ -30,19 +27,14 @@ function build_grub() {
 }
 
 function build_qemu() {
-  # Dependencies
-  if [ -x "$(command -v apt)" ]; then
-    sudo apt -qq install git \
-                         zlib1g-dev \
-                         libglib2.0-dev libfdt-dev libpixman-1-dev \
-                         libsdl2-dev libvulkan-dev
-  fi
   # Building
   cd ${path_orbital}
   cd ${path_qemu}
+
   ./configure --target-list=ps4-softmmu \
     --enable-sdl --enable-vulkan --enable-debug --disable-capstone \
-    --enable-hax
+    --enable-hax ${additional_flags}
+  
   make -j$(nproc)
 }
 
@@ -54,19 +46,38 @@ function generate_image() {
         memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
 }
 
-if [ "$1" == "clean" ]; then
-  cd ${path_orbital}
-  cd ${path_bios}
-  make clean
-  cd ${path_orbital}
-  cd ${path_grub}
-  make clean
+while [ $# -ne 0 ]
+do
+    arg="$1"
+    case "$arg" in
+        -clean)
+        clean="true"
+        ;;
+        -disableStackProtector)
+        additional_flags+="--disable-stack-protector "
+        ;;
+	esac
+	shift
+done
+
+if [ ${clean} == "true" ]; then
+  echo "Cleaning working directory..."
   cd ${path_orbital}
   cd ${path_qemu}
   make clean
+  if [ $(uname -o) != "Msys" ]; then
+    cd ${path_orbital}
+    cd ${path_bios}
+    make clean
+    cd ${path_orbital}
+    cd ${path_grub}
+    make clean
+  fi
 else
-  build_bios
-  build_grub
   build_qemu
-  generate_image
+  if [ $(uname -o) != "Msys" ]; then
+    build_bios
+    build_grub
+    generate_image
+  fi
 fi
