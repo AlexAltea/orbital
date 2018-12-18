@@ -1,36 +1,33 @@
 #!/bin/bash
 
 # Configuration
-path_bin='./bin'
-path_bios='./orbital-bios'
-path_grub='./orbital-grub'
-path_qemu='./orbital-qemu'
+path_bin=$(realpath ./bin)
+path_bios=$(realpath ./orbital-bios)
+path_grub=$(realpath ./orbital-grub)
+path_qemu=$(realpath ./orbital-qemu)
 path_orbital=`pwd`
 
 clean="false"
 additional_flags=""
 
 function build_bios() {
-    cd ${path_orbital}
     cd ${path_bios}
     make -j$(nproc)
     mv out/bios.bin ../${path_bin}/ubios.bin
 }
 
 function build_grub() {
-    cd ${path_orbital}
     cd ${path_grub}
-    
+
     if [ ! -e ./Makefile ]; then
         ./autogen.sh
         ./configure --target=x86_64 --disable-werror
     fi
-    
+
     make -j$(nproc)
 }
 
 function build_qemu() {
-    cd ${path_orbital}
     cd ${path_qemu}
 
     if [ ! -e ./config-host.mak ]; then
@@ -38,12 +35,13 @@ function build_qemu() {
             --enable-sdl --enable-vulkan --enable-debug --disable-capstone \
             --enable-hax ${additional_flags}
     fi
-  
+
     make -j$(nproc)
 }
 
 function postbuild() {
     cd ${path_orbital}
+
     if [ $(uname -o) != "Msys" ]; then
         tar -c -f ${path_bin}/memdisk.tar -C resources boot
             ${path_grub}/grub-mkimage -d ${path_grub}/grub-core \
@@ -69,14 +67,11 @@ done
 
 if [ ${clean} == "true" ]; then
     echo "Cleaning working directory..."
-    cd ${path_orbital}
     cd ${path_qemu}
     make clean
     if [ $(uname -o) != "Msys" ]; then
-        cd ${path_orbital}
         cd ${path_bios}
         make clean
-        cd ${path_orbital}
         cd ${path_grub}
         make clean
     fi

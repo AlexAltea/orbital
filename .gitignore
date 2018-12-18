@@ -2,10 +2,11 @@
 bin/boot*.*
 bin/memdisk*.*
 bin/hdd*.*
+bin/imgui*
+bin/qemu*
 bin/sflash*.*
 bin/ubios*.*
 bin/vbios*.*
-bin/imgui.*
 
 # Executables
 *.sym
