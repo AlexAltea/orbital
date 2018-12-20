@@ -68,12 +68,12 @@ done
 if [ ${clean} == "true" ]; then
     echo "Cleaning working directory..."
     cd ${path_qemu}
-    make clean
+    make distclean
     if [ $(uname -o) != "Msys" ]; then
         cd ${path_bios}
-        make clean
+        make distclean
         cd ${path_grub}
-        make clean
+        make distclean
     fi
 else
     build_qemu
