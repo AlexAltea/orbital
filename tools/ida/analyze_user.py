@@ -4,14 +4,22 @@ import idaapi
 import idautils
 import re
 
+from define_syscalls import *
+
 # Regex patterns
-pattern_function_outside = [
+patterns_function_outside = [
     # Found in safemode.elf
     "([0-9A-Za-z:_]+) failed! \(result:%#x\)",
 ]
-pattern_function_inside = [
+patterns_function_inside = [
     # Found in safemode.elf
-    "([0-9A-Za-z:_]+) failed! \(standby page is NULL\)"
+    "([0-9A-Za-z:_]+) failed! \(standby page is NULL\)",
+]
+
+# Binary patterns
+patterns_syscall = [
+    # mov rax, 0xXXXX; mov r10, rcx; syscall; jb $+0x5
+    "48 C7 C0 ?? ?? 00 00 49 89 CA 0F 05",
 ]
 
 ### Utilities ###
@@ -106,16 +114,32 @@ def rename_function_inside(name, string_ea):
 
 def analyze_functions():
     # Reconstruct function names from strings
-    for pattern in pattern_function_outside:
+    for pattern in patterns_function_outside:
         for string in idautils.Strings():
             match = re.match(pattern, str(string))
             if match:
                 rename_function_outside(match.group(1), string.ea)
-    for pattern in pattern_function_inside:
+    for pattern in patterns_function_inside:
         for string in idautils.Strings():
             match = re.match(pattern, str(string))
             if match:
                 rename_function_inside(match.group(1), string.ea)
+
+def analyze_syscalls():
+    # Detect and rename syscall wrappers
+    for pattern in patterns_syscall:
+        ea = 0x0
+        while True:
+            ea = idc.FindBinary(ea+1, idc.SEARCH_DOWN, pattern)
+            if ea == BADADDR:
+                break
+            func = idaapi.get_func(ea)
+            if not func or func.startEA != ea:
+                continue
+            syscall_id = Dword(ea + 0x3)
+            syscall_name = syscall_list.get(syscall_id, None)
+            if syscall_name:
+                idc.MakeNameEx(ea, syscall_name, idc.SN_NOWARN)
 
 def analyze_qwords():
     # Get user boundaries
@@ -139,7 +163,7 @@ def analyze_qwords():
 
 def analyze_prologues():
     # Target prologue: push rbp; mov rbp, rsp
-    prologue = "55 48 89"
+    pattern = "55 48 89"
     # For each user code segment
     for ea in Segments():
         if ida_segment.segtype(ea) != SEG_CODE:
@@ -149,7 +173,7 @@ def analyze_prologues():
         # Find solitary prologues
         ea = user_start
         while True:
-            ea = idc.FindBinary(ea+1, idc.SEARCH_DOWN, prologue)
+            ea = idc.FindBinary(ea+1, idc.SEARCH_DOWN, pattern)
             if ea > user_stop:
                 break
             func = idaapi.get_func(ea)
@@ -172,6 +196,8 @@ def main():
     analyze_prologues()
     # Renaming stage
     analyze_functions()
+    analyze_syscalls()
+    #analyze_nids()
 
 if __name__ == '__main__':
     main()
