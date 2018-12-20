@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import idc
 import idaapi
 import os

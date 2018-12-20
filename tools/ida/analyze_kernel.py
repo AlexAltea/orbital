@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+
 import idaapi
 
-from analyze_syscalls import *
+from define_syscalls import *
 
 def analyze_sysinit():
     # Create sysinit type
