@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# cd to script's directory (so that it can be run from anywhere)
+cd "${0%/*}"
+
 # Configuration
 path_bin=$(realpath ./bin)
 path_bios=$(realpath ./orbital-bios)
@@ -51,6 +54,7 @@ function postbuild() {
     yes | cp -f ${path_qemu}/ps4-softmmu/qemu-system-* ${path_bin}/
 }
 
+# Argument parsing
 while [ $# -ne 0 ]
 do
     arg="$1"
