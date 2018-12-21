@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 
 import idaapi
+import json
 
-from define_syscalls import *
+### Utilities ###
+
+def get_file_path(name):
+    script_path = os.path.realpath(sys.argv[0])
+    script_base = os.path.dirname(script_path)
+    return os.path.join(script_base, name)
+
+### Analysis ###
 
 def analyze_sysinit():
     # Create sysinit type
@@ -33,6 +41,9 @@ def analyze_sysinit():
         create_struct(get_qword(ea), sysinit_size, sysinit_name)
 
 def analyze_syscalls():
+    path = get_file_path('db_syscalls.json')
+    with open(path, 'r') as f:
+        db = json.load(f)
     # Create sysent type
     sysent_name = "sysent_t"
     sysent_type = get_struc_id(sysent_name)
@@ -62,7 +73,7 @@ def analyze_syscalls():
     sysent_stop = get_name_ea_simple("sysent") + 0x8000
     for ea in range(sysent_start, sysent_stop, sysent_size):
         syscall_id = (ea - sysent_start) / sysent_size
-        syscall_name = syscall_list.get(syscall_id, None)
+        syscall_name = db.get(str(syscall_id), None)
         syscall_args = get_qword(ea + 0x0)
         syscall_func = get_qword(ea + 0x8)
         if syscall_args > 0x80:
@@ -70,6 +81,7 @@ def analyze_syscalls():
         del_items(ea, 0, sysent_size)
         create_struct(ea, sysent_size, sysent_name)
         if syscall_name is not None:
+            syscall_name = str(syscall_name)
             set_name(syscall_func, syscall_name)
 
 def analyze_qwords():

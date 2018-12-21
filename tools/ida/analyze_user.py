@@ -6,16 +6,15 @@ import json
 import re
 import sys
 
-from define_syscalls import *
-
 # Regex patterns
 patterns_function_outside = [
     # Found in safemode.elf
-    "([0-9A-Za-z:_]+) failed! \(result:%#x\)",
+    "^([0-9A-Za-z:_]+) failed! \(result:%#x\)\n$",
+    "^([0-9A-Za-z:_]+)\([0-9A-Za-z_, ]*\) : %x\n$",
 ]
 patterns_function_inside = [
     # Found in safemode.elf
-    "([0-9A-Za-z:_]+) failed! \(standby page is NULL\)",
+    "^([0-9A-Za-z:_]+) failed! \(standby page is NULL\)\n$",
 ]
 
 # Binary patterns
@@ -36,7 +35,8 @@ def get_file_path(name):
 def get_last_direct_call(block, strict=True):
     """
     Iterate predecessor instructions backwards until first direct call.
-    Strict-mode ensure that the match is actually the last call in the block.
+    Strict-mode ensure that the match is actually the last call in the block,
+    and will return NULL to distinguish it from a no-call scenario.
     """
     for head in reversed(list(Heads(block.startEA, block.endEA))):
         instr = idautils.DecodeInstruction(head)
@@ -47,7 +47,7 @@ def get_last_direct_call(block, strict=True):
         if len(refs) > 1:
             return refs[1]
         if strict:
-            return BADADDR
+            return 0x0
     return BADADDR
 
 def get_predecessors(blocks, blacklist=set()):
@@ -84,7 +84,8 @@ def rename_function_outside(name, string_ea):
             for pred in preds:
                 target_ea = get_last_direct_call(pred)
                 if target_ea != BADADDR:
-                    functions.add(target_ea)
+                    if target_ea != 0x0:
+                        functions.add(target_ea)
                     found = True
             # Exit on candidates or no predecessors
             if found or not preds:
@@ -135,6 +136,9 @@ def analyze_functions():
                 rename_function_inside(match.group(1), string.ea)
 
 def analyze_syscalls():
+    path = get_file_path('db_syscalls.json')
+    with open(path, 'r') as f:
+        db = json.load(f)
     # Detect and rename syscall wrappers
     for pattern in patterns_syscall:
         ea = 0x0
@@ -146,8 +150,9 @@ def analyze_syscalls():
             if not func or func.startEA != ea:
                 continue
             syscall_id = Dword(ea + 0x3)
-            syscall_name = syscall_list.get(syscall_id, None)
+            syscall_name = db.get(str(syscall_id), None)
             if syscall_name:
+                syscall_name = str(syscall_name)
                 idc.MakeNameEx(ea, syscall_name, idc.SN_NOWARN)
 
 def analyze_nids():
