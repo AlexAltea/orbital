@@ -2,7 +2,9 @@
 
 import idaapi
 import idautils
+import json
 import re
+import sys
 
 from define_syscalls import *
 
@@ -23,6 +25,13 @@ patterns_syscall = [
 ]
 
 ### Utilities ###
+
+def get_file_path(name):
+    script_path = os.path.realpath(sys.argv[0])
+    script_base = os.path.dirname(script_path)
+    return os.path.join(script_base, name)
+
+### Helpers ###
 
 def get_last_direct_call(block, strict=True):
     """
@@ -141,6 +150,10 @@ def analyze_syscalls():
             if syscall_name:
                 idc.MakeNameEx(ea, syscall_name, idc.SN_NOWARN)
 
+def analyze_nids():
+    # TODO: Not yet implemented, boot userland executables don't use them.
+    return
+
 def analyze_qwords():
     # Get user boundaries
     user_start = BADADDR
@@ -180,6 +193,28 @@ def analyze_prologues():
             if func is None:
                 idc.MakeFunction(ea)
 
+def analyze_types():
+    path = get_file_path('db_types.json')
+    with open(path, 'r') as f:
+        db = json.load(f)
+    for ea in Segments():
+        if ida_segment.segtype(ea) != SEG_CODE:
+            continue
+        for func_addr in Functions(SegStart(ea), SegEnd(ea)):
+            func_name = GetFunctionName(func_addr)
+            if func_name.startswith('sub_'):
+                continue
+            db_type = db.get(func_name, None)
+            if not db_type:
+                continue
+            flags = 1 | 2 | 4 # PT_SIL | PT_NDC | PT_TYP
+            db_type = str(db_type)
+            t = parse_decl(db_type, flags)
+            if not t:
+                print "Failed to apply type: %s" % db_type
+                continue
+            ida_typeinf.apply_type(None, t[1], t[2], func_addr, TINFO_DEFINITE)
+
 ### Main ###
 
 def main():
@@ -194,10 +229,12 @@ def main():
     # Detection stage
     analyze_qwords()
     analyze_prologues()
-    # Renaming stage
+    # Assigning names
     analyze_functions()
     analyze_syscalls()
-    #analyze_nids()
+    analyze_nids()
+    # Assigning types
+    analyze_types()
 
 if __name__ == '__main__':
     main()
