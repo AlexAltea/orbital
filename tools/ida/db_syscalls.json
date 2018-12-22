@@ -223,7 +223,7 @@
   "237": "sys_ktimer_settime",
   "238": "sys_ktimer_gettime",
   "239": "sys_ktimer_getoverrun",
-  "240": "sys_nasleep",
+  "240": "sys_nanosleep",
   "241": "sys_ffclock_getcounter",
   "242": "sys_ffclock_setestimate",
   "243": "sys_ffclock_getestimate",
