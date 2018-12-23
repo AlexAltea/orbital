@@ -1,4 +1,6 @@
 # Binaries
+bin/*.exe
+bin/*.dll
 bin/boot*.*
 bin/memdisk*.*
 bin/hdd*.*
