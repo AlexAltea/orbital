@@ -64,6 +64,7 @@ function postbuild() {
             memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
     fi
     yes | cp -f "${path_qemu}"/ps4-softmmu/qemu-system-* "${path_bin}"/
+    yes | cp -u "${path_qemu}"/pc-bios/optionrom/multiboot.bin "${path_bin}"/
 }
 
 function build_all() {
