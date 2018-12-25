@@ -84,6 +84,9 @@ Partial list of IOCTL codes:
 | Name                                                            | Code       |
 |-----------------------------------------------------------------|------------|
 | *SCE_SYS_DCE_IOCTL_FLIP_CONTROL*                                | 0xC0308203 |
+| *SCE_SYS_DCE_IOCTL_SUBMIT_REQUEST*                              | 0xC0308204 |
+| *SCE_SYS_DCE_IOCTL_REGISTER_BUFFER*                             | 0xC0308206 |
+| *SCE_SYS_DCE_IOCTL_REGISTER_BUFFER_ATTRIBUTE*                   | 0xC0308207 |
 
 
 ## `/dev/gc`
