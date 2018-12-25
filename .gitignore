@@ -9,6 +9,7 @@ bin/qemu*
 bin/sflash*.*
 bin/ubios*.*
 bin/vbios*.*
+bin/multiboot*.*
 
 # Executables
 *.sym
