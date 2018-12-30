@@ -1,3 +1,8 @@
+[![](https://img.shields.io/github/license/AlexAltea/orbital.svg)](https://github.com/AlexAltea/orbital)
+[![](https://img.shields.io/github/languages/code-size/badges/shields.svg)](https://github.com/AlexAltea/orbital)
+[![](https://img.shields.io/twitter/follow/espadrine.svg?label=Follow&style=social?style=flat-square)](https://twitter.com/AlexAltea)
+[![](https://img.shields.io/discord/102860784329052160.svg)](https://discord.gg/yu44DVk)
+
 Orbital
 =======
 
