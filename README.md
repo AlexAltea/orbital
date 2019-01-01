@@ -31,6 +31,30 @@ Kernel ELFs generated from memory dumps will **not** work since writable segment
 * __Memory__: 12 GB RAM.
 * __Graphics__: TBD.
 
-## Acknowledgements
+## Credits
 
-Thanks to all people who have directly or indirectly helped in making this possible. In alphabetical order: *flatz, idc, m0rph3us1987, masterzorag, wildcard, x41, zecoxao, zer0xff, z80*. Also many anonymous folks and others who might have slipped my mind. You know who you are!
+**Author**:
+* `Alexandro Sánchez Bach <alexandro@phi.nz>` Joining Date:  
+
+**Maintainers**: 
+* `Mason <email@example.org>` Joining Date:
+* `Jfhs <email@example.org>` Joining Date:
+
+**Developers**
+
+**Affiliated**
+
+* `Velocity` 
+* `Golden` 
+* `Vesim` 
+* `wildcard` 
+* `zecoxao` 
+
+**Supporters**
+
+* `B E P I S`
+* `Eloeri`
+* `Giant`
+* `JungleRobba`
+* `Tiplook`
+* `🇭🇷 Nicba1010` 
