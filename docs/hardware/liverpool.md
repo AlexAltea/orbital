@@ -19,22 +19,60 @@ Liverpool
 
 ### VM IDs
 
-- 0:
-- 15: SAMU
+- 0: System.
+- 1-14: User.
+- 15: System (SAMU).
 
 ### IH IDs
 
-- 0x08: DCE Page Flip 0
-- 0x0A: DCE Page Flip 1
-- 0x0C: DCE Page Flip 2 (unused)
-- 0x0E: DCE Page Flip 3 (unused)
-- 0x10: DCE Page Flip 4 (unused)
-- 0x12: DCE Page Flip 5 (unused)
-- 0x13: DCE CRTC Line
-- 0x34: DCE Scanin
-- 0x35: DCE Scanin
-- 0x98: SAM
-- 0xA2: ACP
+- 0x00-0x2F: DCE Interrupt (`dce_interrupt`).
+	- 0x08: DCE Page Flip 0
+	- 0x0A: DCE Page Flip 1
+	- 0x0C: DCE Page Flip 2 (unused)
+	- 0x0E: DCE Page Flip 3 (unused)
+	- 0x10: DCE Page Flip 4 (unused)
+	- 0x12: DCE Page Flip 5 (unused)
+	- 0x13: DCE CRTC Line
+- 0x34-0x35: DCE Interrupt Scanin (`dce_interrupt_scanin`).
+	- 0x34: DCE Scanin:
+		- data=8: MFIC.
+	- 0x35: DCE Scanin:
+	    - data=0: Host conflict.
+		- data=1: Data overflow.
+- 0x60: SRBM Timeout (`sub_FFFFFFFF826DFFA0` @ 5.00).
+- 0x8C: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0x8D: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0x92: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0x93: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0x98: SAM (`sub_FFFFFFFF8281CD20` @ 5.00).
+- 0xA2: ACP (`sub_FFFFFFFF82786190` @ 5.00).
+- 0xB4: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0xB5: ??? (`sub_FFFFFFFF826E6380` @ 5.00).
+- 0xB7: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0xB8: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0xB9: CP Interrupt (`sub_FFFFFFFF826ED420` @ 5.00).
+- 0xE0: ??? (`sub_FFFFFFFF827D4EF0` @ 5.00).
+- 0xE9: ??? (`sub_FFFFFFFF826E1EF0` @ 5.00).
+- 0xE9: ??? (`sub_FFFFFFFF826E1EF0` @ 5.00).
+- 0xEF: ??? (`sub_FFFFFFFF826E6380` @ 5.00).
+- 0xF0: ??? (`sub_FFFFFFFF827D4EF0` @ 5.00).
+- 0xF3: ??? (`sub_FFFFFFFF827D4EF0` @ 5.00).
+- 0xF5: ??? (`sub_FFFFFFFF827D4EF0` @ 5.00).
+
+### Glossary
+
+| Name   | Description                                                         |
+|--------|---------------------------------------------------------------------|
+| _CP_   | Command Processor.                                                  |
+| _CPC_  | Command Processor for Compute.                                      |
+| _CPF_  | Command Processor Fetcher.                                          |
+| _CPG_  | Command Processor for Graphics.                                     |
+| _GRBM_ | Graphics Register Backbone Manager.                                 |
+| _RLC_  | Run List Controller.                                                |
+| _SRBM_ | System Register Backbone Manager.                                   |
+| _UVD_  | Universal Video Decoder.                                            |
+| _VGT_  | Vertex Geometry Tesselator.                                         |
+|        |                                                                     |
 
 ### PCI Configuration Space
 
