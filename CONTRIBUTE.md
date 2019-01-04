@@ -19,12 +19,13 @@ These lists must be stored in [CREDITS.md](CREDITS.md) and may also be available
 - _Alias_: Nickname chosen by the person.
 - _Email_: Valid email address owned by the person.
 
-These shall be formatted as follows `$name (@$alias) <$email>`. If *Name* is not provided, *Alias* shall not be wrapped in parenthesis. If neither *Name* nor *Alias* are provided, *Email* shall not be wrapped in angle brackets. Members of the lists: *Author*, *Maintainers* and *Developers* must provide a valid email address, to allow contacting them if required.
+These shall be formatted as follows `$name (@$alias) <$email>`. If *Name* is not provided, *Alias* shall not be wrapped in parenthesis. If neither *Name* nor *Alias* are provided, *Email* shall not be wrapped in angle brackets. Members of the lists: *Maintainers* and *Developers* must provide a valid email address, to allow contacting them if required.
 
 These lists might be managed following these rules:
 
-1. Only *Author* and *Maintainers* shall modify these lists.
+1. Only *Author* and *Maintainers* shall modify the lists: {*Maintainers*, *Developers*, *Affiliated*, *Supporters*}.
 2. Any listed person may remove or modify their own data.
+3. The lists will be sorted by "joining date", i.e. the date the name was added to the list, by keeping older entries first.
 
 
 ## Licensing

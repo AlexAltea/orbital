@@ -63,15 +63,34 @@ Liverpool
 
 | Name   | Description                                                         |
 |--------|---------------------------------------------------------------------|
+| _CB_   | Color Buffer.                                                       |
 | _CP_   | Command Processor.                                                  |
 | _CPC_  | Command Processor for Compute.                                      |
 | _CPF_  | Command Processor Fetcher.                                          |
 | _CPG_  | Command Processor for Graphics.                                     |
+| _CRTC_ | CRT Controller.                                                     |
+| _DB_   | Depth Buffer.                                                       |
+| _DCE_  | Display Core Engine.                                                |
+| _DCP_  | ???                                                                 |
+| _GDS_  | Global Data Share.                                                  |
+| _GFX_  | Graphics/Compute Engine.                                            |
 | _GRBM_ | Graphics Register Backbone Manager.                                 |
+| _IA_   | Input Assembly.                                                     |
+| _IH_   | ???                                                                 |
+| _MC_   | Memory Controller.                                                  |
+| _PA_   | Primitive Assembly.                                                 |
+| _RB_   | Ring Buffer.                                                        |
 | _RLC_  | Run List Controller.                                                |
+| _SAMU_ | Secure Asset Management Unit.                                       |
+| _SC_   | Scan Converter.                                                     |
+| _SMC_  | System Management Controller.                                       |
 | _SRBM_ | System Register Backbone Manager.                                   |
+| _SX_   | Shader Exporter.                                                    |
+| _TA_   | Texture pipes.                                                      |
 | _UVD_  | Universal Video Decoder.                                            |
+| _VCE_  | Video Compression Engine.                                           |
 | _VGT_  | Vertex Geometry Tesselator.                                         |
+| _WD_   | Work Distributor.                                                   |
 |        |                                                                     |
 
 ### PCI Configuration Space
