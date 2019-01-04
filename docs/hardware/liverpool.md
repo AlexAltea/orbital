@@ -33,6 +33,8 @@ Liverpool
 	- 0x10: DCE Page Flip 4 (unused)
 	- 0x12: DCE Page Flip 5 (unused)
 	- 0x13: DCE CRTC Line
+		- data=8: Line 1.
+		- data=9: Line 2.
 - 0x34-0x35: DCE Interrupt Scanin (`dce_interrupt_scanin`).
 	- 0x34: DCE Scanin:
 		- data=8: MFIC.
@@ -76,7 +78,7 @@ Liverpool
 | _GFX_  | Graphics/Compute Engine.                                            |
 | _GRBM_ | Graphics Register Backbone Manager.                                 |
 | _IA_   | Input Assembly.                                                     |
-| _IH_   | ???                                                                 |
+| _IH_   | Interrupt Handler.                                                  |
 | _MC_   | Memory Controller.                                                  |
 | _PA_   | Primitive Assembly.                                                 |
 | _RB_   | Ring Buffer.                                                        |

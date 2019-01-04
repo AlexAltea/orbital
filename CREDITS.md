@@ -21,6 +21,7 @@
 ## Contributors
 
 - `Mason Lee Back <masonleeback@gmail.com>`
+- `Andrey (@jfhs) <romoper@yandex.ru>`
 - `Zion Nimchuk <zionnimchuk@gmail.com>`
 - `Nick Renieris <velocityra@gmail.com>`
 
