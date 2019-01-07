@@ -79,6 +79,7 @@ Liverpool
 | _GRBM_ | Graphics Register Backbone Manager.                                 |
 | _IA_   | Input Assembly.                                                     |
 | _IH_   | Interrupt Handler.                                                  |
+| _LDS_  | Local Data Share.                                                   |
 | _MC_   | Memory Controller.                                                  |
 | _PA_   | Primitive Assembly.                                                 |
 | _RB_   | Ring Buffer.                                                        |
@@ -86,9 +87,10 @@ Liverpool
 | _SAMU_ | Secure Asset Management Unit.                                       |
 | _SC_   | Scan Converter.                                                     |
 | _SMC_  | System Management Controller.                                       |
+| _SPI_  | Shader Processor Input.                                             |
 | _SRBM_ | System Register Backbone Manager.                                   |
-| _SX_   | Shader Exporter.                                                    |
-| _TA_   | Texture pipes.                                                      |
+| _SX_   | Shader Export.                                                      |
+| _TA_   | Texture Addressing.                                                 |
 | _UVD_  | Universal Video Decoder.                                            |
 | _VCE_  | Video Compression Engine.                                           |
 | _VGT_  | Vertex Geometry Tesselator.                                         |

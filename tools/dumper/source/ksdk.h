@@ -9,6 +9,7 @@
 #include "ps4.h"
 
 #include "ksdk_bsd.h"
+#include "ksdk_gpu.h"
 #include "ksdk_sbl.h"
 #include "ksdk_util.h"
 

@@ -11,6 +11,8 @@
 #include "blob.h"
 #include "debug.h"
 #include "ksdk.h"
+
+#include "gpu_dumper.h"
 #include "self_decrypter.h"
 #include "self_mapper.h"
 
@@ -215,7 +217,9 @@ int _main(struct thread *td)
     syscall(11, kpatch_enablemapself);
 
     /* Dump data */
-    traverse_dir("/", true, decrypt_self_to_elf);
+    //traverse_dir("/", true, decrypt_self_to_blobs);
+    //traverse_dir("/", true, decrypt_self_to_elf);
+    //gpu_dump_ih();
 
     /* Return back to browser */
     dprintf("Dump finished!\n");

@@ -15,6 +15,7 @@ KFUNC(0x00642460, _sceSblAuthMgrSmFinalize, int, (void *ctx));
 KDATA(0x010986A0, prison0, void*);
 KDATA(0x01A727E0, M_AUTHMGR, void);
 KDATA(0x022C19F0, rootvnode, void*);
+KDATA(0x024CF328, g_ih_mgr, gpu_ih_mgr_t);
 KDATA(0x02768310, sceSblAuthMgrModuleId, uint64_t);
 KDATA(0x027680D0, authmgr_sm_xlock, void);
 KDATA(0x02768140, self_ctx_status, uint32_t);
