@@ -44,3 +44,48 @@
     ```
 
 6. Run `./build.sh`.
+
+
+## Installing
+
+1. Build *Orbital* as described previously.
+
+2. Build and install *Intel HAXM* (Orbital fork) from: https://github.com/AlexAltea/haxm/tree/orbital.
+
+3. Decrypt your PS4 CPU kernel, VBIOS/UBIOS, SFLASH and PUP for your current firmware. Only if you completed all previous steps independently, you may get help at our server: https://discord.me/orbitalemu.
+
+4. Decrypt your PS4 CPU userland executables using the [Orbital Dumper](https://github.com/AlexAltea/orbital/tree/master/tools/dumper).
+
+5. Place all these decrypted/dumped files in the `bin` folder.
+
+
+## Running
+
+Go to the `bin` folder and run *Orbital* with the command:
+
+```bash
+./run.sh -accel hax
+```
+
+If you encounter any issues you might try instead:
+
+```bash
+./run.sh -accel tcg
+```
+
+Note that the `./run.sh` script forwards any arguments to QEMU, thus refer to the QEMU documentation for further information.
+
+
+## Debugging
+
+### Host Debugging
+
+If you want to debug the *Orbital* emulator itself from Windows, we recommand install [Visual Studio](https://visualstudio.microsoft.com/), and generating a *.PDB* file for the executable, by using [cv2pdb](https://github.com/rainers/cv2pdb). Then debug the executable as usual within Visual Studio.
+
+### Guest Debugging
+
+If you want to debug the PS4 kernel or userland executables, simply start Orbital passing the flags `-s -S` to `./run.sh`. Then attach from GDB or IDA Pro. there's slight differences depending on which QEMU accelerator you are using:
+
+* __TCG__: You might use hardware and software breakpoints at any virtual addresses. Everything works as expected.
+
+* __HAXM__: Software breakpoints might fail if the virtual address they target is being written to by the guest software. Thus, you should always start with hardware breakpoints, and then continue with software breakpoints. Note that memory breakpoints/watchpoints do not work at the moment.

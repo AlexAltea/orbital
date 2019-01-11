@@ -65,6 +65,7 @@ Liverpool
 
 | Name   | Description                                                         |
 |--------|---------------------------------------------------------------------|
+| _BIF_  | Bus Interface.                                                      |
 | _CB_   | Color Buffer.                                                       |
 | _CP_   | Command Processor.                                                  |
 | _CPC_  | Command Processor for Compute.                                      |
@@ -74,8 +75,9 @@ Liverpool
 | _DB_   | Depth Buffer.                                                       |
 | _DCE_  | Display Core Engine.                                                |
 | _DCP_  | ???                                                                 |
+| _GCA_  | Graphics/Compute Array (same as GFX?).                              |
 | _GDS_  | Global Data Share.                                                  |
-| _GFX_  | Graphics/Compute Engine.                                            |
+| _GFX_  | Graphics/Compute Engine (same as GCA?).                             |
 | _GRBM_ | Graphics Register Backbone Manager.                                 |
 | _IA_   | Input Assembly.                                                     |
 | _IH_   | Interrupt Handler.                                                  |
