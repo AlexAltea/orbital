@@ -86,6 +86,8 @@ If you want to debug the *Orbital* emulator itself from Windows, we recommand in
 
 If you want to debug the PS4 kernel or userland executables, simply start Orbital passing the flags `-s -S` to `./run.sh`. Then attach from GDB or IDA Pro. there's slight differences depending on which QEMU accelerator you are using:
 
-* __TCG__: You might use hardware and software breakpoints at any virtual addresses. Everything works as expected.
+* _TCG_: You might use hardware and software breakpoints at any virtual addresses. Everything works as expected.
 
-* __HAXM__: Software breakpoints might fail if the virtual address they target is being written to by the guest software. Thus, you should always start with hardware breakpoints, and then continue with software breakpoints. Note that memory breakpoints/watchpoints do not work at the moment.
+* _HAXM_: Software breakpoints might fail if the virtual address they target is being written to by the guest software. Thus, you should always start with hardware breakpoints, and then continue with software breakpoints. Note that memory breakpoints/watchpoints do not work at the moment.
+
+**Warning:** Older versions of IDA Pro, specifically 7.0 and earlier, have a bug that removes the "Remote GDB debugger" option from debugger list after opening an existing IDA database (*.idb, *.i64). If you face this issue, export the database to an .idc script via the: *File > Produce file > Dump database to IDC file...* menu. Then, reanalyze the original ELF file, and apply the script via the: *File > Script file...* menu. This will work until you close IDA Pro. Update to the latest IDA Pro version to permanently solve this issue.
