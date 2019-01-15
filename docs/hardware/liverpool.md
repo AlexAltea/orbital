@@ -20,8 +20,10 @@ Liverpool
 ### VM IDs
 
 - 0: System.
-- 1-14: User.
-- 15: System (SAMU).
+- 1: User (Game).
+- 2-14: User (VSH).
+- 14: System (Screenshot?).
+- 15: System (SBL/SAMU).
 
 ### IH IDs
 
