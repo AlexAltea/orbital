@@ -40,8 +40,8 @@ int main(int argc, const char **argv)
     }
     fseek(file, 0, SEEK_END);
     shader_size = ftell(file);
-    shader_data = malloc(shader_data);
-    if (!file) {
+    shader_data = malloc(shader_size);
+    if (!shader_data) {
         fprintf(stderr, "Could not allocate 0x%zX bytes!\n", shader_size);
         return 1;
     }
