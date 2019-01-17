@@ -17,6 +17,7 @@
         zlib1g-dev libglib2.0-dev libfdt-dev libpixman-1-dev libsdl2-dev \
         libvulkan-dev libzip-dev
     ```
+    - Note: Make sure you install *libzip-dev* v1.3.1 or later!
 
 2. Run `./build.sh`.
 
