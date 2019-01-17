@@ -17,10 +17,47 @@
         zlib1g-dev libglib2.0-dev libfdt-dev libpixman-1-dev libsdl2-dev \
         libvulkan-dev libzip-dev
     ```
-    - Note: Make sure you install *libzip-dev* v1.3.1 or later!
+2. Clone this repository and initialize its submodules:
+```
+   git clone https://github.com/AlexAltea/orbital
+   git submodule update --init
+```
+3. Run `./build.sh`.
 
-2. Run `./build.sh`.
+**Note**:   After running the `build.sh` script you may encounter errors similar to this:
+```
+    cp: cannot stat '/home/user/orbital/orbital-qemu/ps4-softmmu/qemu-system-*': No such file or directory
+    cp: cannot stat '/home/user/orbital/orbital-qemu/pc-bios/optionrom/multiboot.bin': No such file or directory
+```
+For the second error: 
+1. Copy `multiboot.bin` from orbital-qemu/pc-bios/ where it probably will be, to `orbital/bin/`
 
+For the first error:
+1. Go to the `orbital-qemu` directory and run `./configure`
+    If you get this error message:
+    ```
+        ERROR: libcheck failed
+        Make sure to have the libzip libs and headers installed.
+    ```
+    Then you are probably running `libzip 1.1.2-1.1`. But we need `<= libzip 1.3.1 `. 
+    
+2. So download the latest version of libzip from here: https://libzip.org/download/ and run the following commands:
+    ```
+        tar -xzf libzip-x.y.z.tar.gz
+        cd libzip-x.y.z
+        mkdir build
+        cd build
+        cmake ..
+        make
+        sudo make install
+     ```
+     Note here, `x,y,z` are the version number. For example if you have downloaded `libzip-1.5.1.tar.gz` then `x=1,y=5,z=1`.
+     
+3. Now go to the `orbital-qemu` directory and open `configure` file with any text editor.
+
+4. Find the line `if compile_prog "" "-lzip" ; then` and replace it with `if compile_prog "-I /usr/local/include -L /usr/local/" "-lzip" ; then`.
+
+5. Now go to the `orbital` directory and run `./build.sh -c` and then `./build.sh`.
 
 ## Installing
 
