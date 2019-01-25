@@ -19,3 +19,16 @@ test_gcn_disasm.elf: test_gcn_disasm.c
 		../orbital-qemu/hw/ps4/liverpool/gca/gcn_parser.c \
 		../orbital-qemu/hw/ps4/liverpool/gca/gcn_disasm.c \
 		-I../orbital-qemu/hw/ps4/liverpool/gca/
+
+test_gcn_analyzer.elf: test_gcn_analyzer.c
+	$(CC) $(CFLAGS) -o $@ $< \
+		../orbital-qemu/hw/ps4/liverpool/gca/gcn_parser.c \
+		../orbital-qemu/hw/ps4/liverpool/gca/gcn_analyzer.c \
+		-I../orbital-qemu/hw/ps4/liverpool/gca/
+
+test_gcn_translator.elf: test_gcn_translator.c
+	$(CC) $(CFLAGS) -o $@ $< \
+		../orbital-qemu/hw/ps4/liverpool/gca/gcn_parser.c \
+		../orbital-qemu/hw/ps4/liverpool/gca/gcn_analyzer.c \
+		../orbital-qemu/hw/ps4/liverpool/gca/gcn_translator.c \
+		-I../orbital-qemu/hw/ps4/liverpool/gca/

@@ -3,7 +3,7 @@
  * Released under MIT license. Read LICENSE for more details.
  */
 
-#include "gcn_disasm.h"
+#include "gcn_analyzer.h"
 #include "gcn_parser.h"
 
 #include <stdio.h>
@@ -11,15 +11,11 @@
 
 #define UNUSED(arg) (void)(arg)
 
-static int disasm_shader(const uint8_t *data, size_t size)
+static int analyze_shader(const uint8_t *data, size_t size)
 {
+    UNUSED(data);
     UNUSED(size);
-    gcn_parser_t parser;
-    gcn_disasm_t disasm;
 
-    gcn_parser_init(&parser);
-    gcn_disasm_init(&disasm);
-    gcn_parser_parse(&parser, data, &gcn_disasm_callbacks, &disasm);
     return 0;
 }
 
@@ -54,7 +50,7 @@ int main(int argc, const char **argv)
         fprintf(stderr, "Could not read 0x%zX bytes!\n", shader_size);
         return 1;
     }
-    ret = disasm_shader(shader_data, shader_size);
+    ret = analyze_shader(shader_data, shader_size);
     free(shader_data);
     fclose(file);
 
