@@ -2,20 +2,33 @@ Orbital Dumper
 ==============
 
 Dumper to dump/extract files required by Orbital from an actual PlayStation 4 console.
+The dumper currently supports PS4 FW ver 1.76, 4.55, 5.00, 5.05.
 
 ## Usage
 
 1. Connect your computer and PS4 to the same network.
 
-2. Setup [ps4-payload-sdk](https://github.com/xvortex/ps4-payload-sdk/) and build the payload with `make`.
+2. Setup [ps4-payload-sdk](https://github.com/xvortex/ps4-payload-sdk/). 
 
-3. Start the server with:
+3. Before building, change the IP address (`#define BLOBS_ADDR IP(192,168,2,1)`) found inside `source/blob.c` to the IP adress of the pc where the `server.py` will be running.
+
+4. Build the payload for your firmware version with `make`. Pick one of the following supported firmware versions: 1.76, 4.55, 5.00, 5.05. For example:
+
+    ```bash
+    make 5.00
+    ```
+
+5. Start the server with:
 
     ```bash
     python server.py
     ```
 
-4. Enter your computer's IP address in the PlayStation 4 web browser and follow the instructions on screen.
+6. Enter your computer's IP address in the PlayStation 4 web browser and follow the instructions on screen. The exploit provided by `server.py` only works for firmware 5.00. If you are on a different firmware you need to run an exploit manually and send the dumper payload using netcat/socat:
+
+```bash
+socat -u FILE:dumper.bin TCP:"PS4 IP":9020
+```
 
 ## Development
 
@@ -29,10 +42,4 @@ Furthermore, the server will listen at port `9021` for incoming blobs, and optio
 
 ## Compiling Notes
 
-The dumper currently supports PS4 FW ver 1.76, 4.55, 5.00, 5.05.
-
-By default the build will default to ver 5.00, but in order to compile for a different FW, you must edit the include reference (`#include "ksdk_500.inc"`) found inside `source/ksdk.c` (2 includes to edit) and `source/ksdk.h` (1 include to edit) to match the desired FW.  
-
 If you want to add support for a new FW, use one of the `source/ksdk_XXX.inc` as template and update the required offset to match that of your FW.
-
-Before building, change the IP address (`#define BLOBS_ADDR IP(192,168,2,1)`) found inside `source/blob.c` to the IP adress of the pc where the `server.py` is running.

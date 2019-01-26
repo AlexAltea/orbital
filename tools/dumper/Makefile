@@ -21,6 +21,25 @@ OBJS    := $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(CFILES)) \
 
 TARGET = $(shell basename $(CURDIR)).bin
 
+.PHONY: all
+all: 5.00
+
+.PHONY: 1.76
+1.76: CFLAGS += -DVERSION_176
+1.76: $(TARGET)
+
+.PHONY: 4.55
+4.55: CFLAGS += -DVERSION_455 
+4.55: $(TARGET)
+
+.PHONY: 5.00
+5.00: CFLAGS += -DVERSION_500
+5.00: $(TARGET)
+
+.PHONY: 5.05
+5.05: CFLAGS += -DVERSION_505 
+5.05: $(TARGET)
+
 $(TARGET): $(ODIR) $(OBJS)
 	$(CC) $(LIBPS4)/crt0.s $(ODIR)/*.o -o temp.t $(CFLAGS) $(LFLAGS) $(LIBS)
 	$(OBJCOPY) -O binary temp.t $(TARGET)
@@ -36,6 +55,5 @@ $(ODIR):
 	@mkdir $@
 
 .PHONY: clean
-
 clean:
 	rm -f $(TARGET) $(ODIR)/*.o

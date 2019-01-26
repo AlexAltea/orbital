@@ -25,7 +25,7 @@
     extern ret (*name) args
 #define KDATA(slide, name, type) \
     extern type* name
-#include "ksdk_500.inc"
+#include "ksdk.inc"
 #undef KFUNC
 #undef KDATA
 
