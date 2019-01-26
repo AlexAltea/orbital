@@ -25,17 +25,7 @@
     extern ret (*name) args
 #define KDATA(slide, name, type) \
     extern type* name
-
-#ifdef VERSION_176
-#include "ksdk_176.inc"
-#elif VERSION_455
-#include "ksdk_455.inc"
-#elif VERSION_500
-#include "ksdk_500.inc"
-#elif VERSION_505
-#include "ksdk_505.inc"
-#endif
-
+#include "ksdk.inc"
 #undef KFUNC
 #undef KDATA
 
