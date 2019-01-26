@@ -18,13 +18,13 @@ The dumper currently supports PS4 FW ver 1.76, 4.55, 5.00, 5.05.
     make 5.00
     ```
 
-3. Start the server with:
+5. Start the server with:
 
     ```bash
     python server.py
     ```
 
-4. Enter your computer's IP address in the PlayStation 4 web browser and follow the instructions on screen. The exploit provided by `server.py` only works for firmware 5.00. If you are on a different firmware you need to run an exploit manually and send the dumper payload using netcat/socat:
+6. Enter your computer's IP address in the PlayStation 4 web browser and follow the instructions on screen. The exploit provided by `server.py` only works for firmware 5.00. If you are on a different firmware you need to run an exploit manually and send the dumper payload using netcat/socat:
 
 ```bash
 socat -u FILE:dumper.bin TCP:"PS4 IP":9020
