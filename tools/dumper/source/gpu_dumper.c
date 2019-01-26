@@ -5,6 +5,8 @@
  * Based in previous tools and research by: fail0verflow, flatz.
  */
 
+#ifdef VERSION_500
+
 #include "gpu_dumper.h"
 #include "debug.h"
 
@@ -60,3 +62,5 @@ int gpu_dump_ih()
     hexdump("rb", &info.rb, 0x1000);
     return 0;
 }
+
+#endif
