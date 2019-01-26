@@ -64,10 +64,12 @@ void kpatch_enablemapself(struct thread *td)
     uint8_t* kernel_base = &((uint8_t*)read_msr(0xC0000082))[-0x1C0];
     uint8_t* map_self_patch1 = &kernel_base[0x117B0];
     uint8_t* map_self_patch2 = &kernel_base[0x117C0];
-#ifdef VERSION_505
-    uint8_t* map_self_patch3 = &kernel_base[0x13F03F]; //5.05
-#else
+#ifdef VERSION_500
     uint8_t* map_self_patch3 = &kernel_base[0x13EF2F];
+#elif VERSION_505
+    uint8_t* map_self_patch3 = &kernel_base[0x13F03F];
+#else
+    #error "Target firmware not yet supported."
 #endif
 
     // sceSblACMgrIsAllowedToMmapSelf result
