@@ -34,3 +34,5 @@ The dumper currently supports PS4 FW ver 1.76, 4.55, 5.00, 5.05.
 By default the build will default to ver 5.00, but in order to compile for a different FW, you must edit the include reference (`#include "ksdk_500.inc"`) found inside `source/ksdk.c` (2 includes to edit) and `source/ksdk.h` (1 include to edit) to match the desired FW.  
 
 If you want to add support for a new FW, use one of the `source/ksdk_XXX.inc` as template and update the required offset to match that of your FW.
+
+Before building, change the IP address (`#define BLOBS_ADDR IP(192,168,2,1)`) found inside `source/blob.c` to the IP adress of the pc where the `server.py` is running.
