@@ -15,6 +15,10 @@ bin/multiboot*.*
 *.sym
 *.elf
 
+# Objects
+*.a
+*.o
+
 # Python
 *.pyc
 
