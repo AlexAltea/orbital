@@ -80,11 +80,11 @@ Note that the `./run.sh` script forwards any arguments to QEMU, thus refer to th
 
 ### Host Debugging
 
-If you want to debug the *Orbital* emulator itself from Windows, we recommand install [Visual Studio](https://visualstudio.microsoft.com/), and generating a *.PDB* file for the executable, by using [cv2pdb](https://github.com/rainers/cv2pdb). Then debug the executable as usual within Visual Studio.
+If you want to debug the *Orbital* emulator itself from Windows, we recommend installing [Visual Studio](https://visualstudio.microsoft.com/), and generating a *.PDB* file for the executable, by using [cv2pdb](https://github.com/rainers/cv2pdb). Then debug the executable as usual within Visual Studio.
 
 ### Guest Debugging
 
-If you want to debug the PS4 kernel or userland executables, simply start Orbital passing the flags `-s -S` to `./run.sh`. Then attach from GDB or IDA Pro. there's slight differences depending on which QEMU accelerator you are using:
+If you want to debug the PS4 kernel or userland executables, simply start Orbital passing the flags `-s -S` to `./run.sh`. Then attach from GDB or IDA Pro. There are slight differences depending on which QEMU accelerator you are using:
 
 * _TCG_: You might use hardware and software breakpoints at any virtual addresses. Everything works as expected.
 
