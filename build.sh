@@ -28,7 +28,7 @@ options:
 function build_bios() {
     cd "${path_bios}" || exit 1
     make "-j$(nproc)"
-    mv out/bios.bin "../${path_bin}/ubios.bin"
+    mv out/bios.bin "${path_bin}/ubios.bin"
 }
 
 function build_grub() {
