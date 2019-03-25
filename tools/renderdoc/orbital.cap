@@ -1,0 +1,25 @@
+{
+    "rdocCaptureSettings": 1,
+    "settings": {
+        "autoStart": false,
+        "commandLine": "-bios ./ubios.bin -kernel ./boot.img -drive file=hdd.qcow2 -drive file=fat:sflash/,read-only=off,media=disk -monitor stdio -smp 8 -display orbital -accel hax",
+        "environment": [
+        ],
+        "executable": "../../bin/qemu-system-ps4.exe",
+        "inject": false,
+        "options": {
+            "allowFullscreen": true,
+            "allowVSync": true,
+            "apiValidation": false,
+            "captureAllCmdLists": false,
+            "captureCallstacks": false,
+            "captureCallstacksOnlyDraws": false,
+            "debugOutputMute": true,
+            "delayForDebugger": 0,
+            "hookIntoChildren": false,
+            "refAllResources": false,
+            "verifyBufferAccess": false
+        },
+        "workingDir": ""
+    }
+}
