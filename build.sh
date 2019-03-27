@@ -48,7 +48,7 @@ function build_qemu() {
     if [[ ! -e ./config-host.mak ]]; then
         ./configure --target-list=ps4-softmmu \
             --enable-sdl --enable-vulkan --enable-debug --disable-capstone \
-            --enable-hax ${eflags_qemu}
+            --enable-hax --enable-libusb ${eflags_qemu}
     fi
 
     make "-j$(nproc)"

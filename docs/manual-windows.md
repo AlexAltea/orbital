@@ -12,6 +12,7 @@
     pacman -S mingw-w64-x86_64-glib2 mingw-w64-x86_64-gtk3
     pacman -S mingw-w64-x86_64-vulkan mingw-w64-x86_64-SDL2
     pacman -S mingw-w64-x86_64-glslang mingw-w64-x86_64-libzip
+    pacman -S mingw-w64-x86_64-libusb
     ```
 
 3. Run the following commands to setup a proper environment:
