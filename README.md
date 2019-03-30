@@ -26,10 +26,10 @@ Kernel ELFs generated from memory dumps will **not** work since writable segment
 
 ## Requirements
 
-* __System__: Windows (7+), Linux (TBD.), macOS (10.10+).
-* __Processor__: x86-64 CPU with AVX and virtualization extensions.
+* __System__: Windows (7+), Linux (4.4+), macOS (10.10+).
+* __Processor__: x86-64 CPU with AVX/BMI1 and virtualization extensions.
 * __Memory__: 12 GB RAM.
-* __Graphics__: TBD.
+* __Graphics__:  GPU with software support for Vulkan 1.0+.
 
 ## Acknowledgements
 
