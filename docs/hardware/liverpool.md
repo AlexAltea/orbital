@@ -80,6 +80,7 @@ Liverpool
 | _GCA_  | Graphics/Compute Array (same as GFX?).                              |
 | _GDS_  | Global Data Share.                                                  |
 | _GFX_  | Graphics/Compute Engine (same as GCA?).                             |
+| _GMC_  | Graphics Memory Controller.                                         |
 | _GRBM_ | Graphics Register Backbone Manager.                                 |
 | _IA_   | Input Assembly.                                                     |
 | _IH_   | Interrupt Handler.                                                  |
@@ -90,6 +91,7 @@ Liverpool
 | _RLC_  | Run List Controller.                                                |
 | _SAMU_ | Secure Asset Management Unit.                                       |
 | _SC_   | Scan Converter.                                                     |
+| _SDMA_ | System Direct Memory Access.                                        |
 | _SMC_  | System Management Controller.                                       |
 | _SPI_  | Shader Processor Input.                                             |
 | _SRBM_ | System Register Backbone Manager.                                   |
