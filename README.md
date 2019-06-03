@@ -11,9 +11,9 @@ Future plans for the emulator can be found at the [Roadmap](https://github.com/A
 
 ## FAQ
 
-> How does Orbital work without having SAMU keys?
+> How does Orbital work **without** having SAMU keys?
 
-Until keys are dumped, decryption with SAMU will be "_emulated_" by hashing encrypted input blobs and returning decrypted blobs previously obtained from the actual console.
+Decryption with SAMU is "_emulated_" by hashing encrypted input blobs and returning decrypted blobs previously obtained from the actual console. No keys were dumped, no keys will be dumped. More importantly: we don't need them, so this project does **not** target SAMU.
 
 > My kernel dump crashes shortly after booting. Why?
 
