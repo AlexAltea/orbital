@@ -51,7 +51,7 @@
 
 1. Build *Orbital* as described previously.
 
-2. Build and install *Intel HAXM* (Orbital fork) from: https://github.com/AlexAltea/haxm/tree/orbital.
+2. Build and install *Intel HAXM* (Orbital fork) from: https://github.com/AlexAltea/haxm/tree/orbital. Make sure that your system supports Intel VTX or AMD-V, and that these features are enabled in your host BIOS.
 
 3. Decrypt your PS4 CPU kernel, VBIOS/UBIOS, SFLASH and PUP for your current firmware. Only if you completed all previous steps independently, you may get help at our server: https://discord.me/orbitalemu.
 
