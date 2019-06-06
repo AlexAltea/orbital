@@ -7,7 +7,8 @@ cd "${0%/*}"
 ./qemu-system-ps4 \
     -bios ./ubios.bin \
     -kernel ./boot.img \
-    -drive file=hdd.qcow2 \
     -drive file=fat:sflash/,read-only=off,media=disk \
+    -drive if=none,id=hdd,file=hdd.qcow2 \
+    -device usb-storage,drive=hdd \
     -monitor stdio -smp 8 -display orbital \
     ${@}
