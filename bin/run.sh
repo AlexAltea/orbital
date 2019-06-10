@@ -8,6 +8,6 @@ cd "${0%/*}"
     -bios ./ubios.bin \
     -kernel ./boot.img \
     -drive if=none,id=hdd,file=hdd.qcow2 \
-    -device usb-storage,drive=hdd \
+    -device usb-storage,bus=axhci1.0,drive=hdd \
     -monitor stdio -smp 8 -display orbital \
     ${@}
