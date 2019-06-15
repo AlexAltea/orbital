@@ -4,6 +4,7 @@
 ## Building
 
 1. Install the following dependencies (depending on your distro):
+
 ####  Ubuntu
 ```bash
 ## Common dependencies
@@ -21,6 +22,7 @@ sudo apt -qq install \
 
 ## Make sure you install *libzip-dev* v1.3.1 or later!
 ```
+
 #### Arch linux
 ```bash
 ## Update
@@ -44,7 +46,7 @@ sudo pacman -S \
     vulkan-icd-loader vulkan-headers libzip
 ```
 
-3. Run `./build.sh`.
+2. Run `./build.sh`.
 
 
 ## Installing
