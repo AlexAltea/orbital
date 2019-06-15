@@ -1,25 +1,50 @@
+
 # Manual for Linux
 
 ## Building
 
-1. Install the following dependencies (if using apt on Ubuntu):
-    ```
-    # Common dependencies
-    sudo apt -qq install \
-        git python
+1. Install the following dependencies (depending on your distro):
+####  Ubuntu
+```bash
+## Common dependencies
+sudo apt -qq install \
+    git python
 
-    # Dependencies for orbital-grub
-    sudo apt -qq install \
-        dh-autoreconf bison flex
+## Dependencies for orbital-grub
+sudo apt -qq install \
+    dh-autoreconf bison flex
 
-    # Dependencies for orbital-qemu
-    sudo apt -qq install \
-        zlib1g-dev libglib2.0-dev libfdt-dev libpixman-1-dev libsdl2-dev \
-        libvulkan-dev libzip-dev
-    ```
-    - Note: Make sure you install *libzip-dev* v1.3.1 or later!
+## Dependencies for orbital-qemu
+sudo apt -qq install \
+    zlib1g-dev libglib2.0-dev libfdt-dev libpixman-1-dev libsdl2-dev \
+    libvulkan-dev libzip-dev
 
-2. Run `./build.sh`.
+## Make sure you install *libzip-dev* v1.3.1 or later!
+```
+#### Arch linux
+```bash
+## Update
+sudo pacman -Syu
+
+## Common dependencies
+sudo pacman -S \
+    git python
+
+## Dependencies for orbital-grub
+curl -s https://aur.archlinux.org/cgit/aur.git/snapshot/dh-autoreconf.tar.gz | tar xvz \
+    && cd dh-autoreconf && makepkg -Acs && sudo pacman -U dh-autoreconf_19.tar.xz \
+    && cd .. && rm -rf dh-autoreconf
+
+sudo pacman -S \
+    bison flex
+
+## Dependencies for orbital-qemu
+sudo pacman -S \
+    zlib glib2 dtc pixman sdl2 vulkan-validation-layers \
+    vulkan-icd-loader vulkan-headers libzip
+```
+
+3. Run `./build.sh`.
 
 
 ## Installing
@@ -48,5 +73,4 @@ If you encounter any issues you might try instead:
 ```bash
 ./run.sh -accel tcg
 ```
-
-Note that the `./run.sh` script forwards any arguments to QEMU, thus refer to the QEMU documentation for further information.
+*Note that the `./run.sh` script forwards any arguments to QEMU, thus refer to the QEMU documentation for further information.*
