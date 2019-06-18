@@ -41,6 +41,7 @@
 5. Clone this repository and initialize its submodules:
     ```
     git clone https://github.com/AlexAltea/orbital
+    cd orbital/
     git submodule update --init
     ```
 
