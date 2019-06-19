@@ -40,9 +40,7 @@
 
 5. Clone this repository and initialize its submodules:
     ```
-    git clone https://github.com/AlexAltea/orbital
-    cd orbital/
-    git submodule update --init
+    git clone --recurse-submodules -j8 https://github.com/AlexAltea/orbital
     ```
 
 6. Run `./build.sh`.
