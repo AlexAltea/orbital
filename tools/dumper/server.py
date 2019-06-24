@@ -32,14 +32,14 @@ def server_blobs():
         print('blobs-server: Client connected: %s:%s' % addr)
         while True:
             # File path
-            path_size = c.recv(8)
+            path_size = c.recv(8, socket.MSG_WAITALL)
             if not path_size: break
             path_size = struct.unpack('Q', path_size)[0]
             if not path_size: break
             path = c.recv(path_size, socket.MSG_WAITALL)
             path = os.path.join('dump', path.decode('utf-8'))
             # File data
-            data_size = c.recv(8)
+            data_size = c.recv(8, socket.MSG_WAITALL)
             if not data_size: break
             data_size = struct.unpack('Q', data_size)[0]
             if not data_size: break
