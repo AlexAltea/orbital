@@ -13,6 +13,7 @@
 #include "ksdk.h"
 
 #include "gpu_dumper.h"
+#include "pup_decrypter.h"
 #include "self_decrypter.h"
 #include "self_mapper.h"
 
@@ -198,11 +199,48 @@ static void decrypt_self_to_elf(const char *file)
     free(elf_data);
 }
 
-static int decrypt_selfs(void)
+static void decrypt_pup_to_blobs(const char *file)
+{
+    int err;
+    pup_t *pup;
+    const char *dot;
+
+    // Check filename and open file
+    dot = strrchr(file, '.');
+    if (!dot) return;
+    if (strcmp(dot, ".PUP") &&
+        strcmp(dot, ".pup")) {
+        return;
+    }
+    dprintf("Decrypting %s to blobs.\n", file);
+    pup = pup_open(file);
+    if (!pup) {
+        return;
+    }
+
+    // Decrypt PUP
+    err = pup_verify_header(pup);
+    if (err)
+        goto fail;
+    err = pup_decrypt_segments(pup);
+    if (err)
+        goto fail;
+    blob_transfer_all(pup->blobs, BLOB_TRANSFER_NET);
+
+fail:
+    pup_close(pup);
+    return;
+}
+
+static void decrypt_selfs(void)
 {
     traverse_dir("/", true, decrypt_self_to_blobs);
     traverse_dir("/", true, decrypt_self_to_elf);
-    return 0;
+}
+
+static void decrypt_pups(void)
+{
+    traverse_dir("/mnt/usb0", true, decrypt_pup_to_blobs);
 }
 
 int _main(struct thread *td)
@@ -221,9 +259,9 @@ int _main(struct thread *td)
     syscall(11, kpatch_getroot);
     syscall(11, kpatch_enablemapself);
 
-    /* Dump data */
-    traverse_dir("/", true, decrypt_self_to_blobs);
-    traverse_dir("/", true, decrypt_self_to_elf);
+    /* Dump/decrypt data */
+    decrypt_selfs();
+    decrypt_pups();
     //gpu_dump_ih();
 
     /* Return back to browser */
