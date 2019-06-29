@@ -250,7 +250,7 @@ int self_kdecrypt_segment(
     uint64_t chunk_table_gpu_desc = NULL;
     uint8_t *chunk_table = NULL;
     self_kdecrypt_segment_args_t *args = uap->args;
-    self_t *self =  uap->self;
+    self_t *self = uap->self;
     ret = 1;
 
     /* copy segment data */
@@ -263,13 +263,13 @@ int self_kdecrypt_segment(
     /* create chunk table */
     chunk_table = kmalloc(0x4000, M_AUTHMGR, 0x102);
     kassert(chunk_table);
-    make_chunk_table_system(
+    make_chunk_table(
         &segment_data_gpu_paddr,
         &segment_data_gpu_desc,
         segment_data,
         segment_data_size,
         chunk_table,
-        0x4000);
+        0x4000, 1);
     kassert(segment_data_gpu_paddr);
     kassert(segment_data_gpu_desc);
     map_chunk_table(
@@ -324,7 +324,7 @@ int self_kdecrypt_block(
     uint64_t output_mapdesc = NULL;
     self_kdecrypt_block_args_t *args = uap->args;
     self_block_info_t *block = args->block;
-    self_t *self =  uap->self;
+    self_t *self = uap->self;
     ret = 1;
 
     /* allocate memory for command */

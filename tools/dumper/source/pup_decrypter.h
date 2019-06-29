@@ -36,6 +36,8 @@ typedef struct pup_t {
     /* contents */
     struct bls_header_t header;
     struct bls_entry_t *entries;
+    /* kernel */
+    int svc_id;
     /* blobs */
     struct blob_t *blobs;
 } pup_t;

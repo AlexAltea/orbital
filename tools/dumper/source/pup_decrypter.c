@@ -53,6 +53,128 @@ void trace_pup(pup_t *pup)
     }
 }
 
+/* kernel */
+typedef struct pup_kdecrypt_segment_args_t {
+    unsigned int segment_index;
+    uint8_t *segment_data_user;
+    size_t segment_data_user_size;
+} pup_kdecrypt_segment_args_t;
+
+typedef struct pup_kmethod_uap_t {
+    void *kmethod;
+    pup_t *pup;
+    void *args;
+} pup_kmethod_uap_t;
+
+int pup_kpupmgr_open(
+    struct thread *td, struct pup_kmethod_uap_t *uap)
+{
+    int ret;
+    pup_t *pup = uap->pup;
+
+    kassert(pup->svc_id == 0);
+    ret = sceSblServiceSpawn("80010006", 0, 0, 0, 0, &pup->svc_id);
+    kassert(!ret);
+    kassert(pup->svc_id != 0);
+
+error:
+    return ret;
+}
+
+int pup_kpupmgr_close(
+    struct thread *td, struct pup_kmethod_uap_t *uap)
+{
+    int ret;
+    char payload[0x80];
+    sbl_pupmgr_exit_t *cmd = (void*)&payload[0];
+    pup_t *pup = uap->pup;
+
+    kassert(pup->svc_id != 0);
+    memset(payload, 0, sizeof(payload));
+    cmd->function = 0xFFFF;
+    cmd->status = 0;
+    sceSblServiceMailbox_locked(ret, pup->svc_id, &payload, &payload);
+    kassert(ret == 0);
+    sceSblServiceMailbox_locked(ret, pup->svc_id, &payload, &payload);
+    kassert(ret == -3);
+    pup->svc_id = 0;
+
+error:
+    return ret;
+}
+
+int pup_kdecrypt_segment(
+    struct thread *td, struct pup_kmethod_uap_t *uap)
+{
+    int ret;
+    char payload[0x80];
+    size_t segment_data_size;
+    uint64_t segment_data_gpu_paddr = NULL;
+    uint64_t segment_data_gpu_desc = NULL;
+    uint8_t *segment_data = NULL;
+    uint64_t chunk_table_gpu_paddr = NULL;
+    uint64_t chunk_table_gpu_desc = NULL;
+    uint8_t *chunk_table = NULL;
+    pup_kdecrypt_segment_args_t *args = uap->args;
+    pup_t *pup = uap->pup;
+    ret = 1;
+
+    /* copy segment data */
+    segment_data_size = ALIGN_PAGE(args->segment_data_user_size);
+    segment_data = kmalloc(segment_data_size, M_AUTHMGR, 0x102);
+    kassert(segment_data);
+    memset(segment_data, 0, segment_data_size);
+    memcpy(segment_data, args->segment_data_user, args->segment_data_user_size);
+
+    /* create chunk table */
+    chunk_table = kmalloc(0x4000, M_AUTHMGR, 0x102);
+    kassert(chunk_table);
+    ret = make_chunk_table(
+        &segment_data_gpu_paddr,
+        &segment_data_gpu_desc,
+        segment_data,
+        segment_data_size,
+        chunk_table,
+        0x4000, 0);
+    kassert(!ret);
+    kassert(segment_data_gpu_paddr);
+    kassert(segment_data_gpu_desc);
+    ret = map_chunk_table(
+        &chunk_table_gpu_paddr,
+        &chunk_table_gpu_desc,
+        chunk_table);
+    kassert(!ret);
+    kassert(chunk_table_gpu_paddr);
+    kassert(chunk_table_gpu_desc);
+
+    /* decrypt segment  */
+    sbl_pupmgr_decrypt_segment_t *cmd = (void*)&payload[0];
+    memset(payload, 0, sizeof(payload));
+    cmd->function = PUPMGR_CMD_DECRYPT_SEGMENT;
+    cmd->status = 0;
+    cmd->chunk_table_addr = chunk_table_gpu_paddr;
+    cmd->segment_index = args->segment_index;
+
+    kdprintf("Sending PUPMGR_CMD_DECRYPT_SEGMENT...\n");
+    sceSblServiceMailbox_locked(ret, pup->svc_id, &payload, &payload);
+    kassert(!ret);
+    kassert(!cmd->status);
+    kassert(cmd->function == PUPMGR_CMD_DECRYPT_SEGMENT);
+    memcpy(args->segment_data_user, segment_data, args->segment_data_user_size);
+    ret = 0;
+
+error:
+    if (chunk_table_gpu_paddr)
+        kassert(!sceSblDriverUnmapPages(chunk_table_gpu_desc));
+    if (segment_data_gpu_paddr)
+        kassert(!sceSblDriverUnmapPages(segment_data_gpu_desc));
+    if (chunk_table)
+        kfree(chunk_table, M_AUTHMGR);
+    if (segment_data)
+        kfree(segment_data, M_AUTHMGR);
+    return ret;
+}
+
 pup_t* pup_open(const char* file)
 {
     pup_t* pup;
@@ -91,6 +213,9 @@ pup_t* pup_open(const char* file)
     size = read(fd, pup->entries, pup->entries_size);
     assert(size == pup->entries_size);
 
+    /* open pupmgr */
+    syscall(11, pup_kpupmgr_open, pup);
+
     /* return pup object */
     pup->fd = fd;
     pup->file_path = strdup(file);
@@ -121,6 +246,9 @@ void pup_close(pup_t *pup)
     if (!pup) {
         return;
     }
+
+    /* close pupmgr */
+    syscall(11, pup_kpupmgr_close, pup);
 
     /* remove blobs */
     blob = pup->blobs;

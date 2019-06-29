@@ -7,7 +7,6 @@ KFUNC(0x00152FC0, sys_write, void, (void *td, void *uap));
 KFUNC(0x0061BD90, sceSblDriverMapPages, int, (uint64_t *gpu_paddr, void *cpu_vaddr, uint32_t npages, uint64_t flags, uint64_t unk, uint64_t *gpu_desc));
 KFUNC(0x0061C460, sceSblDriverUnmapPages, int, (uint64_t gpu_desc));
 KFUNC(0x006303B0, map_chunk_table, int, (uint64_t *gpu_paddr, uint64_t *gpu_desc, void *cpu_vaddr));
-KFUNC(0x00630580, make_chunk_table_system, int, (uint64_t *segment_info_gpu_paddr, uint64_t *segment_info_gpu_desc, void *segment_info_cpu_vaddr, size_t segment_info_size, void *chunk_table_cpu_vaddr, size_t chunk_table_size));
 KFUNC(0x00632540, sceSblServiceMailbox, int, (uint64_t module_id, void *query, void *reply));
 KFUNC(0x00642840, _sceSblAuthMgrSmFinalize, int, (void *ctx));
 

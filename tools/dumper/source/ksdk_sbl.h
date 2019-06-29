@@ -6,6 +6,25 @@
 #ifndef KSDK_SBL_H
 #define KSDK_SBL_H
 
+/* pupmgr */
+#define PUPMGR_CMD_DECRYPT_HEADER        0x01
+#define PUPMGR_CMD_DECRYPT_SEGMENT       0x04
+#define PUPMGR_CMD_VERIFY_HEADER         0x0F
+
+typedef struct sbl_pupmgr_decrypt_segment_t {
+    uint32_t function;
+    uint32_t status;
+    uint64_t chunk_table_addr;
+    uint16_t segment_index;
+    uint16_t unk_0A; // zero
+    uint32_t unk_0C; // zero
+} sbl_pupmgr_decrypt_segment_t;
+
+typedef struct sbl_pupmgr_exit_t {
+    uint32_t function;
+    uint32_t status;
+} sbl_pupmgr_exit_t;
+
 /* authmgr */
 #define AUTHMGR_CMD_VERIFY_HEADER        0x01
 #define AUTHMGR_CMD_LOAD_SELF_SEGMENT    0x02
