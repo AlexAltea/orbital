@@ -118,6 +118,7 @@ static int traverse_dir(const char *dir, int recursive, void(*handler)(const cha
         if (entry->d_type == DT_DIR && recursive) {
             if (!strcmp(entry->d_name, ".")  ||
                 !strcmp(entry->d_name, "..") ||
+                !strcmp(entry->d_name, "$RECYCLE.BIN") ||
                 !strcmp(entry->d_name, "sandbox")) {
                 continue;
             }
