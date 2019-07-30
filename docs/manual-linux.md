@@ -34,8 +34,7 @@ sudo pacman -S \
 
 ## Dependencies for orbital-grub
 curl -s https://aur.archlinux.org/cgit/aur.git/snapshot/dh-autoreconf.tar.gz | tar xvz \
-    && cd dh-autoreconf && makepkg -Acs && sudo pacman -U dh-autoreconf_19.tar.xz \
-    && cd .. && rm -rf dh-autoreconf
+    && cd dh-autoreconf && makepkg -Acsi && cd .. && rm -rf dh-autoreconf
 
 sudo pacman -S \
     bison flex
