@@ -7,12 +7,12 @@
 2. Open MSYS2 and install the following dependencies:
     ```
     pacman -Syu
-    pacman -S git python2
-    pacman -S mingw-w64-x86_64-toolchain base-devel
-    pacman -S mingw-w64-x86_64-glib2 mingw-w64-x86_64-gtk3
-    pacman -S mingw-w64-x86_64-vulkan mingw-w64-x86_64-SDL2
-    pacman -S mingw-w64-x86_64-glslang mingw-w64-x86_64-libzip
-    pacman -S mingw-w64-x86_64-libusb openssl-devel
+    pacman -S git python2 base-devel openssl-devel
+    pacman -S \
+      mingw-w64-x86_64-gtk3 mingw-w64-x86_64-vulkan \
+      mingw-w64-x86_64-SDL2 mingw-w64-x86_64-glslang \
+      mingw-w64-x86_64-libzip mingw-w64-x86_64-libusb \
+      mingw-w64-x86_64-toolchain mingw-w64-x86_64-glib2
     ```
 
 3. Run the following commands to setup a proper environment:
