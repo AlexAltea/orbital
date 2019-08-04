@@ -18,7 +18,7 @@ sudo apt -qq install \
 ## Dependencies for orbital-qemu
 sudo apt -qq install \
     zlib1g-dev libglib2.0-dev libfdt-dev libpixman-1-dev libsdl2-dev \
-    libvulkan-dev libzip-dev
+    libvulkan-dev libzip-dev libusb-1.0-0-dev glslang-dev
 
 ## Make sure you install *libzip-dev* v1.3.1 or later!
 ```
