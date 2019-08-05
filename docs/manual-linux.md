@@ -42,7 +42,7 @@ sudo pacman -S \
 ## Dependencies for orbital-qemu
 sudo pacman -S \
     zlib glib2 dtc pixman sdl2 vulkan-validation-layers \
-    vulkan-icd-loader vulkan-headers libzip
+    vulkan-icd-loader vulkan-headers libzip glslang
 ```
 
 2. Run `./build.sh`.
