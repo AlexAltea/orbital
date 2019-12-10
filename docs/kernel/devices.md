@@ -157,6 +157,16 @@ Partial list of IOCTL codes:
 | *SCE_MBUS_KMOD_IOCTL_SET_SYSTEM_STATE*                          | 0xC0108C02 |
 | *SCE_MBUS_KMOD_IOCTL_SET_USB_POWER_BLACK_LIST*                  | 0xC0188C04 |
 
+## `/dev/devact/`
+
+### IOCTLs
+
+Partial list of IOCTL codes:
+
+| Name                                                            | Code       |
+|-----------------------------------------------------------------|------------|
+| *???*                                                           | 0xC0045312h|
+
 
 ## `/dev/mixerX` (X is a number)
 
