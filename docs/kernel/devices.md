@@ -89,6 +89,22 @@ Partial list of IOCTL codes:
 | *SCE_SYS_DCE_IOCTL_REGISTER_BUFFER_ATTRIBUTE*                   | 0xC0308207 |
 
 
+## `/dev/dipsw`
+
+### IOCTLs
+
+Partial list of IOCTL codes:
+
+| Name                                                            | Code       |
+|-----------------------------------------------------------------|------------|
+| *SCE_KERNEL_INITIALIZE_DIPSW*                                   | 0x20008800 |
+| *SCE_KERNEL_SET_DIPSW*                                          | 0x80028801 |
+| *SCE_KERNEL_UNSET_DIPSW*                                        | 0x80028802 |
+| *SCE_KERNEL_CHECK_DIPSW*                                        | 0xC0308207 |
+| *SCE_KERNEL_READ_DIPSW_DATA*                                    | 0x80108804 |
+| *SCE_KERNEL_WRITE_DIPSW_DATA*                                   | 0xC0308207 |
+
+
 ## `/dev/gc`
 
 ### IOCTLs
