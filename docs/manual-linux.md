@@ -8,7 +8,7 @@
 ####  Ubuntu
 ```bash
 ## Common dependencies
-sudo apt -qq install \
+sudo apt install -qq \
     git python
 
 ## Dependencies for orbital-grub
