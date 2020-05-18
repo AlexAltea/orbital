@@ -15,6 +15,10 @@ bin/multiboot*.*
 *.sym
 *.elf
 
+# IDE
+.idea
+.vs
+
 # Objects
 *.a
 *.o
@@ -24,3 +28,7 @@ bin/multiboot*.*
 
 # Private
 tools/private
+
+# TBD.
+CMakeSettings.json
+externals
