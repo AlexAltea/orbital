@@ -9,18 +9,14 @@ cd "${0%/*}" || exit 1
 path_bin=$(realpath ./bin)
 path_bios=$(realpath ./orbital-bios)
 path_grub=$(realpath ./orbital-grub)
-path_qemu=$(realpath ./orbital-qemu)
 path_orbital=$(pwd)
-
-eflags_qemu="--enable-debug-info"
 
 function print_help() {
     usage_text="Usage: $(basename "$0") [option] -- Orbital build script
 
 options:
     -h, --help                            Show this help text
-    -c, --clean                           Clean all genererated files
-    -w, --disable-stack-protector         Build QEMU without the stack protector (Windows segfault workaround)"
+    -c, --clean                           Clean all genererated files"
 
     echo "$usage_text"
 }
@@ -42,18 +38,6 @@ function build_grub() {
     make "-j$(nproc)"
 }
 
-function build_qemu() {
-    cd "${path_qemu}" || exit 1
-
-    if [[ ! -e ./config-host.mak ]]; then
-        ./configure --target-list=ps4-softmmu \
-            --enable-sdl --enable-vulkan --enable-debug --disable-capstone \
-            --enable-hax --enable-libusb ${eflags_qemu}
-    fi
-
-    make "-j$(nproc)"
-}
-
 function postbuild() {
     cd "${path_orbital}" || exit 1
 
@@ -63,12 +47,9 @@ function postbuild() {
             -O i386-pc -o bin/boot.img -m bin/memdisk.tar -c resources/boot/grub/boot.cfg \
             memdisk biosdisk part_msdos part_gpt gfxterm_menu fat tar bsd memrw configfile
     fi
-    yes | cp -f "${path_qemu}"/ps4-softmmu/qemu-system-* "${path_bin}"/
-    yes | cp -u "${path_qemu}"/pc-bios/optionrom/multiboot.bin "${path_bin}"/
 }
 
 function build_all() {
-    build_qemu
     if [[ $(uname -o) != "Msys" ]]; then
         build_bios
         build_grub
@@ -78,8 +59,6 @@ function build_all() {
 
 function clean_all() {
     echo "Cleaning working directory..."
-    cd "${path_qemu}" || exit 1
-    make distclean
     if [[ $(uname -o) != "Msys" ]]; then
         cd "${path_bios}" || exit 1
         make distclean
@@ -101,9 +80,6 @@ function main() {
             -c|--clean)
                 clean_all
                 exit 0
-                ;;
-            -w|--disable-stack-protector)
-                eflags_qemu+=" --disable-stack-protector"
                 ;;
             *)
                 echo >&2 "Invalid option \"$arg\""
