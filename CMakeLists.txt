@@ -18,6 +18,7 @@ project(orbital CXX)
 
 # Dependencies
 find_package(SDL2 REQUIRED)
+find_package(vulkan REQUIRED)
 
 # Sources
 macro(ORBITAL_FILES_APPEND)
@@ -32,6 +33,8 @@ endmacro()
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/analysis)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/analysis/orbis)
+ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/host)
+ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/host/graphics)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/aeolia)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool)
@@ -42,7 +45,8 @@ ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/software/sbl)
 add_executable(orbital ${ORBITAL_SOURCES})
 target_include_directories(orbital PUBLIC ${ORBITAL_DIR_EXTERNALS})
 target_include_directories(orbital PUBLIC ${ORBITAL_DIR_SOURCES})
-target_link_libraries(orbital PRIVATE SDL2::SDL2 SDL2::SDL2main)
+target_include_directories(orbital PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(orbital PRIVATE SDL2::SDL2 ${Vulkan_LIBRARIES})
 include(${ORBITAL_DIR_EXTERNALS}/core.cmake)
 
 # Properties

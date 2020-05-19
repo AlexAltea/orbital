@@ -25,7 +25,7 @@ variable to your desired value, i.e. `x86-windows` for 32-bit builds and
 `x64-windows` for 64-bit builds, you can install the dependencies via:
 
 ```bash
-vcpkg install glslang imgui libzip sdl2 vulkan zlib
+vcpkg install glslang imgui libzip sdl2[vulkan] vulkan zlib
 ```
 
 Finally, clone this repository and initialize its submodules:
