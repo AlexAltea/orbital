@@ -1,8 +1,0 @@
-[submodule "orbital-grub"]
-	path = orbital-grub
-	url = https://github.com/AlexAltea/orbital-grub
-	ignore = dirty
-[submodule "orbital-bios"]
-	path = orbital-bios
-	url = https://github.com/AlexAltea/orbital-bios
-	ignore = dirty
