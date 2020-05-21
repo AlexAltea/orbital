@@ -18,6 +18,7 @@ project(orbital CXX)
 
 # Dependencies
 find_package(SDL2 REQUIRED)
+find_package(imgui REQUIRED)
 find_package(vulkan REQUIRED)
 
 # Sources
@@ -40,13 +41,15 @@ ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/aeolia)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/software)
 ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/software/sbl)
+ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/ui)
+ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/ui/imgui)
 
 # Target
 add_executable(orbital ${ORBITAL_SOURCES})
 target_include_directories(orbital PUBLIC ${ORBITAL_DIR_EXTERNALS})
 target_include_directories(orbital PUBLIC ${ORBITAL_DIR_SOURCES})
 target_include_directories(orbital PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(orbital PRIVATE SDL2::SDL2 ${Vulkan_LIBRARIES})
+target_link_libraries(orbital PRIVATE SDL2::SDL2 imgui::imgui ${Vulkan_LIBRARIES})
 include(${ORBITAL_DIR_EXTERNALS}/core.cmake)
 
 # Properties
