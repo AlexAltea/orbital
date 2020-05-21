@@ -1,30 +1,39 @@
 # Credits
 
-* _Author_: Original developer of this project.
-* _Maintainers_: Current lead developers and responsible of reviews and maintenance.
-* _Developers_: Current and former regular developers.
-* _Contributors_: People who have occasionally contributed to this project.
-* _Supporters_: People who provided economical support.
-
 ## Author
 
+Original developer of this project.
+
 - `Alexandro Sanchez <alexandro@phi.nz>`
+
 
 ## Maintainers
 
+Current lead developers and responsible of reviews and maintenance.
+
 - `Alexandro Sanchez <alexandro@phi.nz>`
+
 
 ## Developers
 
+Current and former regular developers.
+
 - `Alexandro Sanchez <alexandro@phi.nz>`
+- `Nick Renieris <velocityra@gmail.com>`
+- `Jake Arveson <jarveson@gmail.com>`
+
 
 ## Contributors
+
+People who have occasionally contributed to this project.
 
 - `Mason Lee Back <masonleeback@gmail.com>`
 - `Andrey (@jfhs) <romoper@yandex.ru>`
 - `Zion Nimchuk <zionnimchuk@gmail.com>`
-- `Nick Renieris <velocityra@gmail.com>`
+
 
 ## Supporters
+
+People who provided non-technical support: donations, hardware, etc.
 
 (TBD.)
