@@ -179,7 +179,7 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window)
     // Check and store if we are on Wayland
     g_MouseCanUseGlobalState = strncmp(SDL_GetCurrentVideoDriver(), "wayland", 7) != 0;
 
-#ifdef _WIN32
+#if 0 // defined(_WIN32)
     SDL_SysWMinfo wmInfo;
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(window, &wmInfo);
