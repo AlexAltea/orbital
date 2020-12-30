@@ -6,7 +6,7 @@
 #include "blob.h"
 
 #include "ksdk.h"
-#include "md5.h"
+#include "xxhash.h"
 #include "debug.h"
 
 #define BLOBS_ADDR  IP(192,168,2,1);
@@ -30,21 +30,14 @@ void blob_set_path(blob_t *blob, const char *path)
 
 void blob_set_path_hash(blob_t *blob, const uint8_t *data, size_t size)
 {
-    uint8_t hash[16];
     char path[256];
-    char *p;
-
-    MD5_CTX ctx;
-    MD5_Init(&ctx);
-    MD5_Update(&ctx, data, size);
-    MD5_Final(hash, &ctx);
-
+    char* p;
+    
+    uint64_t hash = XXH64(data, size, 0);
+    
     strncpy(path, "crypto/", sizeof(path));
     p = strrchr(path, '/') + 1;
-    for (size_t i = 0; i < sizeof(hash); i++) {
-        snprintf(p, 3, "%02X", hash[i]);
-        p += 2;
-    }
+    p += snprintf(p, sizeof(hash) * 2 + 1, "%016llX", hash);
     strncpy(p, ".bin", sizeof(path) - (p - &path[0]));
     blob_set_path(blob, path);
 }
