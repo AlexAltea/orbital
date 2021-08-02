@@ -11,18 +11,9 @@ Future plans for the emulator can be found at the [Roadmap](https://github.com/A
 
 ## FAQ
 
-> How does Orbital work **without** having SAMU keys?
-
-Decryption with SAMU is "_emulated_" by hashing encrypted input blobs and returning decrypted blobs previously obtained from the actual console. No keys were dumped, no keys will be dumped. More importantly: we don't need them, so this project does **not** target SAMU.
-
-> My kernel dump crashes shortly after booting. Why?
-
-Kernel ELFs generated from memory dumps will **not** work since writable segments might have been modified into a state where booting is not possible. Please generate proper binaries offline by decrypting ELF segments with SAMU on your actual console, not by dumping memory.
-
 > Where can I get Orbital?
 
-**This project is not ready for end users.** No binaries are provided, so you must build each of the three components (BIOS, GRUB, QEMU) yourself. Furthermore, configuring the emulator to do something will be hard, as you will need to dump and decrypt the entire PS4 filesystem and sflash, including the kernel. You might find hints on how to do this in the few scattered _.sh_ files in this repo. Of course, in the future, I'll make this emulator more user-friendly.
-
+**This project is not ready for end users.** No binaries are provided, so you must build each of the three components (BIOS, GRUB, QEMU) yourself. Furthermore, configuring the emulator to do something will be hard, as you will need to extract your own console keys. More information and guides on this matter will be available in the future.
 
 ## Requirements
 
