@@ -24,4 +24,4 @@ Future plans for the emulator can be found at the [Roadmap](https://github.com/A
 
 ## Acknowledgements
 
-Thanks to all people who have directly or indirectly helped in making this possible. In alphabetical order: *flatz, idc, m0rph3us1987, masterzorag, wildcard, x41, zecoxao, zer0xff, z80*. Also many anonymous folks and others who might have slipped my mind. You know who you are!
+Thanks to all people who have directly or indirectly helped in making this possible. In alphabetical order: *flatz, idc, m0rph3us1987, masterzorag, proxima, wildcard, x41, zecoxao, zer0xff, z80*. Also many anonymous folks and others who might have slipped my mind. You know who you are!
