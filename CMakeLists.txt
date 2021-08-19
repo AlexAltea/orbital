@@ -1,4 +1,4 @@
-# Copyright 2020. Alexandro Sanchez Bach.
+# Copyright 2020-2021. Alexandro Sanchez Bach.
 
 cmake_minimum_required(VERSION 3.12)
 
@@ -19,7 +19,7 @@ project(orbital CXX)
 # Dependencies
 find_package(SDL2 REQUIRED)
 find_package(imgui REQUIRED)
-find_package(vulkan REQUIRED)
+find_package(Vulkan REQUIRED)
 
 # Sources
 macro(ORBITAL_FILES_APPEND)
