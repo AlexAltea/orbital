@@ -23,7 +23,7 @@ struct BlsEntry {
     LE<U32> block_offset;
     LE<U32> file_size;
     LE<U32> padding[2];
-    LE<S08> file_name[32];
+    char file_name[32];
 };
 
 struct BlsHeader {

@@ -52,7 +52,7 @@ BlsParser::BlsParser(Stream& s) : s(s) {
     s.seek(0, StreamSeek::Set);
     header = s.read_t<BlsHeader>();
     assert(header.magic == BLS_MAGIC);
-    assert(header.version == 1);
+    assert(header.version <= 2);
 }
 
 BlsParser::~BlsParser() {
@@ -64,7 +64,7 @@ std::vector<std::string> BlsParser::files() {
     s.seek(sizeof(BlsHeader), StreamSeek::Set);
     for (auto& name : names) {
         auto entry = s.read_t<BlsEntry>();
-        name = (char*)&entry.file_name[0];
+        name = entry.file_name;
     }
     return names;
 }
@@ -74,7 +74,7 @@ BlsStream BlsParser::get(std::string_view name) {
     s.seek(sizeof(BlsHeader), StreamSeek::Set);
     for (U32 i = 0; i < header.num_files; i++) {
         auto entry = s.read_t<BlsEntry>();
-        if (name == (char*)&entry.file_name[0])
+        if (name == entry.file_name)
             return BlsStream(this, entry.block_offset * BLS_BLOCK, entry.file_size);
     }
     throw std::runtime_error("Could not find file within BLS");
