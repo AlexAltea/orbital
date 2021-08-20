@@ -50,11 +50,9 @@ cmake --build .
 
 2. Make sure that your system supports Intel VTX or AMD-V, and that these features are enabled.
 
-3. Decrypt your PS4 CPU kernel, VBIOS/UBIOS, SFLASH and PUP for your current firmware. Only if you completed all previous steps independently, you may get help at our server: https://discord.me/orbitalemu.
+3. TBD. (You need to legally own a PS4 console for this step).
 
-4. Decrypt your PS4 CPU userland executables using the [Orbital Dumper](https://github.com/AlexAltea/orbital/tree/master/tools/dumper).
-
-5. Place all these decrypted/dumped files in the `bin` folder.
+4. Place this file in the `bin/crypto` folder.
 
 
 ## Running
@@ -62,12 +60,13 @@ cmake --build .
 Go to the `bin` folder and run *Orbital* with the command:
 
 ```bash
-./orbital.exe
+$ ./orbital.exe
 ```
+
+On your first run: you will be asked to create a new virtual PS4 console, and optionally,
+to specify a recovery PUP to boot from.
 
 
 ## Debugging
 
-If you want to debug the PS4 kernel or userland executables, simply start Orbital passing the flags `-s -S` to `orbital.exe`. Then attach from GDB or IDA Pro.
-
-**Warning:** Older versions of IDA Pro, specifically 7.0 and earlier, have a bug that removes the "Remote GDB debugger" option from debugger list after opening an existing IDA database (*.idb, *.i64). If you face this issue, export the database to an .idc script via the: *File > Produce file > Dump database to IDC file...* menu. Then, reanalyze the original ELF file, and apply the script via the: *File > Script file...* menu. This will work until you close IDA Pro. Update to the latest IDA Pro version to permanently solve this issue.
+TBD.

@@ -1,19 +1,6 @@
 # Binaries
 bin/*.exe
 bin/*.dll
-bin/boot*.*
-bin/memdisk*.*
-bin/hdd*.*
-bin/imgui*
-bin/qemu*
-bin/sflash*.*
-bin/ubios*.*
-bin/vbios*.*
-bin/multiboot*.*
-
-# Executables
-*.sym
-*.elf
 
 # IDE
 .idea
