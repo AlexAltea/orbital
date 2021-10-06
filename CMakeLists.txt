@@ -19,6 +19,7 @@ project(orbital CXX)
 # Dependencies
 find_package(SDL2 REQUIRED)
 find_package(imgui REQUIRED)
+find_package(RapidJSON CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 
 # Sources
@@ -48,6 +49,7 @@ ORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/ui/imgui)
 add_executable(orbital ${ORBITAL_SOURCES})
 target_include_directories(orbital PUBLIC ${ORBITAL_DIR_EXTERNALS})
 target_include_directories(orbital PUBLIC ${ORBITAL_DIR_SOURCES})
+target_include_directories(orbital PUBLIC ${RAPIDJSON_INCLUDE_DIRS})
 target_include_directories(orbital PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(orbital PRIVATE SDL2::SDL2 imgui::imgui ${Vulkan_LIBRARIES})
 include(${ORBITAL_DIR_EXTERNALS}/core.cmake)
