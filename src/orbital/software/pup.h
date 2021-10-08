@@ -28,7 +28,7 @@ struct PupHeader {
 };
 
 struct PupHeaderEx {
-    LE<U64> size;
+    LE<U64> file_size;
     LE<U16> segment_count;
     LE<U16> hash_count;
     LE<U32> flags;
