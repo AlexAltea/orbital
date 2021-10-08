@@ -19,8 +19,11 @@ U64 BlsStream::read(U64 size, void* buffer) {
     std::unique_lock<std::mutex> lock(bls->mtx);
     Stream& s = bls->s;
     s.seek(base + offset, StreamSeek::Set);
-    size = std::min<U32>(size, size - offset);
-    return s.read(size, buffer);
+    size = std::min<U32>(size, this->size - offset);
+
+    U64 nbytes = s.read(size, buffer);
+    offset += nbytes;
+    return nbytes;
 }
 
 U64 BlsStream::write(U64 size, const void* buffer) {

@@ -12,6 +12,8 @@
 
 #include <core.h>
 
+#include <vector>
+
 struct PupHeader {
     LE<U32> magic;
     LE<U08> version;
@@ -26,16 +28,131 @@ struct PupHeader {
 
 struct PupHeaderEx {
     LE<U64> size;
-    LE<U16> entry_count;
+    LE<U16> segment_count;
     LE<U16> hash_count;
     LE<U32> flags;
+};
+
+struct PupSegmentEntry {
+    enum AttrFlags {
+        FLAGS_INFO        = (1 << 0),
+        FLAGS_ENCRYPTION  = (1 << 1),
+        FLAGS_SIGNING     = (1 << 2),
+        FLAGS_COMPRESSION = (1 << 3),
+        FLAGS_BLOCKS      = (1 << 11),
+        FLAGS_DIGESTS     = (1 << 16),
+        FLAGS_EXTENTS     = (1 << 17),
+    };
+
+    LE<U64> attr;
+    LE<U64> offset;
+    LE<U64> mem_size;
+    LE<U64> file_size;
+
+    U64 id() const noexcept {
+        return attr >> 20;
+    }
+    U64 block_size() const noexcept {
+        if (has_blocks()) {
+            return 1 << (((attr >> 12) & 0xF) + 12);
+        } else {
+            return 0x10000;
+        }
+    }
+    U64 block_count() const noexcept {
+        const U64 bs = block_size();
+        return (file_size + bs - 1) / bs;
+    }
+
+    // Helpers
+    bool is_info() const noexcept {
+        return attr & FLAGS_INFO;
+    }
+    bool is_encrypted() const noexcept {
+        return attr & FLAGS_ENCRYPTION;
+    }
+    bool is_signed() const noexcept {
+        return attr & FLAGS_SIGNING;
+    }
+    bool is_compressed() const noexcept {
+        return attr & FLAGS_COMPRESSION;
+    }
+    bool has_blocks() const noexcept {
+        return attr & FLAGS_BLOCKS;
+    }
+    bool has_digests() const noexcept {
+        return attr & FLAGS_DIGESTS;
+    }
+    bool has_extents() const noexcept {
+        return attr & FLAGS_EXTENTS;
+    }
+};
+
+struct PupSegmentMeta {
+    U08 data_key[16];
+    U08 data_iv[16];
+    U08 digest[32];
+    U08 digest_key[16];
+};
+
+struct PupExtent {
+    LE<U32> offset;
+    LE<U32> size;
+};
+
+struct PupDigest {
+    std::byte data[32];
 };
 
 class PupParser {
     Stream& s;
     PupHeader header;
+    PupHeaderEx headerEx;
+    std::vector<PupSegmentEntry> segEntries;
+    std::vector<PupSegmentMeta> segMetas;
 
 public:
-    PupParser(Stream& s);
+    /**
+     * Create PUP parser. 
+     * @param[in]  verify  Verify digital signatures.
+     */
+    PupParser(Stream& s, bool verify=false);
     ~PupParser();
+
+    /**
+     * Get PUP segment by identifier.
+     * @param[in]  id  Segment identifier (44-bits).
+     */
+    Buffer get(U64 id);
+
+private:
+    /**
+     * Get index of first PUP segment satisfying the given predicate, if any.
+     * @param[in]  pred  Predicate function.
+     */
+    U64 find(const std::function<bool(const PupSegmentEntry&, const PupSegmentMeta&)>& pred) const;
+
+    /**
+     * Get index of first PUP segment with the given identifier, if any.
+     * @param[in]  id  Segment identifier (44-bits).
+     */
+    U64 find(U64 id) const;
+
+    /**
+     * Get index of the first information segment of a given PUP segment, if any.
+     * @param[in]  index  Target segment index.
+     */
+    U64 find_info(U64 id) const;
+
+    /**
+     * Get blocked PUP segment by identifier.
+     * @param[in]  id  Segment identifier (44-bits).
+     */
+    Buffer get_blocked(U64 index);
+
+    /**
+     * Get non-blocked PUP segment by identifier.
+     * @param[in]  id  Segment identifier (44-bits).
+     */
+    Buffer get_nonblocked(U64 index);
 };
