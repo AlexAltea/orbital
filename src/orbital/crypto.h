@@ -12,6 +12,8 @@
 
 #include <core.h>
 
+#include <botan/botan.h>
+
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -24,12 +26,16 @@ struct Key {
         AES_128_CBC,
     } type;
 
-    union {
-        struct {
-            U08 key[32];
-            U08 iv[32];
-        } aes;
-    };
+    Botan::SymmetricKey key;
+    Botan::InitializationVector iv;
+
+    Key() : type(NONE) {}
+    Key(Type type, const void* key_buf, size_t key_len, const void* iv_buf, size_t iv_len)
+        : type(type), key((const U8*)key_buf, key_len), iv((const U8*)iv_buf, iv_len) {
+    }
+    Key(Type type, std::string_view key, std::string_view iv)
+        : type(type), key(std::string(key)), iv(std::string(iv)) {
+    }
 };
 
 class CryptoStream : public Stream {

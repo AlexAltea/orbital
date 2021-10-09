@@ -18,29 +18,10 @@
 
 static Crypto g_ps4Crypto;
 
-static uint8_t parseHex(char input) {
-    if (input >= '0' && input <= '9')
-        return input - '0';
-    if (input >= 'A' && input <= 'F')
-        return input - 'A' + 10;
-    if (input >= 'a' && input <= 'f')
-        return input - 'a' + 10;
-    throw std::invalid_argument("Invalid input string");
-}
-
-static void parseHexBytes(std::string_view hex, uint8_t* buf, size_t len) {
-    for (size_t i = 0; i < hex.size() && i < 2*len; i += 2) {
-        buf[i >> 1] = parseHex(hex[i]) * 16 + parseHex(hex[i + 1]);
-    }
-}
-
 static Key parseAesKey(Key::Type type, const rapidjson::Value& value) {
-    Key k = { type };
-    parseHexBytes(value["aes_key"].GetString(),
-        k.aes.key, sizeof(k.aes.key));
-    parseHexBytes(value["aes_iv"].GetString(),
-        k.aes.iv, sizeof(k.aes.iv));
-    return k;
+    auto key = value["aes_key"].GetString();
+    auto iv  = value["aes_iv"].GetString();
+    return Key(type, key, iv);
 }
 
 const Crypto& ps4Crypto() {
@@ -57,6 +38,13 @@ const Crypto& ps4Crypto() {
     // Add individual keys
     g_ps4Crypto.add("pup.hdr",
         parseAesKey(Key::AES_128_CBC, document["pup"]["hdr"]));
+    g_ps4Crypto.add("pup.root_key",
+        parseAesKey(Key::AES_128_CBC, document["pup"]["root_key"]));
+
+    for (const auto& m : document["self"]["80010002"].GetObject()) {
+        std::string name = "self.80010002.";
+        g_ps4Crypto.add(name + m.name.GetString(), parseAesKey(Key::AES_128_CBC, m.value));
+    }
 
     return g_ps4Crypto;
 }

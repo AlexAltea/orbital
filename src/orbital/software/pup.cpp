@@ -137,14 +137,14 @@ Buffer PupParser::get_blocked(U64 index) {
             // TODO: throw std::runtime_error("Unimplemented");
         }
         if (entry.is_encrypted()) {
-            Key key(Key::AES_128_CBC, meta.data_key, 16, meta.data_iv, 16);
-            crypto.decrypt(block.data(), block.size(), key);
+            decrypt(block, meta);
         }
         segment.resize(segment.size() + cur_size);
-        U08* dest = segment.data() + segment.size() - cur_size;
-        if (entry.is_compressed()) {
+        U08* dest = &segment[segment.size() - cur_size];
+        if (entry.is_compressed() && cur_size != cur_zsize) {
             unsigned long cur_usize = cur_size;
-            uncompress(dest, &cur_usize, block.data(), cur_zsize);
+            int zerr = uncompress(dest, &cur_usize, block.data(), cur_zsize);
+            assert(zerr == 0);
         } else {
             memcpy(dest, block.data(), block.size());
         }
