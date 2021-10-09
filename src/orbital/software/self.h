@@ -17,9 +17,6 @@
 #include <memory>
 #include <vector>
 
-// Forward declarations
-class SelfParser;
-
 struct SelfHeader {
     LE<U32> magic;
     LE<U08> version;
@@ -36,11 +33,21 @@ struct SelfHeader {
 };
 
 using SelfSegment = CfSegment;
+using SelfMeta = CfMeta;
 
-class SelfParser {
-    Stream& s;
+struct SelfInfo {
+    LE<U64> paid;        // Program Authority ID
+    LE<U64> ptype;       // Program Type
+    LE<U64> version_app; // Application Version
+    LE<U64> version_fw;  // Firmware Version
+    U08 digest[0x20];
+};
+
+class SelfParser : public CfParser {
     SelfHeader header;
+    SelfInfo info;
     std::vector<SelfSegment> segments;
+    std::vector<SelfMeta> metas;
     std::unique_ptr<ElfParser> elf;
 
 public:
@@ -51,4 +58,25 @@ public:
     Elf_Ehdr<> get_ehdr();
 
     Elf_Phdr<> get_phdr(size_t i);
+
+    Buffer get_pdata(size_t i);
+
+private:
+    /**
+     * Get index of first segment whose identifier matches the given PHDR index, if any.
+     * @param[in]  id  Segment identifier (44-bits).
+     */
+    U64 find_segment(U64 phdr_idx) const;
+
+    /**
+     * Get blocked SELF segment by identifier.
+     * @param[in]  id  Segment identifier (44-bits).
+     */
+    Buffer get_segment_blocked(U64 index);
+
+    /**
+     * Get non-blocked SELF segment by identifier.
+     * @param[in]  id  Segment identifier (44-bits).
+     */
+    Buffer get_segment_nonblocked(U64 index);
 };

@@ -31,9 +31,22 @@ public:
     ElfParser(Stream& s);
     ~ElfParser();
 
+    /**
+     * Get EHDR at the given index.
+     */
     Elf_Ehdr<> get_ehdr();
 
-    Elf_Phdr<> get_phdr(size_t i);
+    /**
+     * Get PHDR at the given index.
+     * @param[in]  index  PHDR index.
+     */
+    Elf_Phdr<> get_phdr(size_t index);
+
+    /**
+     * Get segment/program data described by the PHDR at the given index.
+     * @param[in]  index  PHDR index.
+     */
+    Buffer get_pdata(size_t index);
 
 private:
     template <template<typename> typename S, typename T=Elf_TypeGeneric>

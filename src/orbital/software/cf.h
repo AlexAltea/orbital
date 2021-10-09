@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <core.h>
+
 struct CfSegment {
     enum AttrFlags {
         FLAGS_INFO        = (1 << 0),
@@ -31,7 +33,7 @@ struct CfSegment {
     }
     U64 block_size() const noexcept {
         if (has_blocks()) {
-            return 1 << (((attr >> 12) & 0xF) + 12);
+            return UINT64_C(1) << (((attr >> 12) & 0xF) + 12);
         }
         else {
             return 0x10000;
@@ -64,4 +66,21 @@ struct CfSegment {
     bool has_extents() const noexcept {
         return attr & FLAGS_EXTENTS;
     }
+};
+
+struct CfMeta {
+    U08 data_key[16];
+    U08 data_iv[16];
+    U08 digest[32];
+    U08 digest_key[16];
+};
+
+class CfParser {
+protected:
+    Stream& s;
+
+public:
+    CfParser(Stream& s) : s(s) {}
+
+    static void decrypt(Buffer& data, const CfMeta& meta);
 };

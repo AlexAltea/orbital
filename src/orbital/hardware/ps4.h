@@ -12,6 +12,8 @@
 
 #include <core.h>
 
+#include <filesystem>
+
 struct PS4MachineConfig : MachineConfig {
     PS4MachineConfig();
 };

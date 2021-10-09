@@ -35,13 +35,7 @@ struct PupHeaderEx {
 };
 
 using PupSegmentEntry = CfSegment;
-
-struct PupSegmentMeta {
-    U08 data_key[16];
-    U08 data_iv[16];
-    U08 digest[32];
-    U08 digest_key[16];
-};
+using PupSegmentMeta = CfMeta;
 
 struct PupExtent {
     LE<U32> offset;
@@ -52,8 +46,7 @@ struct PupDigest {
     std::byte data[32];
 };
 
-class PupParser {
-    Stream& s;
+class PupParser : public CfParser {
     PupHeader header;
     PupHeaderEx headerEx;
     std::vector<PupSegmentEntry> segEntries;

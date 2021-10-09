@@ -49,5 +49,7 @@ void PS4Machine::recover(std::filesystem::path file) {
     const auto ehdr = kernel.get_ehdr();
     for (size_t i = 0; i < ehdr.e_phnum; i++) {
         const auto phdr = kernel.get_phdr(i);
+        const auto pdata = kernel.get_pdata(i);
+        assert(phdr.p_type == PT_LOAD);
     }
 }

@@ -66,3 +66,9 @@ Elf_Phdr<> ElfParser::get_phdr(size_t i) {
     s.seek(ehdr_offset + ehdr.e_phoff + ehdr.e_phentsize * i, StreamSeek::Set);
     return parse<Elf_Phdr>();
 }
+
+Buffer ElfParser::get_pdata(size_t i) {
+    const auto phdr = get_phdr(i);
+    s.seek(ehdr_offset + phdr.p_offset, StreamSeek::Set);
+    return s.read_b(phdr.p_filesz);
+}
