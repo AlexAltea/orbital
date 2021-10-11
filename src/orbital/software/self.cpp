@@ -141,7 +141,8 @@ Buffer SelfParser::get_segment_nonblocked(U64 index) {
         unsigned long cur_usize = segment.file_size;
 
         Buffer result(segment.file_size);
-        uncompress(result.data(), &cur_usize, buffer.data(), cur_zsize);
+        int zerr = uncompress(result.data(), &cur_usize, buffer.data(), cur_zsize);
+        assert(zerr == 0);
         buffer = std::move(result);
     }
     return buffer;

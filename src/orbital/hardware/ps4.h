@@ -47,4 +47,7 @@ private:
     Space* space_ram;
     Space* space_ram_below_4g;
     Space* space_ram_above_4g;
+    Space* space_ubios;
+
+    std::vector<X86CPUDevice*> cpus;
 };
