@@ -10,6 +10,7 @@
 
 #include "ui.h"
 #include <orbital/host/graphics/vulkan.h>
+#include <orbital/hardware/ps4.h>
 
 #include <SDL2/SDL_vulkan.h>
 
@@ -35,7 +36,7 @@ static void check_vk_result(VkResult err) {
     }
 }
 
-UI::UI() {
+UI::UI(PS4Machine& ps4) : ps4(ps4) {
     // Initial state
     is_minimized = false;
     is_quitting = false;
@@ -256,7 +257,7 @@ void UI::loop() {
         ImGui::NewFrame();
 
         // Window
-        ui.render();
+        ui.render(ps4);
 
         ImGui::Render();
         frame_render();

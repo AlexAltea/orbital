@@ -10,18 +10,21 @@
 
 #pragma once
 
+#include "widget_cpu.h"
+
 #define IMGUI_IMPL_API
 #include <imgui.h>
 
 #include <vector>
 
+// Forward declarations
+class PS4Machine;
+
 class OrbitalUI {
 public:
-    // Initialization
-    void init();
-
     // Interface
-    void render();
+    void init();
+    void render(PS4Machine& ps4);
 
 private:
     // Fonts
@@ -30,6 +33,9 @@ private:
     ImFont* font_code{};
     std::vector<std::uint8_t> font_text_data;
     std::vector<std::uint8_t> font_code_data;
+
+    // Widgets
+    WidgetCPU widget_cpu;
 
     // State
     bool show_stats;
@@ -46,5 +52,6 @@ private:
     bool show_mem_iommu;
 
     // Helpers
-    void render_menus();
+    void render_dockspace();
+    void render_menus(PS4Machine& ps4);
 };

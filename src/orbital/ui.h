@@ -1,7 +1,7 @@
 /**
  * SDL/ImGui-based user interface.
  *
- * Copyright 2017-2020. Orbital project.
+ * Copyright 2017-2021. Orbital project.
  * Released under MIT license. Read LICENSE for more details.
  *
  * Authors:
@@ -21,10 +21,11 @@
 
 // Forward declarations
 class VulkanManager;
+class PS4Machine;
 
 class UI {
 public:
-    UI();
+    UI(PS4Machine& ps4);
     ~UI();
 
     /**
@@ -45,7 +46,9 @@ private:
     int w;
     int h;
 
+    // Orbital state
     OrbitalUI ui;
+    PS4Machine& ps4;
 
     /**
      * Main UI iteration.

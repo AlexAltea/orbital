@@ -9,6 +9,7 @@
  */
 
 #include "ui_orbital.h"
+#include <orbital/hardware/ps4.h>
 
 #include <core.h>
 
@@ -19,6 +20,12 @@
 #include <imgui.h>
 
 void OrbitalUI::init() {
+    auto& io = ImGui::GetIO();
+    auto& style = ImGui::GetStyle();
+
+    // Create dockspace
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     // Calculate DPI scaling
     float dpi_scale = 1.0;
     float dpi_diagonal;
@@ -26,21 +33,20 @@ void OrbitalUI::init() {
         dpi_scale = dpi_diagonal / 96.0f;
 
     // Create new fonts
-    ImFontConfig font_config{};
-    font_config.FontDataOwnedByAtlas = false;
-
     font_text_data = fs::read_bin("fonts/Roboto-Medium.ttf");
     font_code_data = fs::read_bin("fonts/RobotoMono-Medium.ttf");
 
-    ImGuiIO& io = ImGui::GetIO();
-    font_default = io.Fonts->AddFontDefault();
+    ImFontConfig font_config{};
+    font_config.FontDataOwnedByAtlas = false;
     font_text = io.Fonts->AddFontFromMemoryTTF(font_text_data.data(), static_cast<S32>(font_text_data.size()),
         16.f * dpi_scale, &font_config, io.Fonts->GetGlyphRangesDefault());
     font_code = io.Fonts->AddFontFromMemoryTTF(font_code_data.data(), static_cast<S32>(font_code_data.size()),
         16.f * dpi_scale, &font_config, io.Fonts->GetGlyphRangesDefault());
+    font_default = io.Fonts->AddFontDefault();
+
+    widget_cpu.set_font_code(font_code);
 
     // Initialize style
-    auto& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_Text]                  = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
     style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
@@ -93,18 +99,51 @@ void OrbitalUI::init() {
     style.Colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 }
 
-void OrbitalUI::render() {
-    render_menus();
+void OrbitalUI::render(PS4Machine& ps4) {
+    ImGui::PushFont(font_text);
+
+    render_dockspace();
+    render_menus(ps4);
+
+    // Widgets
+    widget_cpu.render(ps4);
+
+    ImGui::PopFont();
 }
 
-void OrbitalUI::render_menus() {
-    ImGui::PushFont(font_text);
+void OrbitalUI::render_dockspace() {
+    ImGuiWindowFlags window_flags = 0
+        | ImGuiWindowFlags_MenuBar
+        | ImGuiWindowFlags_NoDocking
+        | ImGuiWindowFlags_NoTitleBar
+        | ImGuiWindowFlags_NoCollapse
+        | ImGuiWindowFlags_NoResize
+        | ImGuiWindowFlags_NoMove
+        | ImGuiWindowFlags_NoBringToFrontOnFocus
+        | ImGuiWindowFlags_NoNavFocus;
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    ImGui::SetNextWindowViewport(viewport->ID);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.7f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.7f));
+    ImGui::Begin("dockspace", nullptr, window_flags);
+    ImGui::PopStyleColor(2);
+    ImGui::PopStyleVar(3);
+    ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, ImVec4(1.0f, 0.0f, 0.0f, 0.0f));
+    ImGuiID dockspace_id = ImGui::GetID("dockspace");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), 0);
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
+void OrbitalUI::render_menus(PS4Machine& ps4) {
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("File", true)) {
-        if (ImGui::MenuItem("Open kernel...")) {
-            // TODO
-        }
-        ImGui::Separator();
         if (ImGui::MenuItem("Exit", NULL, false, true)) {
             SDL_Event quit;
             quit.type = SDL_QUIT;
@@ -114,25 +153,25 @@ void OrbitalUI::render_menus() {
     }
 
     if (ImGui::BeginMenu("Machine", true)) {
-        const bool running = true;
+        const bool running = ps4.is_running();
         if (ImGui::MenuItem("Resume", nullptr, false, !running)) {
-            // TODO
+            ps4.request_resume();
         }
         if (ImGui::MenuItem("Pause", nullptr, false, running)) {
-            // TODO
+            ps4.request_pause();
         }
         if (ImGui::MenuItem("Reset")) {
+            ps4.reset();
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Load state", nullptr, false, false)) {
+            // TODO
+        }
+        if (ImGui::MenuItem("Save state", nullptr, false, false)) {
             // TODO
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Load state")) {
-            // TODO
-        }
-        if (ImGui::MenuItem("Save state")) {
-            // TODO
-        }
-        ImGui::Separator();
-        if (ImGui::MenuItem("Configuration...")) {
+        if (ImGui::MenuItem("Configuration...", nullptr, false, false)) {
             // TODO
         }
         ImGui::EndMenu();
@@ -157,12 +196,11 @@ void OrbitalUI::render_menus() {
     }
 
     if (ImGui::BeginMenu("Help", true)) {
-        if (ImGui::MenuItem("About...", NULL, false, false)) {
+        if (ImGui::MenuItem("About...", nullptr, false, false)) {
             // TODO
         }
         ImGui::EndMenu();
     }
 
     ImGui::EndMainMenuBar();
-    ImGui::PopFont();
 }
