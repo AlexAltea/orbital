@@ -9,6 +9,15 @@
  */
 
 #include "ps4.h"
+#include <orbital/hardware/aeolia/aeolia_acpi.h>
+#include <orbital/hardware/aeolia/aeolia_gbe.h>
+#include <orbital/hardware/aeolia/aeolia_ahci.h>
+#include <orbital/hardware/aeolia/aeolia_sdhci.h>
+#include <orbital/hardware/aeolia/aeolia_pcie.h>
+#include <orbital/hardware/aeolia/aeolia_dmac.h>
+#include <orbital/hardware/aeolia/aeolia_mem.h>
+#include <orbital/hardware/aeolia/aeolia_xhci.h>
+#include <orbital/hardware/liverpool_pci.h>
 #include <orbital/software/bls.h>
 #include <orbital/software/elf.h>
 #include <orbital/software/pup.h>
@@ -23,13 +32,6 @@ PS4MachineConfig::PS4MachineConfig() {
 PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     // Create VM
     _vm = createVirtualMachine(this, HypervisorBackend_Core);
-
-    // Initialize CPU
-    for (int i = 0; i < config.cpu_count; i++) {
-        auto cpu = new X86CPUDevice(this, space_mem, vm(), i);
-        cpu->on_state_changed(std::bind(&PS4Machine::cpu_state_change_handler, this, std::placeholders::_1, std::placeholders::_2));
-        _cpus.push_back(cpu);
-    }
 
     // Initialize RAM
     constexpr U64 ram_size = 8_GB;
@@ -46,14 +48,53 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     constexpr size_t ubios_size = 0x80000;
     space_ubios = new MemorySpace(this, ubios_size, {}, SpaceFlags::RW);
     space_mem->addSubspace(space_ubios, 4_GB - ubios_size);
+
+    // Initialize CPU
+    for (int i = 0; i < config.cpu_count; i++) {
+        auto cpu = new X86CPUDevice(this, space_mem, vm(), i);
+        cpu->on_state_changed(std::bind(&PS4Machine::cpu_state_change_handler, this, std::placeholders::_1, std::placeholders::_2));
+        _cpus.push_back(cpu);
+    }
+
+    // Initialize Liverpool
+    lvp_host = new LiverpoolHost(this);
+    auto lvp_bus = lvp_host->bus();
+
+    // Initialize Aeolia
+    aeolia_acpi  = new AeoliaACPIDevice(lvp_bus);
+    aeolia_gbe   = new AeoliaGBEDevice(lvp_bus);
+    aeolia_ahci  = new AeoliaAHCIDevice(lvp_bus);
+    aeolia_sdhci = new AeoliaSDHCIDevice(lvp_bus);
+    aeolia_pcie  = new AeoliaPCIeDevice(lvp_bus);
+    aeolia_dmac  = new AeoliaDMACDevice(lvp_bus);
+    aeolia_mem   = new AeoliaMemDevice(lvp_bus);
+    aeolia_xhci  = new AeoliaXHCIDevice(lvp_bus);
 }
 
 PS4Machine::~PS4Machine() {
+    // Destriy Aeolia
+    delete aeolia_acpi;
+    delete aeolia_gbe;
+    delete aeolia_ahci;
+    delete aeolia_sdhci;
+    delete aeolia_pcie;
+    delete aeolia_dmac;
+    delete aeolia_mem;
+    delete aeolia_xhci;
+
+    // Destroy Liverpool
+    delete lvp_host;
+
+    // Destroy RAM
+    delete space_ubios;
+    delete space_ram_above_4g;
+    delete space_ram_below_4g;
+    delete space_ram;
 }
 
 void PS4Machine::recover(std::filesystem::path file) {
-    // Reset and pause the machine, if already running
-    // TODO
+    // Reset the machine
+    reset();
 
     // Get kernel ELF image
     FileStream fs(file.string(), "rb");
@@ -78,6 +119,4 @@ void PS4Machine::recover(std::filesystem::path file) {
 
     // Expose PS4UPDATE.PUP as USB mass-storage device
     // TODO
-
-    resume();
 }

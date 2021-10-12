@@ -14,6 +14,17 @@
 
 #include <filesystem>
 
+// Forward declarations
+class AeoliaACPIDevice;
+class AeoliaAHCIDevice;
+class AeoliaDMACDevice;
+class AeoliaGBEDevice;
+class AeoliaMemDevice;
+class AeoliaPCIeDevice;
+class AeoliaSDHCIDevice;
+class AeoliaXHCIDevice;
+class LiverpoolHost;
+
 struct PS4MachineConfig : MachineConfig {
     PS4MachineConfig();
 };
@@ -49,5 +60,17 @@ private:
     Space* space_ram_above_4g;
     Space* space_ubios;
 
+    // Liverpool
     std::vector<X86CPUDevice*> cpus;
+    LiverpoolHost* lvp_host;
+
+    // Aeolia
+    AeoliaACPIDevice* aeolia_acpi;
+    AeoliaGBEDevice* aeolia_gbe;
+    AeoliaAHCIDevice* aeolia_ahci;
+    AeoliaSDHCIDevice* aeolia_sdhci;
+    AeoliaPCIeDevice* aeolia_pcie;
+    AeoliaDMACDevice* aeolia_dmac;
+    AeoliaMemDevice* aeolia_mem;
+    AeoliaXHCIDevice* aeolia_xhci;
 };

@@ -22,7 +22,7 @@ enum SelfEndian {
 };
 
 enum ProgramAuthID : U64 {
-    PAID_KERNEL = UINT64_C(0x3c00000000000001),
+    PAID_KERNEL = UINT64_C(0x3C00000000000001),
 };
 
 enum ProgramType : U64 {
