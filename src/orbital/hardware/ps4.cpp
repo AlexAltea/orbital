@@ -17,6 +17,11 @@
 #include <orbital/hardware/aeolia/aeolia_dmac.h>
 #include <orbital/hardware/aeolia/aeolia_mem.h>
 #include <orbital/hardware/aeolia/aeolia_xhci.h>
+#include <orbital/hardware/liverpool/liverpool_gc.h>
+#include <orbital/hardware/liverpool/liverpool_hdac.h>
+#include <orbital/hardware/liverpool/liverpool_iommu.h>
+#include <orbital/hardware/liverpool/liverpool_rc.h>
+#include <orbital/hardware/liverpool/liverpool_rp.h>
 #include <orbital/hardware/liverpool_pci.h>
 #include <orbital/software/bls.h>
 #include <orbital/software/elf.h>
@@ -59,6 +64,11 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     // Initialize Liverpool
     lvp_host = new LiverpoolHost(this);
     auto lvp_bus = lvp_host->bus();
+    lvp_rc       = new LiverpoolRCDevice(lvp_bus);
+    lvp_gc       = new LiverpoolGCDevice(lvp_bus);
+    lvp_hdac     = new LiverpoolHDACDevice(lvp_bus);
+    lvp_iommu    = new LiverpoolIOMMUDevice(lvp_bus);
+    lvp_rp       = new LiverpoolRPDevice(lvp_bus);
 
     // Initialize Aeolia
     aeolia_acpi  = new AeoliaACPIDevice(lvp_bus);

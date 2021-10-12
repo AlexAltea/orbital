@@ -24,6 +24,12 @@ class AeoliaPCIeDevice;
 class AeoliaSDHCIDevice;
 class AeoliaXHCIDevice;
 class LiverpoolHost;
+class LiverpoolRCDevice;
+class LiverpoolGCDevice;
+class LiverpoolHDACDevice;
+class LiverpoolIOMMUDevice;
+class LiverpoolRPDevice;
+
 
 struct PS4MachineConfig : MachineConfig {
     PS4MachineConfig();
@@ -63,6 +69,11 @@ private:
     // Liverpool
     std::vector<X86CPUDevice*> cpus;
     LiverpoolHost* lvp_host;
+    LiverpoolRCDevice* lvp_rc;
+    LiverpoolGCDevice* lvp_gc;
+    LiverpoolHDACDevice* lvp_hdac;
+    LiverpoolIOMMUDevice* lvp_iommu;
+    LiverpoolRPDevice* lvp_rp;
 
     // Aeolia
     AeoliaACPIDevice* aeolia_acpi;

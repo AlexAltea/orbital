@@ -31,6 +31,8 @@ AeoliaXHCIDevice::AeoliaXHCIDevice(PCIBus* bus, const AeoliaXHCIDeviceConfig& co
     register_bar(0, PCI_BASE_ADDRESS_SPACE_MEM, xhci[0]);
     register_bar(2, PCI_BASE_ADDRESS_SPACE_MEM, xhci[1]);
     register_bar(4, PCI_BASE_ADDRESS_SPACE_MEM, xhci[2]);
+
+    reset();
 }
 
 AeoliaXHCIDevice::~AeoliaXHCIDevice() {
