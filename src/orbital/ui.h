@@ -17,6 +17,7 @@
 
 #include "ui/imgui/imgui_impl_sdl.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
+#include "ui/ui_orbital.h"
 
 // Forward declarations
 class VulkanManager;
@@ -43,6 +44,8 @@ private:
     bool is_resized;
     int w;
     int h;
+
+    OrbitalUI ui;
 
     /**
      * Main UI iteration.

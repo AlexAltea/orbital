@@ -9,8 +9,6 @@
  */
 
 #include "ui.h"
-#include "ui/ui_style.h"
-
 #include <orbital/host/graphics/vulkan.h>
 
 #include <SDL2/SDL_vulkan.h>
@@ -151,7 +149,7 @@ UI::UI() {
     // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ui_style_initialize();
+    ui.init();
     ImGui_ImplSDL2_InitForVulkan(window);
 
     ImGui_ImplVulkan_InitInfo init_info = {};
@@ -258,8 +256,7 @@ void UI::loop() {
         ImGui::NewFrame();
 
         // Window
-        ImGui::ShowDemoWindow();
-        //orbital_display_draw(&ui);
+        ui.render();
 
         ImGui::Render();
         frame_render();
