@@ -30,4 +30,19 @@ class AeoliaXHCIDevice final : public PCIDevice {
 public:
     AeoliaXHCIDevice(PCIBus* bus, const AeoliaXHCIDeviceConfig& config = {});
     ~AeoliaXHCIDevice();
+
+    // Device interface
+    void reset() override;
+
+private:
+    MemorySpace* xhci[3];
+
+    U64 xhci0_read(U64 addr, U64 size);
+    void xhci0_write(U64 addr, U64 value, U64 size);
+
+    U64 xhci1_read(U64 addr, U64 size);
+    void xhci1_write(U64 addr, U64 value, U64 size);
+
+    U64 xhci2_read(U64 addr, U64 size);
+    void xhci2_write(U64 addr, U64 value, U64 size);
 };

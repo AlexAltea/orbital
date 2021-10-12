@@ -30,4 +30,10 @@ class AeoliaAHCIDevice final : public PCIDevice {
 public:
     AeoliaAHCIDevice(PCIBus* bus, const AeoliaAHCIDeviceConfig& config = {});
     ~AeoliaAHCIDevice();
+
+    // Device interface
+    void reset() override;
+
+private:
+    AHCIDevice* ahci;
 };

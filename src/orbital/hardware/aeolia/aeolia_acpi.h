@@ -30,4 +30,17 @@ class AeoliaACPIDevice final : public PCIDevice {
 public:
     AeoliaACPIDevice(PCIBus* bus, const AeoliaACPIDeviceConfig& config = {});
     ~AeoliaACPIDevice();
+
+    // Device interface
+    void reset() override;
+
+private:
+    MemorySpace* mem;
+    MemorySpace* io;
+
+    U64 mem_read(U64 addr, U64 size);
+    void mem_write(U64 addr, U64 value, U64 size);
+
+    U64 io_read(U64 addr, U64 size);
+    void io_write(U64 addr, U64 value, U64 size);
 };

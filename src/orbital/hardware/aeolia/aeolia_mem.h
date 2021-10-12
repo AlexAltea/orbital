@@ -30,4 +30,25 @@ class AeoliaMemDevice final : public PCIDevice {
 public:
     AeoliaMemDevice(PCIBus* bus, const AeoliaMemDeviceConfig& config = {});
     ~AeoliaMemDevice();
+
+    // Device interface
+    void reset() override;
+
+private:
+    MemorySpace* bar0;
+    MemorySpace* bar2;
+    MemorySpace* bar4;
+    MemorySpace* bar5;
+
+    U64 bar0_read(U64 addr, U64 size);
+    void bar0_write(U64 addr, U64 value, U64 size);
+
+    U64 bar2_read(U64 addr, U64 size);
+    void bar2_write(U64 addr, U64 value, U64 size);
+
+    U64 bar4_read(U64 addr, U64 size);
+    void bar4_write(U64 addr, U64 value, U64 size);
+
+    U64 bar5_read(U64 addr, U64 size);
+    void bar5_write(U64 addr, U64 value, U64 size);
 };

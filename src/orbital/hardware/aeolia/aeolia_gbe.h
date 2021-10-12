@@ -30,4 +30,13 @@ class AeoliaGBEDevice final : public PCIDevice {
 public:
     AeoliaGBEDevice(PCIBus* bus, const AeoliaGBEDeviceConfig& config = {});
     ~AeoliaGBEDevice();
+
+    // Device interface
+    void reset() override;
+
+private:
+    MemorySpace* mmio;
+
+    U64 mmio_read(U64 addr, U64 size);
+    void mmio_write(U64 addr, U64 value, U64 size);
 };
