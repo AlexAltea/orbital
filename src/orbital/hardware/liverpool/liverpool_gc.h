@@ -33,4 +33,22 @@ public:
 
     // Device interface
     void reset() override;
+
+private:
+    MemorySpace* bar0;
+    MemorySpace* bar2;
+    MemorySpace* pio;
+    MemorySpace* mmio;
+
+    U64 bar0_read(U64 addr, U64 size);
+    void bar0_write(U64 addr, U64 value, U64 size);
+
+    U64 bar2_read(U64 addr, U64 size);
+    void bar2_write(U64 addr, U64 value, U64 size);
+
+    U64 pio_read(U64 addr, U64 size);
+    void pio_write(U64 addr, U64 value, U64 size);
+
+    U64 mmio_read(U64 addr, U64 size);
+    void mmio_write(U64 addr, U64 value, U64 size);
 };

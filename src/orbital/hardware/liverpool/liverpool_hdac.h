@@ -33,4 +33,10 @@ public:
 
     // Device interface
     void reset() override;
+
+private:
+    MemorySpace* mmio;
+
+    U64 mmio_read(U64 addr, U64 size);
+    void mmio_write(U64 addr, U64 value, U64 size);
 };
