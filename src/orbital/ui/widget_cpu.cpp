@@ -79,7 +79,7 @@ void WidgetCPU::render(PS4Machine& ps4) {
         }
 
         render_disasm(x86cpu);
-        render_regs(x86cpu);
+        render_state(x86cpu);
         render_stack(x86cpu);
         render_memory(x86cpu);
     }
@@ -126,12 +126,13 @@ void WidgetCPU::render_disasm(X86CPUDevice* c) {
         size_t insn_count = cs_disasm(cs, buf.data(), buf.size(), rip, insn_maxshow, &insns);
 
         ImGui::PushFont(font_code);
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 4, 1 });
         for (size_t i = 0; i < insn_count; i++) {
             const auto insn = insns[i];
             std::string line;
 
             // Show address
-            line += (insn.address == rip) ? ">" : " ";
+            line += (insn.address == rip) ? "> " : "  ";
             line += fmt::format("{:08X} ", insn.address);
             line += "    ";
 
@@ -148,17 +149,18 @@ void WidgetCPU::render_disasm(X86CPUDevice* c) {
             if (ImGui::Selectable(line.c_str())) {
             }
         }
+        ImGui::PopStyleVar();
         ImGui::PopFont();
         cs_free(insns, insn_count);
     }
     ImGui::End();
 }
 
-void WidgetCPU::render_regs(X86CPUDevice* c) {
-    if (ImGui::Begin("Registers")) {
+void WidgetCPU::render_state(X86CPUDevice* c) {
+    if (ImGui::Begin("State")) {
         const ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
         if (ImGui::BeginTable("Registers", 2, flags)) {
-            ImGui::TableSetupColumn("Register");
+            ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_WidthFixed, 80.0f);
             ImGui::TableSetupColumn("Value");
             ImGui::TableHeadersRow();
             ImGui::PushFont(font_code);
