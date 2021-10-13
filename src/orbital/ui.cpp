@@ -62,7 +62,7 @@ UI::UI(PS4Machine& ps4) : ps4(ps4) {
     }
 
     VulkanManagerConfig config = {};
-    config.debug = true;
+    config.debug = false;// true;
     config.d_exts = {};
     config.i_exts = std::set<std::string>{
         std::make_move_iterator(sdl_exts.begin()),
@@ -119,7 +119,7 @@ UI::UI(PS4Machine& ps4) : ps4(ps4) {
 #endif
     };
     wd.PresentMode = ImGui_ImplVulkanH_SelectPresentMode(pdev, wd.Surface, present_modes, IM_ARRAYSIZE(present_modes));
-    ImGui_ImplVulkanH_CreateWindow(instance, pdev, vk->getDevice(), &wd, vk->getQueueFamilyIndex(), nullptr, w, h, 2);
+    ImGui_ImplVulkanH_CreateOrResizeWindow(instance, pdev, vk->getDevice(), &wd, vk->getQueueFamilyIndex(), nullptr, w, h, 2);
 
     // Create Descriptor Pool
     std::vector<VkDescriptorPoolSize> pool_sizes = {
@@ -242,10 +242,10 @@ void UI::loop() {
     }
 
     // Handle resizing
-    if (is_resized == false) {
-        is_resized = true;
+    if (is_resized) {
+        is_resized = false;
         ImGui_ImplVulkan_SetMinImageCount(2);
-        ImGui_ImplVulkanH_CreateWindow(vk->getInstance(), vk->getPhysicalDevice(), vk->getDevice(),
+        ImGui_ImplVulkanH_CreateOrResizeWindow(vk->getInstance(), vk->getPhysicalDevice(), vk->getDevice(),
             &wd, vk->getQueueFamilyIndex(), nullptr, w, h, 2);
         wd.FrameIndex = 0;
     }
@@ -340,7 +340,10 @@ void UI::frame_present() {
     info.pSwapchains = &wd.Swapchain;
     info.pImageIndices = &wd.FrameIndex;
     VkResult res = vkQueuePresentKHR(vk->getQueue(), &info);
-    check_vk_result(res);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
+        is_resized = true;
+        return;
+    }
 
     // Now we can use the next set of semaphores
     wd.SemaphoreIndex = (wd.SemaphoreIndex + 1) % wd.ImageCount;
