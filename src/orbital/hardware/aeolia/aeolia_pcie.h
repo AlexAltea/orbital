@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "icc/icc.h"
+
 #include <core.h>
 
 #include <memory>
@@ -36,15 +38,22 @@ public:
     // Device interface
     void reset() override;
 
+    void set_spm(MemorySpace* spm) {
+        this->spm = spm;
+    }
+
 private:
     MemorySpace* bar0;
     MemorySpace* bar2;
     MemorySpace* mmio_peripherals;
+    MemorySpace* spm; // Not owned
 
     std::unique_ptr<SerialDevice> uart0;
     std::unique_ptr<SerialDevice> uart1;
 
     // State
+    uint32_t icc_doorbell;
+    uint32_t icc_status;
     struct AeoliaPCIeBar {
         uint32_t size;
         uint32_t base;
@@ -61,4 +70,14 @@ private:
 
     // Updates
     void update_bars();
+    void update_icc();
+
+    // ICC
+    using IccReply = std::pair<IccResult, U16>;
+    IccReply icc_cmd_service_version();
+    IccReply icc_cmd_board_id();
+    IccReply icc_cmd_board_version(IccReplyBoardVersion& reply);
+    IccReply icc_cmd_buttons_state();
+    IccReply icc_cmd_nvram_write(const IccQueryNvram& query);
+    IccReply icc_cmd_nvram_read(const IccQueryNvram& query, IccReplyNvram& reply);
 };

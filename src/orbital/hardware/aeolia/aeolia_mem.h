@@ -17,6 +17,15 @@ enum {
     AEOLIA_MEM_FNC = 0x6,
 };
 
+constexpr U32 ASPM_ICC_BASE = 0;// 0x2C000;
+constexpr U32 ASPM_ICC_SIZE    = 0x1000;
+constexpr U32 ASPM_ICC_QUERY   = ASPM_ICC_BASE + 0x000;
+constexpr U32 ASPM_ICC_QUERY_W = ASPM_ICC_BASE + 0x7F0;
+constexpr U32 ASPM_ICC_QUERY_R = ASPM_ICC_BASE + 0x7F4;
+constexpr U32 ASPM_ICC_REPLY   = ASPM_ICC_BASE + 0x800;
+constexpr U32 ASPM_ICC_REPLY_W = ASPM_ICC_BASE + 0xFF0;
+constexpr U32 ASPM_ICC_REPLY_R = ASPM_ICC_BASE + 0xFF4;
+
 constexpr auto AEOLIA_MEM_VID = static_cast<PCIVendorId>(0x104D);
 constexpr auto AEOLIA_MEM_DID = static_cast<PCIDeviceId>(0x90A3);
 
@@ -33,6 +42,10 @@ public:
 
     // Device interface
     void reset() override;
+
+    MemorySpace* get_spm() {
+        return spm;
+    }
 
 private:
     MemorySpace* bar0;

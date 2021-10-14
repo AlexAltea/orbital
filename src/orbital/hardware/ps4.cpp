@@ -79,6 +79,9 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     aeolia_dmac  = new AeoliaDMACDevice(lvp_bus);
     aeolia_mem   = new AeoliaMemDevice(lvp_bus);
     aeolia_xhci  = new AeoliaXHCIDevice(lvp_bus);
+
+    // HACK: Wiring Aeolia subdevices should happen at Aeolia-level, not PS4-level
+    aeolia_pcie->set_spm(aeolia_mem->get_spm());
 }
 
 PS4Machine::~PS4Machine() {
