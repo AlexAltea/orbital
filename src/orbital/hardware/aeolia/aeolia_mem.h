@@ -38,7 +38,7 @@ private:
     MemorySpace* bar0;
     MemorySpace* bar2;
     MemorySpace* bar4;
-    MemorySpace* bar5;
+    MemorySpace* spm;
 
     U64 bar0_read(U64 addr, U64 size);
     void bar0_write(U64 addr, U64 value, U64 size);
@@ -48,7 +48,4 @@ private:
 
     U64 bar4_read(U64 addr, U64 size);
     void bar4_write(U64 addr, U64 value, U64 size);
-
-    U64 bar5_read(U64 addr, U64 size);
-    void bar5_write(U64 addr, U64 value, U64 size);
 };

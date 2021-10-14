@@ -43,7 +43,7 @@ private:
 
     // Helpers
     void render_disasm(X86CPUDevice* c);
-    void render_regs(X86CPUDevice* c);
+    void render_state(X86CPUDevice* c);
     void render_stack(X86CPUDevice* c);
     void render_memory(X86CPUDevice* c);
 };

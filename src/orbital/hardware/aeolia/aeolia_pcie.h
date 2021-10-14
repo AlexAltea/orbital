@@ -12,6 +12,8 @@
 
 #include <core.h>
 
+#include <memory>
+
 enum {
     AEOLIA_PCIE_DEV = 0x14,
     AEOLIA_PCIE_FNC = 0x4,
@@ -39,6 +41,15 @@ private:
     MemorySpace* bar2;
     MemorySpace* mmio_peripherals;
 
+    std::unique_ptr<SerialDevice> uart0;
+    std::unique_ptr<SerialDevice> uart1;
+
+    // State
+    struct AeoliaPCIeBar {
+        uint32_t size;
+        uint32_t base;
+    } bars[0x40] = {};
+
     U64 bar0_read(U64 addr, U64 size);
     void bar0_write(U64 addr, U64 value, U64 size);
 
@@ -47,4 +58,7 @@ private:
 
     U64 peripherals_read(U64 addr, U64 size);
     void peripherals_write(U64 addr, U64 value, U64 size);
+
+    // Updates
+    void update_bars();
 };

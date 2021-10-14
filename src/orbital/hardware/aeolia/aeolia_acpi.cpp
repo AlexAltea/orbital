@@ -37,6 +37,7 @@ AeoliaACPIDevice::~AeoliaACPIDevice() {
 void AeoliaACPIDevice::reset() {
     // PCI Configuration Space
     auto& header = config_header();
+    header.command = PCI_COMMAND_IO | PCI_COMMAND_MEMORY; // TODO: Is this needed?
     header.header_type |= PCI_HEADER_TYPE_MULTI_FUNCTION;
     header.class_prog = 0x00;
 }
