@@ -52,10 +52,10 @@ void AeoliaACPIDevice::mem_write(U64 addr, U64 value, U64 size) {
 }
 
 U64 AeoliaACPIDevice::io_read(U64 addr, U64 size) {
-    assert_always("Unimplemented");
+    //assert_always("Unimplemented");
     return 0;
 }
 
 void AeoliaACPIDevice::io_write(U64 addr, U64 value, U64 size) {
-    assert_always("Unimplemented");
+    //assert_always("Unimplemented");
 }

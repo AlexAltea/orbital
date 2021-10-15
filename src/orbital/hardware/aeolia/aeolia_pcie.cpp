@@ -344,13 +344,13 @@ void AeoliaPCIeDevice::update_icc() {
     reply.result = std::get<0>(status);
     reply.checksum = icc_checksum(reply);
 
-    icc_status |= APCIE_ICC_MSG_PENDING;
-    icc_doorbell &= ~APCIE_ICC_MSG_PENDING;
     spm_data[ASPM_ICC_QUERY_W] = 0;
     spm_data[ASPM_ICC_QUERY_R] = 1;
     spm_data[ASPM_ICC_REPLY_W] = 1;
     spm_data[ASPM_ICC_REPLY_R] = 0;
-    //icc_send_irq(s);
+    icc_status |= APCIE_ICC_MSG_PENDING | APCIE_ICC_IRQ_PENDING;
+    icc_doorbell &= ~APCIE_ICC_MSG_PENDING;
+    // apcie_msi_trigger(&s->msic, 4, APCIE_MSI_FNC4_ICC);
 }
 
 AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_service_version() {

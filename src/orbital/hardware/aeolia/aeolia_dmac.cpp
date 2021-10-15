@@ -26,6 +26,13 @@ AeoliaDMACDevice::AeoliaDMACDevice(PCIBus* bus, const AeoliaDMACDeviceConfig& co
     register_bar(0, PCI_BASE_ADDRESS_SPACE_MEM, bar0);
     register_bar(2, PCI_BASE_ADDRESS_SPACE_MEM, bar2);
 
+#if 0
+    msi_init(dev, 0x50, 1, true, false, NULL);
+    if (pci_is_express(dev)) {
+        pcie_endpoint_cap_init(dev, 0x70);
+    }
+#endif
+
     reset();
 }
 
@@ -43,12 +50,12 @@ void AeoliaDMACDevice::reset() {
 }
 
 U64 AeoliaDMACDevice::bar0_read(U64 addr, U64 size) {
-    assert_always("Unimplemented");
+    //assert_always("Unimplemented");
     return 0;
 }
 
 void AeoliaDMACDevice::bar0_write(U64 addr, U64 value, U64 size) {
-    assert_always("Unimplemented");
+    //assert_always("Unimplemented");
 }
 
 U64 AeoliaDMACDevice::bar2_read(U64 addr, U64 size) {
