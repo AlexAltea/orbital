@@ -16,6 +16,7 @@
 
 #define IMGUI_IMPL_API
 #include <imgui.h>
+#include "imgui/widgets/imgui_memory_editor.h"
 
  // Forward declarations
 class PS4Machine;
@@ -32,6 +33,8 @@ public:
 
 private:
     ImFont* font_code;
+    MemoryEditor me_stack;
+    MemoryEditor me_memory;
     size_t cs_x86_16;
     size_t cs_x86_32;
     size_t cs_x86_64;

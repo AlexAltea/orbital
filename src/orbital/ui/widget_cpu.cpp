@@ -224,13 +224,59 @@ void WidgetCPU::render_state(X86CPUDevice* c) {
 }
 
 void WidgetCPU::render_stack(X86CPUDevice* c) {
+    const auto& state = c->state();
+    const auto& space = c->space();
+
+    // Read stack contents
+    Buffer buf(0x100);
+    const auto rsp = state.get_linear_rsp();
+    try {
+        space->read(rsp, buf.size(), buf.data());
+    } catch (std::runtime_error& e) {
+        g_error("Error: {}", e.what());
+        return;
+    }
+
+    // Adjust stack view width
+    switch (c->mode()) {
+    case X86CPUMode::REAL:
+    case X86CPUMode::PROTECTED:
+    case X86CPUMode::LONG_COMPATIBILITY:
+        me_stack.Cols = 4;
+        break;
+    case X86CPUMode::LONG_64_BIT:
+    default:
+        me_stack.Cols = 8;
+        break;
+    }
+
     if (ImGui::Begin("Stack")) {
+        ImGui::PushFont(font_code);    
+        me_stack.DrawContents(buf.data(), buf.size(), rsp);
+        ImGui::PopFont();
     }
     ImGui::End();
 }
 
 void WidgetCPU::render_memory(X86CPUDevice* c) {
+    const auto& state = c->state();
+    const auto& space = c->space();
+
+    // Read stack contents
+    Buffer buf(0x1000);
+    const auto addr = 0x9D000;
+    try {
+        space->read(addr, buf.size(), buf.data());
+    }
+    catch (std::runtime_error& e) {
+        g_error("Error: {}", e.what());
+        return;
+    }
+
     if (ImGui::Begin("Memory")) {
+        ImGui::PushFont(font_code);
+        me_memory.DrawContents(buf.data(), buf.size(), addr);
+        ImGui::PopFont();
     }
     ImGui::End();
 }
