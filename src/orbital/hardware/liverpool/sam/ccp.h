@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <core.h>
+#include <orbital/core.h>
 
 enum CcpOp {
     CCP_OP_AES           =  0,

@@ -56,7 +56,15 @@ target_include_directories(orbital PUBLIC ${RAPIDJSON_INCLUDE_DIRS})
 target_include_directories(orbital PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(orbital PRIVATE SDL2::SDL2 imgui::imgui ZLIB::ZLIB
     ${Vulkan_LIBRARIES} ${BOTAN_LIBRARIES} ${CAPSTONE_LIBRARIES})
-include(${ORBITAL_DIR_EXTERNALS}/core.cmake)
+if (EXISTS ${ORBITAL_DIR_EXTERNALS}/core.cmake)
+    include(${ORBITAL_DIR_EXTERNALS}/core.cmake)
+else()
+    message(FATAL_ERROR "
+        Orbital depends on an unreleased third-party library and cannot be built without the required `core.cmake` script.
+        Functionality related to PS4 emulation/introspection is open-sourced *only* as documentation for fellow developers and hackers.
+        To build Orbital, wait for the upcoming release of `core.cmake` or reimplement one yourself that includes/links QEMU instead.
+        Please do NOT ask for help/support related to `core.cmake` issues.")
+endif()
 
 # Properties
 set_target_properties(orbital PROPERTIES CXX_STANDARD 20)

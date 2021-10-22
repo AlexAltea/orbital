@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <core.h>
+#include <orbital/core.h>
 
 // Liverpool PCI Bus
 class LiverpoolBus : public PCIeBus {

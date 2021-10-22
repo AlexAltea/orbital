@@ -11,7 +11,7 @@
 #include "widget_cpu.h"
 #include <orbital/hardware/ps4.h>
 
-#include <core.h>
+#include <orbital/core.h>
 #include <capstone/capstone.h>
 #include <fmt/format.h>
 

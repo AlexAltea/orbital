@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <core.h>
+#include <orbital/core.h>
 
 enum {
     AEOLIA_ACPI_DEV = 0x14,

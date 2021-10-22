@@ -11,7 +11,7 @@
 #include "ui_orbital.h"
 #include <orbital/hardware/ps4.h>
 
-#include <core.h>
+#include <orbital/core.h>
 
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>

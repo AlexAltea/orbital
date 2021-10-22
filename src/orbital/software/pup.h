@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <core.h>
+#include <orbital/core.h>
 #include <orbital/software/cf.h>
 
 #include <vector>
