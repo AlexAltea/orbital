@@ -60,6 +60,15 @@ public:
      */
     void recover(std::filesystem::path pup);
 
+    // Hardware
+
+    /**
+     * Get constant reference to the Graphics Controller (e.g. used for debugging).
+     */
+    const LiverpoolGCDevice& gc() const noexcept {
+        return *lvp_gc;
+    }
+
 private:
     Space* space_ram;
     Space* space_ram_below_4g;

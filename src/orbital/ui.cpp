@@ -22,8 +22,8 @@
 #include <cstdio>
 #include <vector>
 
-constexpr int ORBITAL_WIDTH = 1280;
-constexpr int ORBITAL_HEIGHT = 720;
+constexpr int ORBITAL_WIDTH = 1600;
+constexpr int ORBITAL_HEIGHT = 900;
 
 // Helpers
 static void check_vk_result(VkResult err) {

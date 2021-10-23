@@ -11,6 +11,7 @@
 #pragma once
 
 #include "tab_cpu.h"
+#include "tab_gpu.h"
 
 #define IMGUI_IMPL_API
 #include <imgui.h>
@@ -36,6 +37,7 @@ private:
 
     // Tabs
     TabCPU tab_cpu;
+    TabGPU tab_gpu;
 
     // State
     bool show_stats;

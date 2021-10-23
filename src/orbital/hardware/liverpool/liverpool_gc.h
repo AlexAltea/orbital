@@ -12,11 +12,14 @@
 
 #include <orbital/core.h>
 
-enum {
-    LIVERPOOL_GC_DEV = 0x1,
-    LIVERPOOL_GC_FNC = 0x0,
-};
+#include <array>
+#include <memory>
 
+// Forward declarations
+class SAMUDevice;
+
+constexpr auto LIVERPOOL_GC_DEV = 0x1;
+constexpr auto LIVERPOOL_GC_FNC = 0x0;
 constexpr auto LIVERPOOL_GC_VID = static_cast<PCIVendorId>(0x1002);
 constexpr auto LIVERPOOL_GC_DID = static_cast<PCIDeviceId>(0x9920);
 
@@ -34,11 +37,18 @@ public:
     // Device interface
     void reset() override;
 
+    const auto& get_mmio() const noexcept {
+        return mmio;
+    }
+
 private:
-    MemorySpace* bar0;
-    MemorySpace* bar2;
-    MemorySpace* pio;
-    MemorySpace* mmio;
+    MemorySpace* space_bar0;
+    MemorySpace* space_bar2;
+    MemorySpace* space_pio;
+    MemorySpace* space_mmio;
+
+    // State
+    std::array<U32, 0x10000> mmio;
 
     U64 bar0_read(U64 addr, U64 size);
     void bar0_write(U64 addr, U64 value, U64 size);
@@ -51,4 +61,11 @@ private:
 
     U64 mmio_read(U64 addr, U64 size);
     void mmio_write(U64 addr, U64 value, U64 size);
+
+    // SAMU
+    std::unique_ptr<SAMUDevice> sam;
+    std::array<U32, 0x80> sam_ix;
+    std::array<U32, 0x40> sam_sab_ix;
+
+    void update_sam(U32 value);
 };

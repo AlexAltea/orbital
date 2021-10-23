@@ -45,6 +45,7 @@ void OrbitalUI::init() {
     font_default = io.Fonts->AddFontDefault();
 
     tab_cpu.set_font_code(font_code);
+    tab_gpu.set_font_code(font_code);
 
     // Initialize style
     style.Colors[ImGuiCol_Text]                  = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -136,6 +137,7 @@ void OrbitalUI::render(PS4Machine& ps4) {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("GPU")) {
+                tab_gpu.render(ps4);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("ICC")) {

@@ -31,7 +31,7 @@
 constexpr U64 PS4_PUP_ENTRY_COREOS = 0x5;
 
 PS4MachineConfig::PS4MachineConfig() {
-    cpu_count = 1; // TODO: 8
+    cpu_count = 8;
 }
 
 PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
