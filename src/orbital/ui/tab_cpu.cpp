@@ -1,5 +1,5 @@
 /**
- * UI widget for CPU debugging.
+ * UI tab for CPU debugging.
  *
  * Copyright 2017-2021. Orbital project.
  * Released under MIT license. Read LICENSE for more details.
@@ -8,7 +8,7 @@
  * - Alexandro Sanchez Bach <alexandro@phi.nz>
  */
 
-#include "widget_cpu.h"
+#include "tab_cpu.h"
 #include <orbital/hardware/ps4.h>
 
 #include <orbital/core.h>
@@ -24,7 +24,7 @@ static std::string cpu_name(size_t index) {
     return "CPU #" + std::to_string(index);
 }
 
-WidgetCPU::WidgetCPU() {
+TabCPU::TabCPU() {
     // Initialize Capstone engine
     if (!cs_support(CS_ARCH_X86)) {
         throw std::runtime_error("Capstone library compiled without x86/64 support!");
@@ -34,59 +34,58 @@ WidgetCPU::WidgetCPU() {
     cs_open(CS_ARCH_X86, CS_MODE_64, &cs_x86_64);
 }
 
-void WidgetCPU::render(PS4Machine& ps4) {
+void TabCPU::render(PS4Machine& ps4) {
     const auto cpu_count = ps4.count<X86CPUDevice>();
     if (cpu_index >= cpu_count) {
         cpu_index = 0;
     }
 
-    //ImGui::SetNextWindowDockID(ImGui::GetID("dockspace"), ImGuiCond_Always);
-    if (ImGui::Begin("CPU")) {
-        // CPU selector
-        if (ImGui::BeginCombo("##cpu_selector", cpu_name(cpu_index).c_str())) {
-            for (size_t i = 0; i < cpu_count; i++) {
-                if (ImGui::Selectable(cpu_name(i).c_str(), cpu_index == i)) {
-                    cpu_index = i;
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        // Get pointer to selected CPU
-        X86CPUDevice* x86cpu = nullptr;
-        size_t i = 0;
-        for (auto& cpu : ps4.get_iterable_member<CPUDevice>()) {
-            if (i++ == cpu_index) {
-                x86cpu = dynamic_cast<X86CPUDevice*>(cpu);
+    // CPU selector
+    if (ImGui::BeginCombo("##cpu_selector", cpu_name(cpu_index).c_str())) {
+        for (size_t i = 0; i < cpu_count; i++) {
+            if (ImGui::Selectable(cpu_name(i).c_str(), cpu_index == i)) {
+                cpu_index = i;
             }
         }
-
-        // CPU control toolbar
-        if (x86cpu->is_running()) {
-            ImGui::SameLine();
-            if (ImGui::Button("Pause")) {
-                x86cpu->request_pause();
-            }
-        } else {
-            ImGui::SameLine();
-            if (ImGui::Button("Resume")) {
-                x86cpu->request_resume();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Step")) {
-                x86cpu->request_step();
-            }
-        }
-
-        render_disasm(x86cpu);
-        render_state(x86cpu);
-        render_stack(x86cpu);
-        render_memory(x86cpu);
+        ImGui::EndCombo();
     }
-    ImGui::End();
+
+    // Get pointer to selected CPU
+    X86CPUDevice* x86cpu = nullptr;
+    size_t i = 0;
+    for (auto& cpu : ps4.get_iterable_member<CPUDevice>()) {
+        if (i++ == cpu_index) {
+            x86cpu = dynamic_cast<X86CPUDevice*>(cpu);
+        }
+    }
+
+    // CPU control toolbar
+    if (x86cpu->is_running()) {
+        ImGui::SameLine();
+        if (ImGui::Button("Pause")) {
+            x86cpu->request_pause();
+        }
+    } else {
+        ImGui::SameLine();
+        if (ImGui::Button("Resume")) {
+            x86cpu->request_resume();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Step")) {
+            x86cpu->request_step();
+        }
+    }
+
+    begin_dockspace();
+    render_disasm(x86cpu);
+    render_state(x86cpu);
+    render_stack(x86cpu);
+    render_memory(x86cpu);
+    render_breakpoints(x86cpu);
+    end_dockspace();
 }
 
-void WidgetCPU::render_disasm(X86CPUDevice* c) {
+void TabCPU::render_disasm(X86CPUDevice* c) {
     // Select Capstone engine base on CPU mode
     csh cs;
     switch (c->mode()) {
@@ -156,7 +155,7 @@ void WidgetCPU::render_disasm(X86CPUDevice* c) {
     ImGui::End();
 }
 
-void WidgetCPU::render_state(X86CPUDevice* c) {
+void TabCPU::render_state(X86CPUDevice* c) {
     if (ImGui::Begin("State")) {
         const ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
         if (ImGui::BeginTable("Registers", 2, flags)) {
@@ -223,7 +222,7 @@ void WidgetCPU::render_state(X86CPUDevice* c) {
     ImGui::End();
 }
 
-void WidgetCPU::render_stack(X86CPUDevice* c) {
+void TabCPU::render_stack(X86CPUDevice* c) {
     const auto& state = c->state();
     const auto& space = c->space();
 
@@ -258,7 +257,7 @@ void WidgetCPU::render_stack(X86CPUDevice* c) {
     ImGui::End();
 }
 
-void WidgetCPU::render_memory(X86CPUDevice* c) {
+void TabCPU::render_memory(X86CPUDevice* c) {
     const auto& state = c->state();
     const auto& space = c->space();
 
@@ -277,6 +276,12 @@ void WidgetCPU::render_memory(X86CPUDevice* c) {
         ImGui::PushFont(font_code);
         me_memory.DrawContents(buf.data(), buf.size(), addr);
         ImGui::PopFont();
+    }
+    ImGui::End();
+}
+
+void TabCPU::render_breakpoints(X86CPUDevice* c) {
+    if (ImGui::Begin("Breakpoints")) {
     }
     ImGui::End();
 }

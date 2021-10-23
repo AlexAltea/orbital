@@ -44,7 +44,7 @@ void OrbitalUI::init() {
         16.f * dpi_scale, &font_config, io.Fonts->GetGlyphRangesDefault());
     font_default = io.Fonts->AddFontDefault();
 
-    widget_cpu.set_font_code(font_code);
+    tab_cpu.set_font_code(font_code);
 
     // Initialize style
     style.Colors[ImGuiCol_Text]                  = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -102,16 +102,9 @@ void OrbitalUI::init() {
 void OrbitalUI::render(PS4Machine& ps4) {
     ImGui::PushFont(font_text);
 
-    render_dockspace();
     render_menus(ps4);
 
-    // Widgets
-    widget_cpu.render(ps4);
-
-    ImGui::PopFont();
-}
-
-void OrbitalUI::render_dockspace() {
+    // Main space
     ImGuiWindowFlags window_flags = 0
         | ImGuiWindowFlags_MenuBar
         | ImGuiWindowFlags_NoDocking
@@ -131,14 +124,33 @@ void OrbitalUI::render_dockspace() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.7f));
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.7f));
-    ImGui::Begin("dockspace", nullptr, window_flags);
-    ImGui::PopStyleColor(2);
-    ImGui::PopStyleVar(3);
-    ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, ImVec4(1.0f, 0.0f, 0.0f, 0.0f));
-    ImGuiID dockspace_id = ImGui::GetID("dockspace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), 0);
-    ImGui::PopStyleColor();
-    ImGui::End();
+
+    if (ImGui::Begin("mainspace", nullptr, window_flags)) {
+        ImGui::PopStyleColor(2);
+        ImGui::PopStyleVar(3);
+
+        // Tabs
+        if (ImGui::BeginTabBar("tabspace")) {
+            if (ImGui::BeginTabItem("CPU")) {
+                tab_cpu.render(ps4);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("GPU")) {
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("ICC")) {
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("SAMU")) {
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+
+        ImGui::End();
+    }
+
+    ImGui::PopFont();
 }
 
 void OrbitalUI::render_menus(PS4Machine& ps4) {

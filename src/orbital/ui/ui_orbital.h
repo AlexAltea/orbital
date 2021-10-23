@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "widget_cpu.h"
+#include "tab_cpu.h"
 
 #define IMGUI_IMPL_API
 #include <imgui.h>
@@ -34,8 +34,8 @@ private:
     std::vector<std::uint8_t> font_text_data;
     std::vector<std::uint8_t> font_code_data;
 
-    // Widgets
-    WidgetCPU widget_cpu;
+    // Tabs
+    TabCPU tab_cpu;
 
     // State
     bool show_stats;
@@ -52,6 +52,5 @@ private:
     bool show_mem_iommu;
 
     // Helpers
-    void render_dockspace();
     void render_menus(PS4Machine& ps4);
 };

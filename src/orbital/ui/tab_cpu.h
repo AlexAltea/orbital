@@ -1,5 +1,5 @@
 /**
- * UI widget for CPU debugging.
+ * UI tab for CPU debugging.
  *
  * Copyright 2017-2021. Orbital project.
  * Released under MIT license. Read LICENSE for more details.
@@ -11,6 +11,7 @@
 #pragma once
 
 #include <orbital/core.h>
+#include "tab.h"
 
 #include <cstdint>
 
@@ -21,9 +22,9 @@
  // Forward declarations
 class PS4Machine;
 
-class WidgetCPU {
+class TabCPU : public Tab {
 public:
-    WidgetCPU();
+    TabCPU();
 
     // Interface
     void set_font_code(ImFont* font_code) {
@@ -49,4 +50,5 @@ private:
     void render_state(X86CPUDevice* c);
     void render_stack(X86CPUDevice* c);
     void render_memory(X86CPUDevice* c);
+    void render_breakpoints(X86CPUDevice* c);
 };
