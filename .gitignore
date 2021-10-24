@@ -17,6 +17,5 @@ bin/*.dll
 tools/private
 
 # TBD.
-CMakeSettings.json
 externals
 assets/analysis/freebsd
