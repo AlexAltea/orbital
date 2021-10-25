@@ -19,9 +19,10 @@ project(orbital CXX)
 # Dependencies
 find_package(SDL2 REQUIRED)
 find_package(imgui REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
-find_package(zlib REQUIRED)
+find_package(ZLIB REQUIRED)
 find_library(BOTAN_LIBRARIES NAMES BOTAN2 botan2 BOTAN botan)
 find_library(CAPSTONE_LIBRARIES NAMES capstone_dll capstone)
 
@@ -54,7 +55,7 @@ target_include_directories(orbital PUBLIC ${ORBITAL_DIR_EXTERNALS})
 target_include_directories(orbital PUBLIC ${ORBITAL_DIR_SOURCES})
 target_include_directories(orbital PUBLIC ${RAPIDJSON_INCLUDE_DIRS})
 target_include_directories(orbital PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(orbital PRIVATE SDL2::SDL2 imgui::imgui ZLIB::ZLIB
+target_link_libraries(orbital PRIVATE fmt::fmt SDL2::SDL2 imgui::imgui ZLIB::ZLIB
     ${Vulkan_LIBRARIES} ${BOTAN_LIBRARIES} ${CAPSTONE_LIBRARIES})
 if (EXISTS ${ORBITAL_DIR_EXTERNALS}/core.cmake)
     include(${ORBITAL_DIR_EXTERNALS}/core.cmake)

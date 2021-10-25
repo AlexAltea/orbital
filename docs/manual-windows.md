@@ -19,28 +19,21 @@ Additionally, install the following libraries:
 Although you might download them all and forward them to CMake via the
 appropriate variables (e.g. `SDL2_DIR`, `IMGUI_DIR`, etc.), we recommend
 to manage dependencies via [vcpkg](https://github.com/Microsoft/vcpkg).
+With *vcpkg*, dependencies declared in the [`vcpkg.json`](/vcpkg.json) 
+manifest file will be automatically built and installed.
 
-After installing *vcpkg* and setting the `VCPKG_DEFAULT_TRIPLET` environment
-variable to your desired value, i.e. `x86-windows` for 32-bit builds and
-`x64-windows` for 64-bit builds, you can install the dependencies via:
-
-```bash
-vcpkg install glslang imgui libzip sdl2[vulkan] vulkan zlib
-```
-
-Finally, clone this repository and initialize its submodules:
+Then, clone this repository:
 
 ```bash
-git clone https://github.com/AlexAltea/orbital
-git submodule update --init
+git clone --depth 1 https://github.com/AlexAltea/orbital
+cd orbital
 ```
 
 And build Orbital with:
 
 ```bash
-mkdir -p build && cd build
-cmake ..
-cmake --build .
+cmake -B build .
+cmake --build build
 ```
 
 
@@ -65,8 +58,3 @@ $ ./orbital.exe
 
 On your first run: you will be asked to create a new virtual PS4 console, and optionally,
 to specify a recovery PUP to boot from.
-
-
-## Debugging
-
-TBD.

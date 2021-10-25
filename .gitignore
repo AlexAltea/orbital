@@ -2,6 +2,9 @@
 bin/*.exe
 bin/*.dll
 
+# Dependencies
+vcpkg_installed
+
 # IDE
 .idea
 .vs
@@ -17,5 +20,7 @@ bin/*.dll
 tools/private
 
 # TBD.
+CMakeSettings.json
+vcpkg.json
 externals
 assets/analysis/freebsd
