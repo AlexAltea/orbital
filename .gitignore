@@ -1,6 +1,7 @@
 # Binaries
 bin/*.exe
 bin/*.dll
+out/
 
 # Dependencies
 vcpkg_installed

@@ -20,6 +20,7 @@
 #include <orbital/hardware/liverpool/liverpool_gc.h>
 #include <orbital/hardware/liverpool/liverpool_hdac.h>
 #include <orbital/hardware/liverpool/liverpool_iommu.h>
+#include <orbital/hardware/liverpool/liverpool_nb.h>
 #include <orbital/hardware/liverpool/liverpool_rc.h>
 #include <orbital/hardware/liverpool/liverpool_rp.h>
 #include <orbital/hardware/liverpool_pci.h>
@@ -69,6 +70,13 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     lvp_hdac     = new LiverpoolHDACDevice(lvp_bus);
     lvp_iommu    = new LiverpoolIOMMUDevice(lvp_bus);
     lvp_rp       = new LiverpoolRPDevice(lvp_bus);
+
+    lvp_fnc0     = new LiverpoolNBFnc0Device(lvp_bus);
+    lvp_fnc1     = new LiverpoolNBFnc1Device(lvp_bus);
+    lvp_fnc2     = new LiverpoolNBFnc2Device(lvp_bus);
+    lvp_fnc3     = new LiverpoolNBFnc3Device(lvp_bus);
+    lvp_fnc4     = new LiverpoolNBFnc4Device(lvp_bus);
+    lvp_fnc5     = new LiverpoolNBFnc5Device(lvp_bus);
 
     // Initialize Aeolia
     aeolia_acpi  = new AeoliaACPIDevice(lvp_bus);

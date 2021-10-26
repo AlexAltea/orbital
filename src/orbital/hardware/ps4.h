@@ -29,6 +29,12 @@ class LiverpoolGCDevice;
 class LiverpoolHDACDevice;
 class LiverpoolIOMMUDevice;
 class LiverpoolRPDevice;
+class LiverpoolNBFnc0Device;
+class LiverpoolNBFnc1Device;
+class LiverpoolNBFnc2Device;
+class LiverpoolNBFnc3Device;
+class LiverpoolNBFnc4Device;
+class LiverpoolNBFnc5Device;
 
 
 struct PS4MachineConfig : MachineConfig {
@@ -83,6 +89,13 @@ private:
     LiverpoolHDACDevice* lvp_hdac;
     LiverpoolIOMMUDevice* lvp_iommu;
     LiverpoolRPDevice* lvp_rp;
+
+    LiverpoolNBFnc0Device* lvp_fnc0;
+    LiverpoolNBFnc1Device* lvp_fnc1;
+    LiverpoolNBFnc2Device* lvp_fnc2;
+    LiverpoolNBFnc3Device* lvp_fnc3;
+    LiverpoolNBFnc4Device* lvp_fnc4;
+    LiverpoolNBFnc5Device* lvp_fnc5;
 
     // Aeolia
     AeoliaACPIDevice* aeolia_acpi;
