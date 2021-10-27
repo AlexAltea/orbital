@@ -190,6 +190,22 @@ void TabCPU::render_disasm(X86CPUDevice* c) {
 }
 
 void TabCPU::render_state(X86CPUDevice* c) {
+    auto add_register = [](const char* name, auto value) {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::Text(name);
+        ImGui::TableSetColumnIndex(1);
+        if constexpr (sizeof(value) == 2) {
+            ImGui::Text("%04X", value);
+        }
+        if constexpr (sizeof(value) == 4) {
+            ImGui::Text("%08X", value);
+        }
+        if constexpr (sizeof(value) == 8) {
+            ImGui::Text("%016llX", value);
+        }
+    };
+
     if (ImGui::Begin("State")) {
         const ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
         if (ImGui::BeginTable("Registers", 2, flags)) {
@@ -198,21 +214,6 @@ void TabCPU::render_state(X86CPUDevice* c) {
             ImGui::TableHeadersRow();
             ImGui::PushFont(font_code);
 
-            auto add_register = [](const char* name, auto value) {
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                ImGui::Text(name);
-                ImGui::TableSetColumnIndex(1);
-                if constexpr (sizeof(value) == 2) {
-                    ImGui::Text("%04X", value);
-                }
-                if constexpr (sizeof(value) == 4) {
-                    ImGui::Text("%08X", value);
-                }
-                if constexpr (sizeof(value) == 8) {
-                    ImGui::Text("%016llX", value);
-                }
-            };
             const auto& state = c->state();
             switch (c->mode()) {
             case X86CPUMode::REAL:
@@ -251,6 +252,28 @@ void TabCPU::render_state(X86CPUDevice* c) {
             }
             ImGui::PopFont();
             ImGui::EndTable();
+        }
+
+        if (ImGui::CollapsingHeader("LAPIC")) {
+            if (ImGui::BeginTable("LAPIC", 2, flags)) {
+                ImGui::TableSetupColumn("Register", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                ImGui::TableSetupColumn("Value");
+                ImGui::TableHeadersRow();
+                ImGui::PushFont(font_code);
+                auto lapic_state = c->lapic()->state();
+                add_register("ID", lapic_state.id);
+                add_register("VER", lapic_state.ver.value);
+                add_register("TPR", lapic_state.tpr);
+                add_register("RRD", lapic_state.rrd);
+                add_register("LDR", lapic_state.ldr.value);
+                add_register("DFR", lapic_state.dfr.value);
+                add_register("SVR", lapic_state.svr.value);
+                add_register("ESR", lapic_state.esr.value);
+                add_register("ICR", lapic_state.icr.value);
+                ImGui::PopFont();
+                ImGui::EndTable();
+            }
+            ImGui::Separator();
         }
     }
     ImGui::End();
