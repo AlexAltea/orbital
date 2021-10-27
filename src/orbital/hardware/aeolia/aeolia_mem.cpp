@@ -10,8 +10,8 @@
 
 #include "aeolia_mem.h"
 
-AeoliaMemDevice::AeoliaMemDevice(PCIBus* bus, const AeoliaMemDeviceConfig& config)
-    : PCIDevice(bus, config) {
+AeoliaMemDevice::AeoliaMemDevice(PCIeBus* bus, const AeoliaMemDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     // Define BARs
     bar0 = new MemorySpace(this, 0x1000, {
         static_cast<MemorySpaceReadOp>(&AeoliaMemDevice::bar0_read),

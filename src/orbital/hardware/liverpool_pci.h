@@ -28,4 +28,8 @@ class LiverpoolHost final : public PCIeHost {
 public:
     LiverpoolHost(Device* parent, const PCIeHostConfig& config = {});
     ~LiverpoolHost();
+
+    LiverpoolBus* bus() {
+        return static_cast<LiverpoolBus*>(_bus);
+    }
 };

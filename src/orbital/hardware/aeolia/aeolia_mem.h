@@ -29,15 +29,15 @@ constexpr U32 ASPM_ICC_REPLY_R = ASPM_ICC_BASE + 0xFF4;
 constexpr auto AEOLIA_MEM_VID = static_cast<PCIVendorId>(0x104D);
 constexpr auto AEOLIA_MEM_DID = static_cast<PCIDeviceId>(0x90A3);
 
-struct AeoliaMemDeviceConfig : PCIDeviceConfig {
+struct AeoliaMemDeviceConfig : PCIeDeviceConfig {
     AeoliaMemDeviceConfig(PCI_DF df = PCI_DF(AEOLIA_MEM_DEV, AEOLIA_MEM_FNC))
-        : PCIDeviceConfig(df, AEOLIA_MEM_VID, AEOLIA_MEM_DID, 0x0, PCI_CLASS_SYSTEM_OTHER) {
+        : PCIeDeviceConfig(df, AEOLIA_MEM_VID, AEOLIA_MEM_DID, 0x0, PCI_CLASS_SYSTEM_OTHER) {
     }
 };
 
-class AeoliaMemDevice final : public PCIDevice {
+class AeoliaMemDevice final : public PCIeDevice {
 public:
-    AeoliaMemDevice(PCIBus* bus, const AeoliaMemDeviceConfig& config = {});
+    AeoliaMemDevice(PCIeBus* bus, const AeoliaMemDeviceConfig& config = {});
     ~AeoliaMemDevice();
 
     // Device interface

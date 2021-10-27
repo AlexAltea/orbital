@@ -19,15 +19,15 @@ enum {
 
 constexpr auto LIVERPOOL_RP_DID = static_cast<PCIDeviceId>(0x1438);
 
-struct LiverpoolRPDeviceConfig : PCIDeviceConfig {
+struct LiverpoolRPDeviceConfig : PCIeDeviceConfig {
     LiverpoolRPDeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_RP_DEV, LIVERPOOL_RP_FNC))
-        : PCIDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_RP_DID, 0x1, PCI_CLASS_BRIDGE_HOST) {
+        : PCIeDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_RP_DID, 0x1, PCI_CLASS_BRIDGE_HOST) {
     }
 };
 
-class LiverpoolRPDevice final : public PCIDevice {
+class LiverpoolRPDevice final : public PCIeDevice {
 public:
-    LiverpoolRPDevice(PCIBus* bus, const LiverpoolRPDeviceConfig& config = {});
+    LiverpoolRPDevice(PCIeBus* bus, const LiverpoolRPDeviceConfig& config = {});
     ~LiverpoolRPDevice();
 
     // Device interface

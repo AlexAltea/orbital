@@ -29,90 +29,90 @@ constexpr auto LIVERPOOL_NB_FNC3_DID = static_cast<PCIDeviceId>(0x1431);
 constexpr auto LIVERPOOL_NB_FNC4_DID = static_cast<PCIDeviceId>(0x1432);
 constexpr auto LIVERPOOL_NB_FNC5_DID = static_cast<PCIDeviceId>(0x1433);
 
-struct LiverpoolNBFnc0DeviceConfig : PCIDeviceConfig {
+struct LiverpoolNBFnc0DeviceConfig : PCIeDeviceConfig {
     LiverpoolNBFnc0DeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_NB_DEV, LIVERPOOL_NB_FNC0))
-        : PCIDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC0_DID, 0x1, 0x0) {
+        : PCIeDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC0_DID, 0x1, 0x0) {
     }
 };
 
-struct LiverpoolNBFnc1DeviceConfig : PCIDeviceConfig {
+struct LiverpoolNBFnc1DeviceConfig : PCIeDeviceConfig {
     LiverpoolNBFnc1DeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_NB_DEV, LIVERPOOL_NB_FNC1))
-        : PCIDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC1_DID, 0x1, 0x0) {
+        : PCIeDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC1_DID, 0x1, 0x0) {
     }
 };
 
-struct LiverpoolNBFnc2DeviceConfig : PCIDeviceConfig {
+struct LiverpoolNBFnc2DeviceConfig : PCIeDeviceConfig {
     LiverpoolNBFnc2DeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_NB_DEV, LIVERPOOL_NB_FNC2))
-        : PCIDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC2_DID, 0x1, 0x0) {
+        : PCIeDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC2_DID, 0x1, 0x0) {
     }
 };
 
-struct LiverpoolNBFnc3DeviceConfig : PCIDeviceConfig {
+struct LiverpoolNBFnc3DeviceConfig : PCIeDeviceConfig {
     LiverpoolNBFnc3DeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_NB_DEV, LIVERPOOL_NB_FNC3))
-        : PCIDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC3_DID, 0x1, 0x0) {
+        : PCIeDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC3_DID, 0x1, 0x0) {
     }
 };
 
-struct LiverpoolNBFnc4DeviceConfig : PCIDeviceConfig {
+struct LiverpoolNBFnc4DeviceConfig : PCIeDeviceConfig {
     LiverpoolNBFnc4DeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_NB_DEV, LIVERPOOL_NB_FNC4))
-        : PCIDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC4_DID, 0x1, 0x0) {
+        : PCIeDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC4_DID, 0x1, 0x0) {
     }
 };
 
-struct LiverpoolNBFnc5DeviceConfig : PCIDeviceConfig {
+struct LiverpoolNBFnc5DeviceConfig : PCIeDeviceConfig {
     LiverpoolNBFnc5DeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_NB_DEV, LIVERPOOL_NB_FNC5))
-        : PCIDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC5_DID, 0x1, 0x0) {
+        : PCIeDeviceConfig(df, PCI_VENDOR_ID_AMD, LIVERPOOL_NB_FNC5_DID, 0x1, 0x0) {
     }
 };
 
-class LiverpoolNBFnc0Device final : public PCIDevice {
+class LiverpoolNBFnc0Device final : public PCIeDevice {
 public:
-    LiverpoolNBFnc0Device(PCIBus* bus, const LiverpoolNBFnc0DeviceConfig& config = {});
+    LiverpoolNBFnc0Device(PCIeBus* bus, const LiverpoolNBFnc0DeviceConfig& config = {});
     ~LiverpoolNBFnc0Device();
 
     // Device interface
     void reset() override;
 };
 
-class LiverpoolNBFnc1Device final : public PCIDevice {
+class LiverpoolNBFnc1Device final : public PCIeDevice {
 public:
-    LiverpoolNBFnc1Device(PCIBus* bus, const LiverpoolNBFnc1DeviceConfig& config = {});
+    LiverpoolNBFnc1Device(PCIeBus* bus, const LiverpoolNBFnc1DeviceConfig& config = {});
     ~LiverpoolNBFnc1Device();
 
     // Device interface
     void reset() override;
 };
 
-class LiverpoolNBFnc2Device final : public PCIDevice {
+class LiverpoolNBFnc2Device final : public PCIeDevice {
 public:
-    LiverpoolNBFnc2Device(PCIBus* bus, const LiverpoolNBFnc2DeviceConfig& config = {});
+    LiverpoolNBFnc2Device(PCIeBus* bus, const LiverpoolNBFnc2DeviceConfig& config = {});
     ~LiverpoolNBFnc2Device();
 
     // Device interface
     void reset() override;
 };
 
-class LiverpoolNBFnc3Device final : public PCIDevice {
+class LiverpoolNBFnc3Device final : public PCIeDevice {
 public:
-    LiverpoolNBFnc3Device(PCIBus* bus, const LiverpoolNBFnc3DeviceConfig& config = {});
+    LiverpoolNBFnc3Device(PCIeBus* bus, const LiverpoolNBFnc3DeviceConfig& config = {});
     ~LiverpoolNBFnc3Device();
 
     // Device interface
     void reset() override;
 };
 
-class LiverpoolNBFnc4Device final : public PCIDevice {
+class LiverpoolNBFnc4Device final : public PCIeDevice {
 public:
-    LiverpoolNBFnc4Device(PCIBus* bus, const LiverpoolNBFnc4DeviceConfig& config = {});
+    LiverpoolNBFnc4Device(PCIeBus* bus, const LiverpoolNBFnc4DeviceConfig& config = {});
     ~LiverpoolNBFnc4Device();
 
     // Device interface
     void reset() override;
 };
 
-class LiverpoolNBFnc5Device final : public PCIDevice {
+class LiverpoolNBFnc5Device final : public PCIeDevice {
 public:
-    LiverpoolNBFnc5Device(PCIBus* bus, const LiverpoolNBFnc5DeviceConfig& config = {});
+    LiverpoolNBFnc5Device(PCIeBus* bus, const LiverpoolNBFnc5DeviceConfig& config = {});
     ~LiverpoolNBFnc5Device();
 
     // Device interface

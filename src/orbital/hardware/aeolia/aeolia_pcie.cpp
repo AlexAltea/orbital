@@ -62,8 +62,8 @@ static U16 icc_checksum(const IccMessageHeader& message) {
     return checksum;
 }
 
-AeoliaPCIeDevice::AeoliaPCIeDevice(PCIBus* bus, const AeoliaPCIeDeviceConfig& config)
-    : PCIDevice(bus, config) {
+AeoliaPCIeDevice::AeoliaPCIeDevice(PCIeBus* bus, const AeoliaPCIeDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     // Create sub-devices
     SerialDeviceConfig uart_config = {};
     uart_config.backend.type = host::CharHostType::Stdio;

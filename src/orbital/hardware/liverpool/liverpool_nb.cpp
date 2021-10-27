@@ -10,8 +10,8 @@
 
 #include "liverpool_nb.h"
 
-LiverpoolNBFnc0Device::LiverpoolNBFnc0Device(PCIBus* bus, const LiverpoolNBFnc0DeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolNBFnc0Device::LiverpoolNBFnc0Device(PCIeBus* bus, const LiverpoolNBFnc0DeviceConfig& config)
+    : PCIeDevice(bus, config) {
     reset();
 }
 
@@ -21,8 +21,8 @@ LiverpoolNBFnc0Device::~LiverpoolNBFnc0Device() {
 void LiverpoolNBFnc0Device::reset() {
 }
 
-LiverpoolNBFnc1Device::LiverpoolNBFnc1Device(PCIBus* bus, const LiverpoolNBFnc1DeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolNBFnc1Device::LiverpoolNBFnc1Device(PCIeBus* bus, const LiverpoolNBFnc1DeviceConfig& config)
+    : PCIeDevice(bus, config) {
     reset();
 }
 
@@ -32,8 +32,8 @@ LiverpoolNBFnc1Device::~LiverpoolNBFnc1Device() {
 void LiverpoolNBFnc1Device::reset() {
 }
 
-LiverpoolNBFnc2Device::LiverpoolNBFnc2Device(PCIBus* bus, const LiverpoolNBFnc2DeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolNBFnc2Device::LiverpoolNBFnc2Device(PCIeBus* bus, const LiverpoolNBFnc2DeviceConfig& config)
+    : PCIeDevice(bus, config) {
     reset();
 }
 
@@ -43,8 +43,8 @@ LiverpoolNBFnc2Device::~LiverpoolNBFnc2Device() {
 void LiverpoolNBFnc2Device::reset() {
 }
 
-LiverpoolNBFnc3Device::LiverpoolNBFnc3Device(PCIBus* bus, const LiverpoolNBFnc3DeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolNBFnc3Device::LiverpoolNBFnc3Device(PCIeBus* bus, const LiverpoolNBFnc3DeviceConfig& config)
+    : PCIeDevice(bus, config) {
     reset();
 }
 
@@ -78,8 +78,8 @@ void LiverpoolNBFnc3Device::reset() {
     (U32&)config_data[REG_NB_CPUID_3XFC] = 0x00710F13;
 }
 
-LiverpoolNBFnc4Device::LiverpoolNBFnc4Device(PCIBus* bus, const LiverpoolNBFnc4DeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolNBFnc4Device::LiverpoolNBFnc4Device(PCIeBus* bus, const LiverpoolNBFnc4DeviceConfig& config)
+    : PCIeDevice(bus, config) {
     reset();
 }
 
@@ -89,8 +89,8 @@ LiverpoolNBFnc4Device::~LiverpoolNBFnc4Device() {
 void LiverpoolNBFnc4Device::reset() {
 }
 
-LiverpoolNBFnc5Device::LiverpoolNBFnc5Device(PCIBus* bus, const LiverpoolNBFnc5DeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolNBFnc5Device::LiverpoolNBFnc5Device(PCIeBus* bus, const LiverpoolNBFnc5DeviceConfig& config)
+    : PCIeDevice(bus, config) {
     reset();
 }
 

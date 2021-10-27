@@ -10,8 +10,8 @@
 
 #include "liverpool_iommu.h"
 
-LiverpoolIOMMUDevice::LiverpoolIOMMUDevice(PCIBus* bus, const LiverpoolIOMMUDeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolIOMMUDevice::LiverpoolIOMMUDevice(PCIeBus* bus, const LiverpoolIOMMUDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     // Define BARs
     mmio = new MemorySpace(this, 0x4000, {
         static_cast<MemorySpaceReadOp>(&LiverpoolIOMMUDevice::mmio_read),

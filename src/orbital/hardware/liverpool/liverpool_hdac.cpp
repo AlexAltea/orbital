@@ -16,8 +16,8 @@ enum {
     HDAC_UNK68 = 0x68, // Flags?
 };
 
-LiverpoolHDACDevice::LiverpoolHDACDevice(PCIBus* bus, const LiverpoolHDACDeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolHDACDevice::LiverpoolHDACDevice(PCIeBus* bus, const LiverpoolHDACDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     // Define BARs
     mmio = new MemorySpace(this, 0x4000, {
         static_cast<MemorySpaceReadOp>(&LiverpoolHDACDevice::mmio_read),

@@ -27,8 +27,8 @@ enum {
     AGBE_UNK2880    = 0x2880,
 };
 
-AeoliaGBEDevice::AeoliaGBEDevice(PCIBus* bus, const AeoliaGBEDeviceConfig& config)
-    : PCIDevice(bus, config) {
+AeoliaGBEDevice::AeoliaGBEDevice(PCIeBus* bus, const AeoliaGBEDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     // Define BARs
     mmio = new MemorySpace(this, 0x4000, {
         static_cast<MemorySpaceReadOp>(&AeoliaGBEDevice::mmio_read),

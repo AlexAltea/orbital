@@ -13,8 +13,8 @@
 constexpr U32 AEOLIA_AHCI_BAR_IDP = 4;
 constexpr U32 AEOLIA_AHCI_BAR_MEM = 5;
 
-AeoliaAHCIDevice::AeoliaAHCIDevice(PCIBus* bus, const AeoliaAHCIDeviceConfig& config)
-    : PCIDevice(bus, config) {
+AeoliaAHCIDevice::AeoliaAHCIDevice(PCIeBus* bus, const AeoliaAHCIDeviceConfig& config)
+    : PCIeDevice(bus, config) {
 
     // Create AHCI device
     Interrupt* irq = allocate_irq();

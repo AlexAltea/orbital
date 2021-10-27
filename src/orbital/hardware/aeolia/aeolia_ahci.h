@@ -20,15 +20,15 @@ enum {
 constexpr auto AEOLIA_AHCI_VID = static_cast<PCIVendorId>(0x104D);
 constexpr auto AEOLIA_AHCI_DID = static_cast<PCIDeviceId>(0x909F);
 
-struct AeoliaAHCIDeviceConfig : PCIDeviceConfig {
+struct AeoliaAHCIDeviceConfig : PCIeDeviceConfig {
     AeoliaAHCIDeviceConfig(PCI_DF df = PCI_DF(AEOLIA_AHCI_DEV, AEOLIA_AHCI_FNC))
-        : PCIDeviceConfig(df, AEOLIA_AHCI_VID, AEOLIA_AHCI_DID, 0x0, PCI_CLASS_SYSTEM_OTHER) {
+        : PCIeDeviceConfig(df, AEOLIA_AHCI_VID, AEOLIA_AHCI_DID, 0x0, PCI_CLASS_SYSTEM_OTHER) {
     }
 };
 
-class AeoliaAHCIDevice final : public PCIDevice {
+class AeoliaAHCIDevice final : public PCIeDevice {
 public:
-    AeoliaAHCIDevice(PCIBus* bus, const AeoliaAHCIDeviceConfig& config = {});
+    AeoliaAHCIDevice(PCIeBus* bus, const AeoliaAHCIDeviceConfig& config = {});
     ~AeoliaAHCIDevice();
 
     // Device interface

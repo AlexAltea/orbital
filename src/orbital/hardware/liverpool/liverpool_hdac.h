@@ -20,15 +20,15 @@ enum {
 constexpr auto LIVERPOOL_HDAC_VID = static_cast<PCIVendorId>(0x1002);
 constexpr auto LIVERPOOL_HDAC_DID = static_cast<PCIDeviceId>(0x9921);
 
-struct LiverpoolHDACDeviceConfig : PCIDeviceConfig {
+struct LiverpoolHDACDeviceConfig : PCIeDeviceConfig {
     LiverpoolHDACDeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_HDAC_DEV, LIVERPOOL_HDAC_FNC))
-        : PCIDeviceConfig(df, LIVERPOOL_HDAC_VID, LIVERPOOL_HDAC_DID, 0x0, PCI_CLASS_MULTIMEDIA_AUDIO) {
+        : PCIeDeviceConfig(df, LIVERPOOL_HDAC_VID, LIVERPOOL_HDAC_DID, 0x0, PCI_CLASS_MULTIMEDIA_AUDIO) {
     }
 };
 
-class LiverpoolHDACDevice final : public PCIDevice {
+class LiverpoolHDACDevice final : public PCIeDevice {
 public:
-    LiverpoolHDACDevice(PCIBus* bus, const LiverpoolHDACDeviceConfig& config = {});
+    LiverpoolHDACDevice(PCIeBus* bus, const LiverpoolHDACDeviceConfig& config = {});
     ~LiverpoolHDACDevice();
 
     // Device interface

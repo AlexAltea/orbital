@@ -10,8 +10,8 @@
 
 #include "aeolia_sdhci.h"
 
-AeoliaSDHCIDevice::AeoliaSDHCIDevice(PCIBus* bus, const AeoliaSDHCIDeviceConfig& config)
-    : PCIDevice(bus, config) {
+AeoliaSDHCIDevice::AeoliaSDHCIDevice(PCIeBus* bus, const AeoliaSDHCIDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     // Define BARs
     mmio = new MemorySpace(this, 0x1000, {
         static_cast<MemorySpaceReadOp>(&AeoliaSDHCIDevice::mmio_read),

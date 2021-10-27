@@ -10,8 +10,8 @@
 
 #include "liverpool_rc.h"
 
-LiverpoolRCDevice::LiverpoolRCDevice(PCIBus* bus, const LiverpoolRCDeviceConfig& config)
-    : PCIDevice(bus, config) {
+LiverpoolRCDevice::LiverpoolRCDevice(PCIeBus* bus, const LiverpoolRCDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     reset();
 }
 

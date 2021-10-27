@@ -10,8 +10,8 @@
 
 #include "aeolia_xhci.h"
 
-AeoliaXHCIDevice::AeoliaXHCIDevice(PCIBus* bus, const AeoliaXHCIDeviceConfig& config)
-    : PCIDevice(bus, config) {
+AeoliaXHCIDevice::AeoliaXHCIDevice(PCIeBus* bus, const AeoliaXHCIDeviceConfig& config)
+    : PCIeDevice(bus, config) {
     // Define BARs
     constexpr size_t xhci_size = 0x200000;
     xhci[0] = new MemorySpace(this, xhci_size, {
