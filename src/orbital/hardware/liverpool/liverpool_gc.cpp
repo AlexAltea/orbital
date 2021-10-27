@@ -109,10 +109,119 @@ void LiverpoolGCDevice::pio_write(U64 addr, U64 value, U64 size) {
 }
 
 U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
-    assert_always("Unimplemented");
-    return 0;
+    U32 value = 0;
+    U64 index = addr >> 2;
+    U64 index_ix = 0;
+
+    // Remapped registers
+    if (addr + size <= config_size) {
+        value = (U32&)config_data[addr];
+        return value;
+    }
+
+    switch (index) {
+    case mmSAM_IX_DATA:
+        index_ix = mmio[mmSAM_IX_INDEX];
+        DPRINTF("mmSAM_IX_DATA_read { index: %X }", index_ix);
+        value = sam_ix[index_ix];
+        break;
+    case mmSAM_SAB_IX_DATA:
+        index_ix = mmio[mmSAM_SAB_IX_INDEX];
+        DPRINTF("mmSAM_SAB_IX_DATA_read { index: %X }", index_ix);
+        value = sam_sab_ix[index_ix];
+        break;
+
+    // Simple registers
+    case mmSAM_GPR_SCRATCH_0:
+    case mmSAM_GPR_SCRATCH_1:
+    case mmSAM_GPR_SCRATCH_2:
+    case mmSAM_GPR_SCRATCH_3:
+        value = mmio[index];
+        break;
+
+    default:
+        DPRINTF("index=0x%llX, size=0x%llX", index, size);
+        assert_always("Unimplemented");
+        value = mmio[index];
+    }
+
+    return value;
 }
 
 void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
-    assert_always("Unimplemented");
+    U64 index = addr >> 2;
+    U64 index_ix = 0;
+
+    // Remapped registers
+    if (addr + size <= config_size) {
+        (U32&)config_data[addr] = value;
+        return;
+    }
+
+    // Indirect registers
+    switch (index) {
+    case mmSAM_IX_DATA:
+        switch (mmio[mmSAM_IX_INDEX]) {
+        case ixSAM_IH_CPU_AM32_INT:
+            update_sam(value);
+            break;
+        case ixSAM_IH_AM32_CPU_INT_ACK:
+            sam_ix[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;
+            break;
+        default:
+            index_ix = mmio[mmSAM_IX_INDEX];
+            DPRINTF("mmSAM_IX_DATA_write { index: %X, value: %llX }", index_ix, value);
+            sam_ix[index_ix] = value;
+        }
+        return;
+
+    case mmSAM_SAB_IX_DATA:
+        switch (mmio[mmSAM_SAB_IX_INDEX]) {
+        default:
+            index_ix = mmio[mmSAM_SAB_IX_INDEX];
+            DPRINTF("mmSAM_SAB_IX_DATA_write { index: %X, value: %llX }", index_ix, value);
+            sam_sab_ix[index_ix] = value;
+        }
+        return;
+
+    case mmMM_DATA:
+        mmio_write(mmio[mmMM_INDEX], value, size);
+        return;
+    }
+
+    // Direct registers
+    mmio[index] = value;
+    switch (index) {
+    // Simple registers
+    case mmSAM_IX_INDEX:
+    case mmSAM_GPR_SCRATCH_0:
+    case mmSAM_GPR_SCRATCH_1:
+    case mmSAM_GPR_SCRATCH_2:
+    case mmSAM_GPR_SCRATCH_3:
+        break;
+
+    default:
+        DPRINTF("index=0x%llX, size=0x%llX, value=0x%llX }", index, size, value);
+        assert_always("Unimplemented");
+    }
+}
+
+void LiverpoolGCDevice::update_sam(U32 value) {
+    U64 query_addr;
+    U64 reply_addr;
+
+    assert(value == 1);
+    query_addr = sam_ix[ixSAM_IH_CPU_AM32_INT_CTX_HIGH];
+    query_addr = sam_ix[ixSAM_IH_CPU_AM32_INT_CTX_LOW] | (query_addr << 32);
+    query_addr &= 0xFFFFFFFFFFFFULL;
+    reply_addr = sam_ix[ixSAM_IH_AM32_CPU_INT_CTX_HIGH];
+    reply_addr = sam_ix[ixSAM_IH_AM32_CPU_INT_CTX_LOW] | (reply_addr << 32);
+    reply_addr &= 0xFFFFFFFFFFFFULL;
+
+    const U16 flags = query_addr >> 48;
+    DPRINTF("flags=0x%llX, query=0x%llX, reply=0x%llX\n", flags, query_addr, reply_addr);
+
+
+    sam_ix[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;// 1;
+    sam_ix[ixSAM_IH_AM32_CPU_INT_STATUS] |= 1;
 }

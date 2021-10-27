@@ -1,5 +1,7 @@
 /**
  * AMD Secure Asset Management Unit (SAMU) device.
+ * 
+ * Based on research from: Alexey Kulaev (flatz).
  *
  * Copyright 2017-2021. Orbital project.
  * Released under MIT license. Read LICENSE for more details.
@@ -15,7 +17,10 @@
 #define mmSAM_IX_DATA                     0x00008801
 #define mmSAM_SAB_IX_INDEX                0x00008802
 #define mmSAM_SAB_IX_DATA                 0x00008803
-#define mmSAM_UNK881C                     0x0000881C
+#define mmSAM_GPR_SCRATCH_0               0x0000881C
+#define mmSAM_GPR_SCRATCH_1               0x0000881D
+#define mmSAM_GPR_SCRATCH_2               0x0000881E
+#define mmSAM_GPR_SCRATCH_3               0x0000881F
 
 // SAMU IX                               
 #define ixSAM_RST_HOST_SOFT_RESET         0x00000001
