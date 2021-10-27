@@ -140,10 +140,13 @@ void OrbitalUI::render(PS4Machine& ps4) {
                 tab_gpu.render(ps4);
                 ImGui::EndTabItem();
             }
+            if (ImGui::BeginTabItem("PCI")) {
+                ImGui::EndTabItem();
+            }
             if (ImGui::BeginTabItem("ICC")) {
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("SAMU")) {
+            if (ImGui::BeginTabItem("SBL")) {
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();

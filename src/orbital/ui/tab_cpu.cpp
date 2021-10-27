@@ -24,6 +24,40 @@ static std::string cpu_name(size_t index) {
     return "CPU #" + std::to_string(index);
 }
 
+static const char* bp_prot(CPUBreakpoint::Prot prot) {
+    switch (prot) {
+    case CPUBreakpoint::Prot::R:
+        return "R--";
+    case CPUBreakpoint::Prot::W:
+        return "-W-";
+    case CPUBreakpoint::Prot::X:
+        return "--X";
+    case CPUBreakpoint::Prot::RW:
+        return "RW-";
+    case CPUBreakpoint::Prot::RX:
+        return "R-X";
+    case CPUBreakpoint::Prot::WX:
+        return "-WX";
+    case CPUBreakpoint::Prot::RWX:
+        return "RWX";
+    default:
+        return "---";
+    }
+}
+
+static const char* bp_type(CPUBreakpoint::Type type) {
+    switch (type) {
+    case CPUBreakpoint::Type::HW:
+        return "HW";
+    case CPUBreakpoint::Type::SW:
+        return "SW";
+    case CPUBreakpoint::Type::HV:
+        return "HV";
+    default:
+        return "Auto";
+    }
+}
+
 TabCPU::TabCPU() {
     // Initialize Capstone engine
     if (!cs_support(CS_ARCH_X86)) {
@@ -281,7 +315,29 @@ void TabCPU::render_memory(X86CPUDevice* c) {
 }
 
 void TabCPU::render_breakpoints(X86CPUDevice* c) {
+    auto bps = c->breakpoints_all();
+
     if (ImGui::Begin("Breakpoints")) {
+        const ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
+        if (ImGui::BeginTable("Breakpoint", 3, flags)) {
+            ImGui::TableSetupColumn("Address");
+            ImGui::TableSetupColumn("Prot");
+            ImGui::TableSetupColumn("Type");
+            ImGui::TableHeadersRow();
+
+            ImGui::PushFont(font_code);
+            for (const auto& bp : bps) {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Text("0x%08X", bp.addr);
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text(bp_prot(bp.prot));
+                ImGui::TableSetColumnIndex(2);
+                ImGui::Text(bp_type(bp.type));
+            }
+            ImGui::PopFont();
+            ImGui::EndTable();
+        }
     }
     ImGui::End();
 }
