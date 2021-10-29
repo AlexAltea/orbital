@@ -162,25 +162,43 @@ void TabCPU::render_disasm(X86CPUDevice* c) {
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 4, 1 });
         for (size_t i = 0; i < insn_count; i++) {
             const auto insn = insns[i];
-            std::string line;
 
-            // Show address
+            // Draw breakpoints with a different color
+            if (c->breakpoint_get_by_addr(insn.address).handle != INVALID_BP_HANDLE) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+            }
+
+            // Disassemble line
+            std::string line;
+            constexpr size_t bytes_maxshow = 5;
             line += (insn.address == rip) ? "> " : "  ";
             line += fmt::format("{:08X} ", insn.address);
             line += "    ";
-
-            // Show bytes
-            constexpr size_t bytes_maxshow = 5;
             for (size_t j = 0; j < bytes_maxshow; j++) {
                 line += (j < insn.size) ? fmt::format("{:02X} ", insn.bytes[j]) : "   ";
             }
             line += "    ";
-
-            // Show disassembly
             line += fmt::format("{:<8s} {}", insn.mnemonic, insn.op_str);
 
+            // Toggle breakpoints on click
             if (ImGui::Selectable(line.c_str())) {
+                auto bp_handle = c->breakpoint_get_by_addr(insn.address).handle;
+                if (bp_handle != INVALID_BP_HANDLE) {
+                    c->breakpoint_remove(bp_handle);
+                } else {
+                    CPUBreakpoint bp = {};
+                    bp.type = CPUBreakpoint::Type::HW;
+                    bp.prot = CPUBreakpoint::Prot::X;
+                    bp.addr = insn.address;
+                    bp.size = 1;
+                    bp.options = { .pause_cpu = true, .delete_on_hit = false };
+                    c->breakpoint_add(bp);
+                }
             }
+
+            ImGui::PopStyleColor(1);
         }
         ImGui::PopStyleVar();
         ImGui::PopFont();
