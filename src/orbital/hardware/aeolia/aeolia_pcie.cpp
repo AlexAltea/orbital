@@ -49,10 +49,25 @@ enum {
     APCIE_ICC_REG_IRQ_MASK  = range_icc.base + 0x824,
 };
 
+enum {
+    APCIE_WDT_REG_CCR       = range_wdt.base + 0x00, // R/W
+    APCIE_WDT_REG_TIMER0    = range_wdt.base + 0x28,
+    APCIE_WDT_REG_TIMER1    = range_wdt.base + 0x2C,
+    APCIE_WDT_REG_PLCR      = range_wdt.base + 0x58,
+    APCIE_WDT_REG_CER       = range_wdt.base + 0x84, // R/W
+};
+
 constexpr U32 APCIE_ICC_MSG_PENDING = 0x1;
 constexpr U32 APCIE_ICC_IRQ_PENDING = 0x2;
 constexpr U32 APCIE_ICC_REPLY = 0x4000;
 constexpr U32 APCIE_ICC_EVENT = 0x8000;
+
+constexpr U32 APCIE_RTC_STATUS             =  0x100;
+constexpr U32 APCIE_RTC_STATUS__BATTERY_OK =  0x100;
+constexpr U32 APCIE_RTC_STATUS__CLOCK_OK   =    0x4;
+constexpr U32 APCIE_CHIP_ID0               = 0x1104;
+constexpr U32 APCIE_CHIP_ID1               = 0x1108;
+constexpr U32 APCIE_CHIP_REV               = 0x110C;
 
 static U16 icc_checksum(const IccMessageHeader& message) {
     auto* data = reinterpret_cast<const U08*>(&message);
@@ -121,8 +136,30 @@ void AeoliaPCIeDevice::bar0_write(U64 addr, U64 value, U64 size) {
 }
 
 U64 AeoliaPCIeDevice::bar2_read(U64 addr, U64 size) {
+    U64 value = 0;
     assert_always("Unimplemented");
-    return 0;
+    switch (addr) {
+    case APCIE_RTC_STATUS:
+        value = 0
+            | APCIE_RTC_STATUS__BATTERY_OK
+            | APCIE_RTC_STATUS__CLOCK_OK;
+        break;
+    case 0x210:
+        value = 0x18080; /* check 0xFFFFFFFF82833286 @ 5.00 */
+        break;
+    case APCIE_CHIP_ID0:
+        value = 0x41B30130;
+        break;
+    case APCIE_CHIP_ID1:
+        value = 0x52024D44;
+        break;
+    case APCIE_CHIP_REV:
+        value = 0x00000300;
+        break;
+    default:
+        assert_always("Unimplemented");
+    }
+    return value;
 }
 
 void AeoliaPCIeDevice::bar2_write(U64 addr, U64 value, U64 size) {
@@ -133,6 +170,12 @@ U64 AeoliaPCIeDevice::peripherals_read(U64 addr, U64 size) {
     U64 value = 0;
 
     switch (addr) {
+    case APCIE_WDT_REG_TIMER0:
+    case APCIE_WDT_REG_TIMER1:
+        // EMC timer ticking at 32.768kHz
+        value = Clock::now().time_since_epoch().count();
+        value /= 30518LL; // 10^9 Hz / 32768 Hz
+        break;
     case APCIE_ICC_REG_DOORBELL:
         value = icc_doorbell;
         break;
@@ -140,10 +183,7 @@ U64 AeoliaPCIeDevice::peripherals_read(U64 addr, U64 size) {
         value = icc_status;
         break;
     default:
-        if (range_wdt.contains(addr)) {
-            assert_always("Unimplemented");
-        }
-        else if (range_unk1.contains(addr)) {
+        if (range_unk1.contains(addr)) {
             fprintf(stderr, "AeoliaPCIeDevice::peripherals_read: addr=0x%llX, size=0x%llX\n", addr, size);
         }
         else if (range_sflash.contains(addr)) {
