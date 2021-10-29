@@ -41,9 +41,34 @@ static Key getKey(const SelfInfo& info) {
 
     switch (info.paid) {
     case PAID_KERNEL:
-        if (info.version_app >= 0x00000500'00000000 &&
-            info.version_app <= 0x0000054F'FFFFFFFF) {
+        if (info.version_app >= 0x00000900'00000000) {
+            return crypto.get("self.80010002.900");
+        } else if (info.version_app >= 0x00000850'00000000) { // TODO: Not sure, which 8.XX is it?
+            return crypto.get("self.80010002.8xx");
+        } else if (info.version_app >= 0x00000800'00000000) {
+            return crypto.get("self.80010002.800");
+        } else if (info.version_app >= 0x00000750'00000000) { // TODO: Not sure, which 7.XX is it?
+            return crypto.get("self.80010002.7xx");
+        } else if (info.version_app >= 0x00000700'00000000) {
+            return crypto.get("self.80010002.700");
+        } else if (info.version_app >= 0x00000650'00000000) { // TODO: Not sure, which 6.XX is it?
+            return crypto.get("self.80010002.6xx");
+        } else if (info.version_app >= 0x00000600'00000000) {
+            return crypto.get("self.80010002.600");
+        } else if (info.version_app >= 0x00000550'00000000) {
+            return crypto.get("self.80010002.550");
+        } else if (info.version_app >= 0x00000500'00000000) {
             return crypto.get("self.80010002.500");
+        } else if (info.version_app >= 0x00000450'00000000) {
+            return crypto.get("self.80010002.450");
+        } else if (info.version_app >= 0x00000406'00000000) {
+            return crypto.get("self.80010002.406");
+        } else if (info.version_app >= 0x00000400'00000000) {
+            return crypto.get("self.80010002.400");
+        } else if (info.version_app >= 0x00000350'00000000) {
+            return crypto.get("self.80010002.350");
+        } else if (info.version_app >= 0x00000150'00000000) { // TODO: Not sure, which 1.XX is it?
+            return crypto.get("self.80010002.1xx");
         } else {
             throw std::runtime_error("Unsupported");
         }
