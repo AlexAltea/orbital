@@ -119,6 +119,11 @@ CORE_PACKED(struct IccReplyBoardVersion {
 });
 static_assert(sizeof(IccReplyBoardVersion) == 0x2C);
 
+CORE_PACKED(struct IccReplyBoardCapacity {
+    LE<U32> ddr3_capacity;
+});
+static_assert(sizeof(IccReplyBoardCapacity) == 0x04);
+
 /* ICC messages */
 constexpr size_t ICC_MESSAGE_MAXSIZE = 0x7F0;
 
@@ -137,6 +142,8 @@ struct IccReplyMessage : IccMessageHeader {
 
         // ICC_CMD_BOARD_OP_GET_FW_VERSION
         IccReplyBoardVersion cmd_fwver;
+        // ICC_CMD_BOARD_OP_GET_DDR_CAPACITY
+        IccReplyBoardCapacity cmd_capacity;
     };
 };
 

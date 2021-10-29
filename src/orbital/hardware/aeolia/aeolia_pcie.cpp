@@ -321,6 +321,9 @@ void AeoliaPCIeDevice::update_icc() {
         case ICC_CMD_BOARD_OP_GET_FW_VERSION:
             status = icc_cmd_board_version(reply.cmd_fwver);
             break;
+        case ICC_CMD_BOARD_OP_GET_DDR_CAPACITY:
+            status = icc_cmd_board_capacity(reply.cmd_capacity);
+            break;
         default:
             fprintf(stderr, "icc: Unknown board query 0x%04X!\n", query.minor);
         }
@@ -404,6 +407,12 @@ AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_board_version(IccReplyBoard
     reply.syscon_version_modify = 0x45;
     reply.syscon_version_edition = 0x54;
     reply.syscon_version_reserved = 0x0;
+
+    return { IccResult::OK, sizeof(reply) };
+}
+
+AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_board_capacity(IccReplyBoardCapacity& reply) {
+    reply.ddr3_capacity = 0x40000000;
 
     return { IccResult::OK, sizeof(reply) };
 }
