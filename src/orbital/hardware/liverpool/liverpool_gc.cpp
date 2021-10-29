@@ -21,6 +21,8 @@
 #include "gmc/gmc_7_1_sh_mask.h"
 #include "oss/oss_2_0_d.h"
 #include "oss/oss_2_0_sh_mask.h"
+#include "smu/smu_7_1_2_d.h"
+#include "smu/smu_7_1_2_sh_mask.h"
 #include "sam/sam.h"
 
 // Logging
@@ -114,12 +116,44 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
     U64 index_ix = 0;
 
     // Remapped registers
-    if (addr + size <= config_size) {
+    if (addr + size <= 0x100) {
         value = (U32&)config_data[addr];
         return value;
     }
 
     switch (index) {
+    // SMU
+    case mmSMC_IND_INDEX:
+        value = mmio[index];
+        break;
+    case mmSMC_IND_DATA:
+        switch (mmio[mmSMC_IND_INDEX]) {
+        case 0xC2100004:
+            value = 0x2 | 0x1;
+            break;
+        case 0xC0500090:
+            value = 0x1;
+            break;
+        case 0xC0500098:
+            value = 0x1;
+            break;
+        default:
+            value = 0x0;
+        }
+        break;
+
+    // GCA
+    case mmGRBM_GFX_INDEX:
+    case mmRLC_MAX_PG_CU:
+    case mmRLC_PG_CNTL:
+        value = mmio[index];
+        break;
+
+    // GMC
+    case mmMC_BIST_MISMATCH_ADDR:
+        value = mmio[index];
+        break;
+
     case mmSAM_IX_DATA:
         index_ix = mmio[mmSAM_IX_INDEX];
         DPRINTF("mmSAM_IX_DATA_read { index: %X }", index_ix);
@@ -153,7 +187,7 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     U64 index_ix = 0;
 
     // Remapped registers
-    if (addr + size <= config_size) {
+    if (addr + size <= 0x100) {
         (U32&)config_data[addr] = value;
         return;
     }
@@ -192,6 +226,82 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     // Direct registers
     mmio[index] = value;
     switch (index) {
+    // SMU
+    case mmSMC_IND_INDEX:
+        break;
+
+    // GCA
+    case mmGRBM_GFX_INDEX:
+    case mmRLC_PG_ALWAYS_ON_CU_MASK:
+    case mmRLC_MAX_PG_CU:
+    case mmRLC_PG_CNTL:
+        break;
+
+    // GMC
+    case mmMC_SHARED_BLACKOUT_CNTL:
+    case mmMC_SEQ_RESERVE_0_S:
+    case mmMC_SEQ_RESERVE_1_S:
+    case mmMC_RPB_ARB_CNTL:
+    case mmMC_RPB_CID_QUEUE_WR:
+    case mmMC_RPB_WR_COMBINE_CNTL:
+    case mmMC_RPB_DBG1:
+    case mmMC_HUB_WDP_IH:
+    case mmMC_HUB_WDP_CPF:
+    case mmMC_HUB_RDREQ_CPC:
+    case mmMC_HUB_WDP_RLC:
+    case mmMC_HUB_RDREQ_UVD:
+    case mmMC_HUB_WRRET_MCDW:
+    case mmMC_HUB_RDREQ_DMIF:
+    case mmMC_HUB_RDREQ_CNTL:
+    case mmMC_HUB_RDREQ_MCDW:
+    case mmMC_HUB_RDREQ_MCDX:
+    case mmMC_HUB_RDREQ_MCDY:
+    case mmMC_HUB_RDREQ_MCDZ:
+    case mmMC_CITF_CREDITS_ARB_RD:
+    case mmMC_CITF_CREDITS_ARB_WR:
+    case mmMC_RD_GRP_EXT:
+    case mmMC_WR_GRP_EXT:
+    case mmMC_RD_GRP_LCL:
+    case mmMC_WR_GRP_LCL:
+    case mmMC_ARB_TM_CNTL_RD:
+    case mmMC_ARB_TM_CNTL_WR:
+    case mmMC_ARB_LAZY0_RD:
+    case mmMC_ARB_LAZY0_WR:
+    case mmMC_ARB_AGE_RD:
+    case mmMC_ARB_AGE_WR:
+    case mmMC_RD_GRP_GFX:
+    case mmMC_WR_GRP_GFX:
+    case mmMC_RD_GRP_SYS:
+    case mmMC_WR_GRP_SYS:
+    case mmMC_RD_GRP_OTH:
+    case mmMC_WR_GRP_OTH:
+    case mmMC_HUB_RDREQ_CPF:
+    case mmMC_HUB_WDP_ACPO:
+    case mmMC_ARB_WTM_CNTL_WR:
+    case mmMC_HUB_RDREQ_VMC:
+    case mmMC_ARB_WTM_CNTL_RD:
+    case mmMC_ARB_RET_CREDITS_WR:
+    case mmMC_ARB_LM_WR:
+    case mmMC_ARB_LM_RD:
+    case mmMC_ARB_RET_CREDITS_RD:
+    case mmMC_HUB_WDP_VCEU:
+    case mmMC_HUB_WDP_XDMAM:
+    case mmMC_HUB_WDP_XDMA:
+    case mmMC_HUB_RDREQ_XDMAM:
+    case mmMC_ARB_RET_CREDITS2:
+    case mmMC_SHARED_CHMAP:
+    case mmMC_ARB_SQM_CNTL:
+    case mmMC_BIST_MISMATCH_ADDR:
+    case mmMC_XPB_CLK_GAT:
+    case mmMC_HUB_MISC_SIP_CG:
+    case mmMC_HUB_MISC_HUB_CG:
+    case mmMC_HUB_MISC_VM_CG:
+    case mmMC_CITF_MISC_RD_CG:
+    case mmMC_CITF_MISC_WR_CG:
+    case mmMC_CITF_MISC_VM_CG:
+    case mmVM_L2_CG:
+        break;
+
     // Simple registers
     case mmSAM_IX_INDEX:
     case mmSAM_GPR_SCRATCH_0:
