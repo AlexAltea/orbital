@@ -100,15 +100,21 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     auto boot = &ram[0x600000];
     // SAMU version?
     boot[0x000] = 6;
+    // ???: sceSblRcMgrIsAllowSLDebugger
+    boot[0x006] = 0x4;
+    boot[0x009] = 0x2;
+    // ???: Used by `sceSblAIMgrIs*` functions.Seems to be always 0x01.
+    boot[0x00C] = 1;
+    // ???: Target ID
+    boot[0x00D] = 0x82;
     // SAMU ID?
     boot[0x1C8] = 'W';
     boot[0x1C9] = '5';
     boot[0x1CA] = 'C';
     boot[0x1CB] = '2';
     boot[0x1CC] = '1';
-
     // KASLR disable
-    uint8_t sha1_null16_preimage[64] = { 0xF8, 0x6F };
+    uint8_t sha1_null16_preimage[20] = { 0xF8, 0x6F };
     memcpy(&boot[0x160], sha1_null16_preimage, sizeof(sha1_null16_preimage));
 }
 
@@ -157,6 +163,13 @@ void PS4Machine::recover(std::filesystem::path file) {
     // Load kernel and UBIOS into into memory
     space_ram->write(phdr.p_paddr, pdata.size(), pdata.data());
     space_ubios->write(0x0, space_ubios->size(), pdata.data());
+
+    // Patch kernel
+    if (0) { // Patches only valid for 5.00
+        auto ram = reinterpret_cast<U08*>(space_ram->ptr());
+        auto img = &ram[phdr.p_paddr];
+        (U32&)img[0x3B341E] |= 0x800; // boothowto: Enable verbosity
+    }
 
     // Expose PS4UPDATE.PUP as USB mass-storage device
     // TODO
