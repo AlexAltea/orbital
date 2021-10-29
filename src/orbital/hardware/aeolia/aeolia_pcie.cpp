@@ -11,21 +11,7 @@
 #include "aeolia_pcie.h"
 #include "aeolia_mem.h"
 #include "uart/aeolia_uart.h"
-
-struct OffsetRange {
-    uint64_t base;
-    uint64_t size;
-
-    constexpr OffsetRange(uint64_t base, uint64_t size)
-        : base(base), size(size) {
-    }
-    constexpr bool contains(uint64_t off) const noexcept {
-        return (base <= off) && (off < base + size);
-    }
-    constexpr bool contains_strict(uint64_t off, uint64_t len) const noexcept {
-        return contains(off) && (off + len <= base + size);
-    }
-};
+#include <orbital/offset_range.h>
 
 constexpr auto range_wdt    = OffsetRange(0x081000, 0x1000);
 constexpr auto range_unk1   = OffsetRange(0x084000, 0x1000); // ???
