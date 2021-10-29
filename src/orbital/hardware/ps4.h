@@ -79,10 +79,10 @@ public:
     }
 
 private:
-    Space* space_ram;
-    Space* space_ram_below_4g;
-    Space* space_ram_above_4g;
-    Space* space_ubios;
+    MemorySpace* space_ubios;
+    MemorySpace* space_ram;
+    AliasSpace* space_ram_below_4g;
+    AliasSpace* space_ram_above_4g;
 
     // Liverpool
     std::vector<X86CPUDevice*> cpus;

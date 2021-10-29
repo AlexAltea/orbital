@@ -94,6 +94,18 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
 
     // HACK: Wiring Aeolia subdevices should happen at Aeolia-level, not PS4-level
     aeolia_pcie->set_spm(aeolia_mem->get_spm());
+
+    // Init RAM:0x600000
+    auto ram = reinterpret_cast<U08*>(space_ram->ptr());
+    auto boot = &ram[0x600000];
+    // SAMU version?
+    boot[0x000] = 6;
+    // SAMU ID?
+    boot[0x1C8] = 'W';
+    boot[0x1C9] = '5';
+    boot[0x1CA] = 'C';
+    boot[0x1CB] = '2';
+    boot[0x1CC] = '1';
 }
 
 PS4Machine::~PS4Machine() {
