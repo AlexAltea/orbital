@@ -36,7 +36,7 @@ static void check_vk_result(VkResult err) {
     }
 }
 
-UI::UI(PS4Machine& ps4) : ps4(ps4) {
+UI::UI() {
     // Initial state
     is_minimized = false;
     is_quitting = false;
@@ -202,13 +202,13 @@ UI::~UI() {
     SDL_DestroyWindow(window);
 }
 
-void UI::task() {
+void UI::task(PS4Machine& ps4) {
     while (!is_quitting) {
-        loop();
+        loop(ps4);
     }
 }
 
-void UI::loop() {
+void UI::loop(PS4Machine& ps4) {
     SDL_Event e;
 
     // Handle events

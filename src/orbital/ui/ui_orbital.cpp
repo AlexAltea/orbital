@@ -152,10 +152,26 @@ void OrbitalUI::render(PS4Machine& ps4) {
             ImGui::EndTabBar();
         }
 
+        // Tools
+        if (show_uart1) {
+            tool_uart1.Draw("UART #1");
+        }
+        if (show_uart0) {
+            tool_uart0.Draw("UART #0");
+        }
+
         ImGui::End();
     }
 
     ImGui::PopFont();
+}
+
+CharHost* OrbitalUI::get_uart0_backend() {
+    return tool_uart0.backend();
+}
+
+CharHost* OrbitalUI::get_uart1_backend() {
+    return tool_uart1.backend();
 }
 
 void OrbitalUI::render_menus(PS4Machine& ps4) {
@@ -195,11 +211,11 @@ void OrbitalUI::render_menus(PS4Machine& ps4) {
     }
 
     if (ImGui::BeginMenu("Tools", true)) {
-        ImGui::MenuItem("Statistics", "Alt+1", &show_stats, true);
-        ImGui::MenuItem("UART Output", "Alt+2", &show_uart, true);
-        ImGui::MenuItem("GPU Debugger", "Alt+3", &show_gpu_debugger, true);
-        ImGui::MenuItem("Executing Processes", "Alt+4", &show_executing_processes, true);
-        ImGui::MenuItem("Process List", "Alt+5", &show_process_list, true);
+        ImGui::MenuItem("Statistics", "Alt+1", &show_stats, false);
+        ImGui::MenuItem("UART #0", "Alt+2", &show_uart0, true);
+        ImGui::MenuItem("UART #1", "Alt+3", &show_uart1, true);
+        ImGui::MenuItem("Executing Processes", "Alt+4", &show_executing_processes, false);
+        ImGui::MenuItem("Process List", "Alt+5", &show_process_list, false);
         ImGui::Separator();
         ImGui::MenuItem("CP Commands", "Alt+6", &show_trace_cp, false);
         ImGui::MenuItem("ICC Commands", "Alt+7", &show_trace_icc, false);

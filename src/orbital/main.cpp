@@ -14,7 +14,11 @@
 #include <stdio.h>
 
 int main(int argc, char** argv) {
+    UI ui{};
+
     PS4MachineConfig config = {};
+    config.aeolia_uart0 = ui.get_uart0_backend();
+    config.aeolia_uart1 = ui.get_uart1_backend();
 
     PS4Machine ps4(config);
     ps4.recover("pups/PS4UPDATE.PUP");
@@ -22,6 +26,6 @@ int main(int argc, char** argv) {
 
     UI ui(ps4);
 
-    ui.task();
+    ui.task(ps4);
     return 0;
 }

@@ -10,6 +10,8 @@
  
 #pragma once
 
+#include <orbital/core.h>
+
 #include <vulkan/vulkan.h>
 
 #define SDL_MAIN_HANDLED
@@ -25,13 +27,16 @@ class PS4Machine;
 
 class UI {
 public:
-    UI(PS4Machine& ps4);
+    UI();
     ~UI();
 
     /**
      * Main UI loop.
      */
-    void task();
+    void task(PS4Machine& ps4);
+
+    CharHost* get_uart0_backend() { return ui.get_uart0_backend(); }
+    CharHost* get_uart1_backend() { return ui.get_uart1_backend(); }
 
 private:
     VulkanManager* vk;
@@ -48,12 +53,11 @@ private:
 
     // Orbital state
     OrbitalUI ui;
-    PS4Machine& ps4;
-
+    
     /**
      * Main UI iteration.
      */
-    void loop();
+    void loop(PS4Machine& ps4);
 
     void frame_render();
     void frame_present();

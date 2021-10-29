@@ -10,6 +10,7 @@
 
 #include "aeolia_pcie.h"
 #include "aeolia_mem.h"
+#include "uart/aeolia_uart.h"
 
 struct OffsetRange {
     uint64_t base;
@@ -65,10 +66,10 @@ static U16 icc_checksum(const IccMessageHeader& message) {
 AeoliaPCIeDevice::AeoliaPCIeDevice(PCIeBus* bus, const AeoliaPCIeDeviceConfig& config)
     : PCIeDevice(bus, config) {
     // Create sub-devices
-    SerialDeviceConfig uart_config = {};
-    uart_config.backend.type = host::CharHostType::Stdio;
-    uart0 = std::make_unique<SerialDevice>(this, nullptr, uart_config);
-    uart1 = std::make_unique<SerialDevice>(this, nullptr, uart_config);
+    AeoliaUARTDeviceConfig uart0_config(config.backend_uart0);
+    AeoliaUARTDeviceConfig uart1_config(config.backend_uart1);
+    uart0 = std::make_unique<AeoliaUARTDevice>(this, nullptr, uart0_config);
+    uart1 = std::make_unique<AeoliaUARTDevice>(this, nullptr, uart1_config);
 
     // Define BARs
     bar0 = new MemorySpace(this, 0x100000, {

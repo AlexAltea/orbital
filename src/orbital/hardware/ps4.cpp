@@ -79,11 +79,15 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     lvp_fnc5     = new LiverpoolNBFnc5Device(lvp_bus);
 
     // Initialize Aeolia
+    AeoliaPCIeDeviceConfig apcie_config = {};
+    apcie_config.backend_uart0 = config.aeolia_uart0;
+    apcie_config.backend_uart1 = config.aeolia_uart1;
+
     aeolia_acpi  = new AeoliaACPIDevice(lvp_bus);
     aeolia_gbe   = new AeoliaGBEDevice(lvp_bus);
     aeolia_ahci  = new AeoliaAHCIDevice(lvp_bus);
     aeolia_sdhci = new AeoliaSDHCIDevice(lvp_bus);
-    aeolia_pcie  = new AeoliaPCIeDevice(lvp_bus);
+    aeolia_pcie  = new AeoliaPCIeDevice(lvp_bus, apcie_config);
     aeolia_dmac  = new AeoliaDMACDevice(lvp_bus);
     aeolia_mem   = new AeoliaMemDevice(lvp_bus);
     aeolia_xhci  = new AeoliaXHCIDevice(lvp_bus);

@@ -38,6 +38,9 @@ class LiverpoolNBFnc5Device;
 
 
 struct PS4MachineConfig : MachineConfig {
+    CharHost* aeolia_uart0 = nullptr;
+    CharHost* aeolia_uart1 = nullptr;
+
     PS4MachineConfig();
 };
 

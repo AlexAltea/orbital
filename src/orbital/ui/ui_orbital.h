@@ -12,6 +12,7 @@
 
 #include "tab_cpu.h"
 #include "tab_gpu.h"
+#include "tool_logs.h"
 
 #define IMGUI_IMPL_API
 #include <imgui.h>
@@ -27,6 +28,9 @@ public:
     void init();
     void render(PS4Machine& ps4);
 
+    CharHost* get_uart0_backend();
+    CharHost* get_uart1_backend();
+
 private:
     // Fonts
     ImFont* font_default{};
@@ -39,10 +43,14 @@ private:
     TabCPU tab_cpu;
     TabGPU tab_gpu;
 
+    // Tools
+    ToolLogs tool_uart0{};
+    ToolLogs tool_uart1{};
+
     // State
     bool show_stats;
-    bool show_uart;
-    bool show_gpu_debugger;
+    bool show_uart0 = true;
+    bool show_uart1 = false;
     bool show_executing_processes;
     bool show_process_list;
     bool show_trace_cp;

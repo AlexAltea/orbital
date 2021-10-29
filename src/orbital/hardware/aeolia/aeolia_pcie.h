@@ -11,10 +11,14 @@
 #pragma once
 
 #include "icc/icc.h"
+#include "nvs/aeolia_nvs.h"
 
 #include <orbital/core.h>
 
 #include <memory>
+
+// Forward declarations
+class AeoliaUARTDevice;
 
 enum {
     AEOLIA_PCIE_DEV = 0x14,
@@ -25,6 +29,9 @@ constexpr auto AEOLIA_PCIE_VID = static_cast<PCIVendorId>(0x104D);
 constexpr auto AEOLIA_PCIE_DID = static_cast<PCIDeviceId>(0x90A1);
 
 struct AeoliaPCIeDeviceConfig : PCIeDeviceConfig {
+    CharHost* backend_uart0 = nullptr;
+    CharHost* backend_uart1 = nullptr;
+
     AeoliaPCIeDeviceConfig(PCI_DF df = PCI_DF(AEOLIA_PCIE_DEV, AEOLIA_PCIE_FNC))
         : PCIeDeviceConfig(df, AEOLIA_PCIE_VID, AEOLIA_PCIE_DID, 0x0, PCI_CLASS_SYSTEM_OTHER) {
     }
@@ -48,8 +55,8 @@ private:
     MemorySpace* mmio_peripherals;
     MemorySpace* spm; // Not owned
 
-    std::unique_ptr<SerialDevice> uart0;
-    std::unique_ptr<SerialDevice> uart1;
+    std::unique_ptr<AeoliaUARTDevice> uart0;
+    std::unique_ptr<AeoliaUARTDevice> uart1;
 
     // State
     AeoliaNVS nvs{};
