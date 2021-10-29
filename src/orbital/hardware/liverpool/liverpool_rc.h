@@ -32,4 +32,7 @@ public:
 
     // Device interface
     void reset() override;
+
+    void config_write(U32 offset, U64 value, size_t size) override;
+    U64 config_read(U32 offset, size_t size) override;
 };
