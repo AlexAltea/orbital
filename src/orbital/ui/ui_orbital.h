@@ -46,6 +46,7 @@ private:
     // Tools
     ToolLogs tool_uart0{};
     ToolLogs tool_uart1{};
+    MemoryEditor me_mem_gpa;
 
     // State
     bool show_stats;
@@ -56,7 +57,7 @@ private:
     bool show_trace_cp;
     bool show_trace_icc;
     bool show_trace_samu;
-    bool show_mem_gpa;
+    bool show_mem_gpa = false;
     bool show_mem_gva;
     bool show_mem_gart;
     bool show_mem_iommu;

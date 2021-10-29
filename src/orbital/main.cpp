@@ -24,7 +24,6 @@ int main(int argc, char** argv) {
     ps4.recover("pups/PS4UPDATE.PUP");
     ps4.resume();
 
-    UI ui(ps4);
 
     ui.task(ps4);
     return 0;

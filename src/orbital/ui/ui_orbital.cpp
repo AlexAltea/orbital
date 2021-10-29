@@ -159,6 +159,16 @@ void OrbitalUI::render(PS4Machine& ps4) {
         if (show_uart0) {
             tool_uart0.Draw("UART #0");
         }
+        if (show_mem_gpa) {
+            if (ImGui::Begin("Memory (GPA)")) {
+                const auto addr = 0x600000;
+                const auto size = 0x1000;
+                Buffer buf(size);
+                ps4.mem()->read(addr, size, &buf[0]);
+                me_mem_gpa.DrawContents(buf.data(), buf.size(), addr);
+            }
+            ImGui::End();
+        }
 
         ImGui::End();
     }
@@ -221,7 +231,7 @@ void OrbitalUI::render_menus(PS4Machine& ps4) {
         ImGui::MenuItem("ICC Commands", "Alt+7", &show_trace_icc, false);
         ImGui::MenuItem("SAMU Commands", "Alt+8", &show_trace_samu, false);
         ImGui::Separator();
-        ImGui::MenuItem("Memory Editor (GPA)", "Ctrl+1", &show_mem_gpa, false);
+        ImGui::MenuItem("Memory Editor (GPA)", "Ctrl+1", &show_mem_gpa, true);
         ImGui::MenuItem("Memory Editor (GVA)", "Ctrl+2", &show_mem_gva, false);
         ImGui::MenuItem("Memory Editor (GART)", "Ctrl+3", &show_mem_gart, false);
         ImGui::MenuItem("Memory Editor (IOMMU)", "Ctrl+4", &show_mem_iommu, false);
