@@ -10,6 +10,10 @@
 
 #include "aeolia_mem.h"
 
+constexpr U32 AMEM_SPM_VERSION_MAJOR = 0x12010;
+constexpr U32 AMEM_SPM_VERSION_MINOR = 0x12011;
+constexpr U32 AMEM_SPM_VERSION_REV   = 0x12012;
+
 AeoliaMemDevice::AeoliaMemDevice(PCIeBus* bus, const AeoliaMemDeviceConfig& config)
     : PCIeDevice(bus, config) {
     // Define BARs
@@ -49,6 +53,19 @@ void AeoliaMemDevice::reset() {
     header.command = PCI_COMMAND_MEMORY; // TODO: Is this needed?
     header.header_type |= PCI_HEADER_TYPE_MULTI_FUNCTION;
     header.class_prog = 0x06;
+
+    // Init SPM
+    auto data = reinterpret_cast<U08*>(spm->ptr());
+
+    // Subsystem ID
+    // Written in big-endian. Hardcoded to 0x10200 for now.
+    // - 0x1XXXX  Aeolia
+    // - 0x2XXXX  Belize
+    // - 0x3XXXX  Baikal
+    // - 0x4XXXX  Belize
+    data[AMEM_SPM_VERSION_MAJOR] = 0x1;
+    data[AMEM_SPM_VERSION_MINOR] = 0x2;
+    data[AMEM_SPM_VERSION_REV] = 0x0;
 }
 
 U64 AeoliaMemDevice::bar0_read(U64 addr, U64 size) {
