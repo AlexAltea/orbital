@@ -119,10 +119,6 @@ CORE_PACKED(struct IccReplyBoardVersion {
 });
 static_assert(sizeof(IccReplyBoardVersion) == 0x2C);
 
-CORE_PACKED(struct IccReplyNvram {
-    LE<U08> unk00;
-});
-
 /* ICC messages */
 constexpr size_t ICC_MESSAGE_MAXSIZE = 0x7F0;
 
@@ -141,8 +137,6 @@ struct IccReplyMessage : IccMessageHeader {
 
         // ICC_CMD_BOARD_OP_GET_FW_VERSION
         IccReplyBoardVersion cmd_fwver;
-        // ICC_CMD_NVRAM_OP_READ
-        IccReplyNvram cmd_nvram;
     };
 };
 

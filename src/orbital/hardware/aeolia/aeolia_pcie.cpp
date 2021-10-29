@@ -315,6 +315,7 @@ void AeoliaPCIeDevice::update_icc() {
     }
 
     // Process ICC query
+    reply = {};
     AeoliaPCIeDevice::IccReply status = { IccResult::OK, 0 };
     switch (query.major) {
     case ICC_CMD_SERVICE:
@@ -365,7 +366,7 @@ void AeoliaPCIeDevice::update_icc() {
             status = icc_cmd_nvram_write(query.cmd_nvram);
             break;
         case ICC_CMD_NVRAM_OP_READ:
-            status = icc_cmd_nvram_read(query.cmd_nvram, reply.cmd_nvram);
+            status = icc_cmd_nvram_read(query.cmd_nvram, reply);
             break;
         default:
             fprintf(stderr, "icc: Unknown NVRAM query 0x%04X!\n", query.minor);
@@ -376,7 +377,6 @@ void AeoliaPCIeDevice::update_icc() {
     }
 
     // Create ICC reply
-    reply = {};
     reply.magic = query.magic;
     reply.major = query.major;
     reply.minor = query.minor | APCIE_ICC_REPLY;
@@ -432,10 +432,13 @@ AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_nvram_write(const IccQueryN
     return { IccResult::OK, 0 };
 }
 
-AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_nvram_read(const IccQueryNvram& query, IccReplyNvram& reply) {
-    fprintf(stderr, "icc: icc_cmd_nvram_read(addr=0x%X, size=0x%X)\n", query.addr, query.size);
+AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_nvram_read(const IccQueryNvram& query, IccReplyMessage& reply) {
+    const auto addr = std::min<size_t>({ query.addr, nvs.size() });
+    const auto size = std::min<size_t>({ query.size, nvs.size() - addr, sizeof(reply.data) });
 
-    AeoliaPCIeDevice::IccReply status = { IccResult::OK, 0 };
+    memcpy(&reply.data[0], &nvs.data[addr], size);
+    AeoliaPCIeDevice::IccReply status = { IccResult::OK, size };
+#if 0
     switch (query.addr) {
     case 0x18: // sceKernelHwHasWlanBt second bit as 1 for none
         reply.unk00 = 2;
@@ -451,5 +454,6 @@ AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_nvram_read(const IccQueryNv
         // ignore
         break;
     }
+#endif
     return status;
 }

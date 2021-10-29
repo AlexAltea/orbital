@@ -87,5 +87,5 @@ private:
     IccReply icc_cmd_board_version(IccReplyBoardVersion& reply);
     IccReply icc_cmd_buttons_state();
     IccReply icc_cmd_nvram_write(const IccQueryNvram& query);
-    IccReply icc_cmd_nvram_read(const IccQueryNvram& query, IccReplyNvram& reply);
+    IccReply icc_cmd_nvram_read(const IccQueryNvram& query, IccReplyMessage& reply);
 };
