@@ -16,6 +16,7 @@
 #include <memory>
 
 // Forward declarations
+class GmcDevice;
 class SAMUDevice;
 
 constexpr auto LIVERPOOL_GC_DEV = 0x1;
@@ -61,6 +62,9 @@ private:
 
     U64 mmio_read(U64 addr, U64 size);
     void mmio_write(U64 addr, U64 value, U64 size);
+
+    // GMC
+    std::unique_ptr<GmcDevice> gmc;
 
     // SAMU
     std::unique_ptr<SAMUDevice> sam;

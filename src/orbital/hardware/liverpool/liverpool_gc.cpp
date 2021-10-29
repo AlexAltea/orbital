@@ -25,6 +25,9 @@
 #include "smu/smu_7_1_2_sh_mask.h"
 #include "sam/sam.h"
 
+// Engines
+#include "gmc/gmc.h"
+
 // Logging
 #define DEBUG_GC 0
 #define DPRINTF(...) \
@@ -61,6 +64,10 @@ LiverpoolGCDevice::LiverpoolGCDevice(PCIeBus* bus, const LiverpoolGCDeviceConfig
     register_bar(2, PCI_BASE_ADDRESS_SPACE_MEM, space_bar2);
     register_bar(4, PCI_BASE_ADDRESS_SPACE_IO, space_pio);
     register_bar(5, PCI_BASE_ADDRESS_SPACE_MEM, space_mmio);
+
+    // Create engines
+    GmcDeviceConfig gmc_config = {};
+    gmc = std::make_unique<GmcDevice>(bus->space_mem(), gmc_config);
 
     reset();
 }
@@ -118,6 +125,14 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
     // Remapped registers
     if (addr + size <= 0x100) {
         value = (U32&)config_data[addr];
+        return value;
+    }
+    else if (GMC_MMIO_VM.contains(index)) {
+        value = gmc->mmio_read(index);
+        return value;
+    }
+    else if (GMC_MMIO_MC.contains(index)) {
+        value = gmc->mmio_read(index);
         return value;
     }
 
@@ -190,6 +205,12 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     if (addr + size <= 0x100) {
         (U32&)config_data[addr] = value;
         return;
+    }
+    else if (GMC_MMIO_VM.contains(index)) {
+        gmc->mmio_write(index, value);
+    }
+    else if (GMC_MMIO_MC.contains(index)) {
+        gmc->mmio_write(index, value);
     }
 
     // Indirect registers
@@ -302,6 +323,7 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     case mmVM_L2_CG:
         break;
 
+#endif
     // Simple registers
     case mmSAM_IX_INDEX:
     case mmSAM_GPR_SCRATCH_0:
