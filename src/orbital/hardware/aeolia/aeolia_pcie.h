@@ -52,6 +52,7 @@ private:
     std::unique_ptr<SerialDevice> uart1;
 
     // State
+    AeoliaNVS nvs{};
     uint32_t icc_doorbell;
     uint32_t icc_status;
     struct AeoliaPCIeBar {
