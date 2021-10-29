@@ -106,6 +106,10 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     boot[0x1CA] = 'C';
     boot[0x1CB] = '2';
     boot[0x1CC] = '1';
+
+    // KASLR disable
+    uint8_t sha1_null16_preimage[64] = { 0xF8, 0x6F };
+    memcpy(&boot[0x160], sha1_null16_preimage, sizeof(sha1_null16_preimage));
 }
 
 PS4Machine::~PS4Machine() {
