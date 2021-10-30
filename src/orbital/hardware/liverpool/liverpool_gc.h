@@ -12,11 +12,13 @@
 
 #include <orbital/core.h>
 
+ // Engines
+#include "gmc/gmc.h"
+
 #include <array>
 #include <memory>
 
 // Forward declarations
-class GmcDevice;
 class SAMUDevice;
 
 constexpr auto LIVERPOOL_GC_DEV = 0x1;
@@ -64,7 +66,7 @@ private:
     void mmio_write(U64 addr, U64 value, U64 size);
 
     // GMC
-    std::unique_ptr<GmcDevice> gmc;
+    GmcDevice gmc;
 
     // SAMU
     std::unique_ptr<SAMUDevice> sam;

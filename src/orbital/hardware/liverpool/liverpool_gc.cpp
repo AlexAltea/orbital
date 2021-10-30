@@ -11,6 +11,7 @@
 #include "liverpool_gc.h"
 
 // Registers
+#include "acp/acp.h"
 #include "bif/bif_4_1_d.h"
 #include "bif/bif_4_1_sh_mask.h"
 #include "dce/dce_8_0_d.h"
@@ -25,9 +26,6 @@
 #include "smu/smu_7_1_2_sh_mask.h"
 #include "sam/sam.h"
 
-// Engines
-#include "gmc/gmc.h"
-
 // Logging
 #define DEBUG_GC 0
 #define DPRINTF(...) \
@@ -40,7 +38,10 @@ do { \
 } while (0)
 
 LiverpoolGCDevice::LiverpoolGCDevice(PCIeBus* bus, const LiverpoolGCDeviceConfig& config)
-    : PCIeDevice(bus, config) {
+    : PCIeDevice(bus, config),
+    // Engines
+    gmc(bus->space_mem())
+{
     // Define BARs
     space_bar0 = new MemorySpace(this, 0x4000000, {
         static_cast<MemorySpaceReadOp>(&LiverpoolGCDevice::bar0_read),
@@ -64,10 +65,6 @@ LiverpoolGCDevice::LiverpoolGCDevice(PCIeBus* bus, const LiverpoolGCDeviceConfig
     register_bar(2, PCI_BASE_ADDRESS_SPACE_MEM, space_bar2);
     register_bar(4, PCI_BASE_ADDRESS_SPACE_IO, space_pio);
     register_bar(5, PCI_BASE_ADDRESS_SPACE_MEM, space_mmio);
-
-    // Create engines
-    GmcDeviceConfig gmc_config = {};
-    gmc = std::make_unique<GmcDevice>(bus->space_mem(), gmc_config);
 
     reset();
 }
@@ -128,15 +125,26 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
         return value;
     }
     else if (GMC_MMIO_VM.contains(index)) {
-        value = gmc->mmio_read(index);
+        value = gmc.mmio_read(index);
         return value;
     }
     else if (GMC_MMIO_MC.contains(index)) {
-        value = gmc->mmio_read(index);
+        value = gmc.mmio_read(index);
         return value;
     }
 
     switch (index) {
+    // ACP
+    case mmACP_STATUS:
+        value = 1;
+        break;
+    case mmACP_SOFT_RESET:
+        value = mmio[mmACP_SOFT_RESET];
+        break;
+    case mmACP_UNK512F_:
+        value = 0xFFFFFFFF;
+        break;
+
     // SMU
     case mmSMC_IND_INDEX:
         value = mmio[index];
@@ -207,10 +215,10 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
         return;
     }
     else if (GMC_MMIO_VM.contains(index)) {
-        gmc->mmio_write(index, value);
+        gmc.mmio_write(index, value);
     }
     else if (GMC_MMIO_MC.contains(index)) {
-        gmc->mmio_write(index, value);
+        gmc.mmio_write(index, value);
     }
 
     // Indirect registers
@@ -247,6 +255,11 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     // Direct registers
     mmio[index] = value;
     switch (index) {
+    // ACP
+    case mmACP_SOFT_RESET:
+        mmio[mmACP_SOFT_RESET] = (value << 16);
+        break;
+
     // SMU
     case mmSMC_IND_INDEX:
         break;
