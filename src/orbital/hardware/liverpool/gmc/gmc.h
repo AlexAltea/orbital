@@ -18,20 +18,18 @@
 // Forward declarations
 class GmcDevice;
 
-constexpr auto GMC_VM_COUNT = 16;
-
 constexpr auto GMC_MMIO_VM = OffsetRange(0x500, 0x78);
 constexpr auto GMC_MMIO_MC = OffsetRange(0x800, 0x300);
 
 class GmcVmSpace : public TranslatorSpace {
+    friend class GmcDevice;
 public:
-    GmcVmSpace(GmcDevice* gmc);
+    GmcVmSpace(Space* gmc_mem);
 
-    virtual TranslatorResult translate(Offset off) = 0;
+    TranslatorResult translate(Offset off) override;
 
 private:
     U64 base = 0;
-    GmcDevice& gmc;
 };
 
 struct GmcDeviceConfig : DeviceConfig {
@@ -46,9 +44,10 @@ public:
     U32 mmio_read(U32 index);
     void mmio_write(U32 index, U32 value);
 
+    GmcVmSpace& get(U32 vmid);
+
 private:
-    U32 vm_invalidate_request;
-    U64 vm_context_base[GMC_VM_COUNT];
+    std::vector<GmcVmSpace> vm_contexts;
+    U32 vm_invalidate_response;
     U32 mc_bist_mismatch_addr;
-    Space* mem;
 };
