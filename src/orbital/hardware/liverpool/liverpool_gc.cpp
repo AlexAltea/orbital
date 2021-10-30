@@ -40,7 +40,7 @@ do { \
 LiverpoolGCDevice::LiverpoolGCDevice(PCIeBus* bus, const LiverpoolGCDeviceConfig& config)
     : PCIeDevice(bus, config),
     // Engines
-    gmc(bus->space_mem())
+    gmc(bus->space_mem()), ih(*this, gmc)
 {
     // Define BARs
     space_bar0 = new MemorySpace(this, 0x4000000, {
@@ -132,6 +132,10 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
         value = gmc.mmio_read(index);
         return value;
     }
+    else if (OSS_MMIO_IH.contains(index)) {
+        value = ih.mmio_read(index);
+        return value;
+    }
 
     switch (index) {
     // ACP
@@ -171,10 +175,11 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
     case mmRLC_PG_CNTL:
         value = mmio[index];
         break;
-
-    // GMC
-    case mmMC_BIST_MISMATCH_ADDR:
-        value = mmio[index];
+    case mmCP_HQD_ACTIVE:
+        value = 0;
+        break;
+    case mmRLC_SERDES_CU_MASTER_BUSY:
+        value = 0;
         break;
 
     case mmSAM_IX_DATA:
@@ -219,6 +224,9 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     }
     else if (GMC_MMIO_MC.contains(index)) {
         gmc.mmio_write(index, value);
+    }
+    else if (OSS_MMIO_IH.contains(index)) {
+        ih.mmio_write(index, value);
     }
 
     // Indirect registers

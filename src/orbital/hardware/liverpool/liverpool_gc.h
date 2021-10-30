@@ -14,6 +14,7 @@
 
  // Engines
 #include "gmc/gmc.h"
+#include "oss/ih.h"
 
 #include <array>
 #include <memory>
@@ -67,6 +68,9 @@ private:
 
     // GMC
     GmcDevice gmc;
+
+    // OSS
+    IhDevice ih;
 
     // SAMU
     std::unique_ptr<SAMUDevice> sam;
