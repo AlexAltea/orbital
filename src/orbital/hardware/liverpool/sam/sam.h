@@ -12,6 +12,16 @@
 
 #pragma once
 
+#include <orbital/core.h>
+#include <orbital/offset_range.h>
+
+// Forward declarations
+class GmcDevice;
+class IhDevice;
+class SmuDevice;
+
+constexpr auto SAM_MMIO = OffsetRange(0x8800, 0x20);
+
 // SAMU
 #define mmSAM_IX_INDEX                    0x00008800
 #define mmSAM_IX_DATA                     0x00008801
@@ -31,6 +41,7 @@
 #define ixSAM_IH_AM32_CPU_INT_CTX_HIGH    0x00000035
 #define ixSAM_IH_AM32_CPU_INT_CTX_LOW     0x00000036
 #define ixSAM_IH_AM32_CPU_INT_ACK         0x00000037
+#define ixSAM_UNK3E                       0x0000003E
 #define ixSAM_IH_CPU_AM32_INT_STATUS      0x0000004A
 #define ixSAM_IH_AM32_CPU_INT_STATUS      0x0000004B
 #define ixSAM_RST_HOST_SOFT_RST_RDY       0x00000051
@@ -126,6 +137,41 @@ struct samu_command_service_rand_t {
     LE<U08> data[0x10];
 };
 
-class SAMUDevice : public Device {
+class SamDevice : public Device {
+public:
+    SamDevice(GmcDevice& gmc, IhDevice& ih, SmuDevice& smu);
 
+    void reset();
+
+    U32 mmio_read(U32 index);
+    void mmio_write(U32 index, U32 value);
+
+private:
+    GmcDevice& gmc;
+    IhDevice& ih;
+    SmuDevice& smu;
+
+    std::array<U32, 4> gpr;
+    std::array<U32, 0x80> ix_data;
+    std::array<U32, 0x40> sab_ix_data;
+    U32 sam_ix_index;
+    U32 sam_sab_ix_index;
+
+    union {
+        LE<U64> ih_cpu_am32_int_ctx;
+        Bitfield<U64, 48, 16> ih_cpu_am32_int_flags;
+        struct {
+            LE<U32> ih_cpu_am32_int_ctx_low;
+            LE<U32> ih_cpu_am32_int_ctx_high;
+        };
+    };
+    union {
+        LE<U64> ih_am32_cpu_int_ctx;
+        struct {
+            LE<U32> ih_am32_cpu_int_ctx_low;
+            LE<U32> ih_am32_cpu_int_ctx_high;
+        };
+    };
+
+    void handle_request(U32 value);
 };

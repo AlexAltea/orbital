@@ -15,6 +15,7 @@
  // Engines
 #include "gmc/gmc.h"
 #include "oss/ih.h"
+#include "smu/smu.h"
 
 #include <array>
 #include <memory>
@@ -66,16 +67,9 @@ private:
     U64 mmio_read(U64 addr, U64 size);
     void mmio_write(U64 addr, U64 value, U64 size);
 
-    // GMC
+    // Engines
     GmcDevice gmc;
-
-    // OSS
     IhDevice ih;
-
-    // SAMU
-    std::unique_ptr<SAMUDevice> sam;
-    std::array<U32, 0x80> sam_ix;
-    std::array<U32, 0x40> sam_sab_ix;
-
-    void update_sam(U32 value);
+    SmuDevice smu;
+    SamDevice sam;
 };

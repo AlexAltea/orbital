@@ -22,9 +22,8 @@
 #include "gmc/gmc_7_1_sh_mask.h"
 #include "oss/oss_2_0_d.h"
 #include "oss/oss_2_0_sh_mask.h"
-#include "smu/smu_7_1_2_d.h"
-#include "smu/smu_7_1_2_sh_mask.h"
-#include "sam/sam.h"
+
+constexpr auto GC_MMIO_PCI  = OffsetRange(0x0000, 0x100);
 
 // Logging
 #define DEBUG_GC 0
@@ -40,7 +39,9 @@ do { \
 LiverpoolGCDevice::LiverpoolGCDevice(PCIeBus* bus, const LiverpoolGCDeviceConfig& config)
     : PCIeDevice(bus, config),
     // Engines
-    gmc(bus->space_mem()), ih(*this, gmc)
+    gmc(bus->space_mem()), ih(*this, gmc),
+    smu(gmc, ih),
+    sam(gmc, ih, smu)
 {
     // Define BARs
     space_bar0 = new MemorySpace(this, 0x4000000, {
@@ -83,8 +84,6 @@ void LiverpoolGCDevice::reset() {
     header.header_type |= PCI_HEADER_TYPE_MULTI_FUNCTION;
 
     mmio.fill(0);
-    sam_ix.fill(0);
-    sam_sab_ix.fill(0);
 }
 
 U64 LiverpoolGCDevice::bar0_read(U64 addr, U64 size) {
@@ -128,12 +127,21 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
         value = gmc.mmio_read(index);
         return value;
     }
-    else if (GMC_MMIO_MC.contains(index)) {
+    else if (GMC_MMIO_VM.contains(index)
+          || GMC_MMIO_MC.contains(index)) {
         value = gmc.mmio_read(index);
         return value;
     }
     else if (OSS_MMIO_IH.contains(index)) {
         value = ih.mmio_read(index);
+        return value;
+    }
+    else if (SMU_MMIO.contains(index)) {
+        value = smu.mmio_read(index);
+        return value;
+    }
+    else if (SAM_MMIO.contains(index)) {
+        value = sam.mmio_read(index);
         return value;
     }
 
@@ -149,25 +157,6 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
         value = 0xFFFFFFFF;
         break;
 
-    // SMU
-    case mmSMC_IND_INDEX:
-        value = mmio[index];
-        break;
-    case mmSMC_IND_DATA:
-        switch (mmio[mmSMC_IND_INDEX]) {
-        case 0xC2100004:
-            value = 0x2 | 0x1;
-            break;
-        case 0xC0500090:
-            value = 0x1;
-            break;
-        case 0xC0500098:
-            value = 0x1;
-            break;
-        default:
-            value = 0x0;
-        }
-        break;
 
     // GCA
     case mmGRBM_GFX_INDEX:
@@ -180,25 +169,6 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
         break;
     case mmRLC_SERDES_CU_MASTER_BUSY:
         value = 0;
-        break;
-
-    case mmSAM_IX_DATA:
-        index_ix = mmio[mmSAM_IX_INDEX];
-        DPRINTF("mmSAM_IX_DATA_read { index: %X }", index_ix);
-        value = sam_ix[index_ix];
-        break;
-    case mmSAM_SAB_IX_DATA:
-        index_ix = mmio[mmSAM_SAB_IX_INDEX];
-        DPRINTF("mmSAM_SAB_IX_DATA_read { index: %X }", index_ix);
-        value = sam_sab_ix[index_ix];
-        break;
-
-    // Simple registers
-    case mmSAM_GPR_SCRATCH_0:
-    case mmSAM_GPR_SCRATCH_1:
-    case mmSAM_GPR_SCRATCH_2:
-    case mmSAM_GPR_SCRATCH_3:
-        value = mmio[index];
         break;
 
     default:
@@ -222,39 +192,26 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     else if (GMC_MMIO_VM.contains(index)) {
         gmc.mmio_write(index, value);
     }
-    else if (GMC_MMIO_MC.contains(index)) {
+    else if (GMC_MMIO_VM.contains(index)
+          || GMC_MMIO_MC.contains(index)) {
         gmc.mmio_write(index, value);
+        return;
     }
     else if (OSS_MMIO_IH.contains(index)) {
         ih.mmio_write(index, value);
+        return;
+    }
+    else if (SMU_MMIO.contains(index)) {
+        smu.mmio_write(index, value);
+        return;
+    }
+    else if (SAM_MMIO.contains(index)) {
+        sam.mmio_write(index, value);
+        return;
     }
 
     // Indirect registers
     switch (index) {
-    case mmSAM_IX_DATA:
-        switch (mmio[mmSAM_IX_INDEX]) {
-        case ixSAM_IH_CPU_AM32_INT:
-            update_sam(value);
-            break;
-        case ixSAM_IH_AM32_CPU_INT_ACK:
-            sam_ix[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;
-            break;
-        default:
-            index_ix = mmio[mmSAM_IX_INDEX];
-            DPRINTF("mmSAM_IX_DATA_write { index: %X, value: %llX }", index_ix, value);
-            sam_ix[index_ix] = value;
-        }
-        return;
-
-    case mmSAM_SAB_IX_DATA:
-        switch (mmio[mmSAM_SAB_IX_INDEX]) {
-        default:
-            index_ix = mmio[mmSAM_SAB_IX_INDEX];
-            DPRINTF("mmSAM_SAB_IX_DATA_write { index: %X, value: %llX }", index_ix, value);
-            sam_sab_ix[index_ix] = value;
-        }
-        return;
-
     case mmMM_DATA:
         mmio_write(mmio[mmMM_INDEX], value, size);
         return;
@@ -266,10 +223,6 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     // ACP
     case mmACP_SOFT_RESET:
         mmio[mmACP_SOFT_RESET] = (value << 16);
-        break;
-
-    // SMU
-    case mmSMC_IND_INDEX:
         break;
 
     // GCA
@@ -357,24 +310,4 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
         DPRINTF("index=0x%llX, size=0x%llX, value=0x%llX }", index, size, value);
         assert_always("Unimplemented");
     }
-}
-
-void LiverpoolGCDevice::update_sam(U32 value) {
-    U64 query_addr;
-    U64 reply_addr;
-
-    assert(value == 1);
-    query_addr = sam_ix[ixSAM_IH_CPU_AM32_INT_CTX_HIGH];
-    query_addr = sam_ix[ixSAM_IH_CPU_AM32_INT_CTX_LOW] | (query_addr << 32);
-    query_addr &= 0xFFFFFFFFFFFFULL;
-    reply_addr = sam_ix[ixSAM_IH_AM32_CPU_INT_CTX_HIGH];
-    reply_addr = sam_ix[ixSAM_IH_AM32_CPU_INT_CTX_LOW] | (reply_addr << 32);
-    reply_addr &= 0xFFFFFFFFFFFFULL;
-
-    const U16 flags = query_addr >> 48;
-    DPRINTF("flags=0x%llX, query=0x%llX, reply=0x%llX\n", flags, query_addr, reply_addr);
-
-
-    sam_ix[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;// 1;
-    sam_ix[ixSAM_IH_AM32_CPU_INT_STATUS] |= 1;
 }
