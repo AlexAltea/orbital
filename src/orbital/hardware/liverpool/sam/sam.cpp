@@ -14,10 +14,10 @@
 #include <orbital/hardware/liverpool/smu/smu.h>
 
 // SBL
-constexpr U32 SBL_INT_UNKA202   = 0xA202;
-constexpr U32 SBL_INT_UNKA303   = 0xA303;
-constexpr U32 SBL_INT_SMU_READ  = 0xA404;
-constexpr U32 SBL_INT_SMU_WRITE = 0xA505;
+constexpr U32 SBL_SK_MBOX_READ  = 0xA202;
+constexpr U32 SBL_SK_MBOX_WRITE = 0xA303;
+constexpr U32 SBL_SK_SMC_READ   = 0xA404;
+constexpr U32 SBL_SK_SMC_WRITE  = 0xA505;
 
 // Logging
 #define DEBUG_SAM 1
@@ -49,10 +49,10 @@ U32 SamDevice::mmio_read(U32 index) {
 
     switch (index) {
     case mmSAM_IX_INDEX:
-        value = sam_ix_index;
+        value = ix_index;
         break;
     case mmSAM_IX_DATA:
-        switch (sam_ix_index) {
+        switch (ix_index) {
         case ixSAM_IH_CPU_AM32_INT_CTX_HIGH:
             value = ih_cpu_am32_int_ctx_high;
             break;
@@ -66,16 +66,16 @@ U32 SamDevice::mmio_read(U32 index) {
             value = ih_am32_cpu_int_ctx_low;
             break;
         default:
-            DPRINTF("mmSAM_IX_DATA_read { index: %X }", sam_ix_index);
-            value = ix_data[sam_ix_index];
+            DPRINTF("mmSAM_IX_DATA_read { index: %X }", ix_index);
+            value = ix_data[ix_index];
         }
         break;
     case mmSAM_SAB_IX_INDEX:
-        value = sam_sab_ix_index;
+        value = sab_ix_index;
         break;
     case mmSAM_SAB_IX_DATA:
-        DPRINTF("mmSAM_SAB_IX_DATA_read { index: %X }", sam_sab_ix_index);
-        value = sab_ix_data[sam_sab_ix_index];
+        DPRINTF("mmSAM_SAB_IX_DATA_read { index: %X }", sab_ix_index);
+        value = sab_ix_data[sab_ix_index];
         break;
     case mmSAM_GPR_SCRATCH_0:
         value = gpr[0];
@@ -99,10 +99,10 @@ U32 SamDevice::mmio_read(U32 index) {
 void SamDevice::mmio_write(U32 index, U32 value) {
     switch (index) {
     case mmSAM_IX_INDEX:
-        sam_ix_index = value;
+        ix_index = value;
         break;
     case mmSAM_IX_DATA:
-        switch (sam_ix_index) {
+        switch (ix_index) {
         case ixSAM_IH_CPU_AM32_INT:
             handle_request(value);
             break;
@@ -119,22 +119,22 @@ void SamDevice::mmio_write(U32 index, U32 value) {
             ih_am32_cpu_int_ctx_low = value;
             break;
         case ixSAM_IH_AM32_CPU_INT_ACK:
-            //sam_ix[ixSAM_IH_AM32_CPU_INT_STATUS] = 0;
+            //ix_data[ixSAM_IH_AM32_CPU_INT_STATUS] = 0;
             ix_data[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;
             break;
         default:
-            DPRINTF("mmSAM_IX_DATA_write { index: %X, value: %llX }", sam_ix_index, value);
-            ix_data[sam_ix_index] = value;
+            DPRINTF("mmSAM_IX_DATA_write { index: %X, value: %llX }", ix_index, value);
+            ix_data[ix_index] = value;
         }
         break;
     case mmSAM_SAB_IX_INDEX:
-        sam_sab_ix_index = value;
+        sab_ix_index = value;
         break;
     case mmSAM_SAB_IX_DATA:
-        switch (sam_sab_ix_index) {
+        switch (sab_ix_index) {
         default:
-            DPRINTF("mmSAM_SAB_IX_DATA_write { index: %X, value: %llX }", sam_sab_ix_index, value);
-            ix_data[sam_sab_ix_index] = value;
+            DPRINTF("mmSAM_SAB_IX_DATA_write { index: %X, value: %llX }", sab_ix_index, value);
+            ix_data[sab_ix_index] = value;
         }
         break;
     case mmSAM_GPR_SCRATCH_0:
@@ -165,22 +165,26 @@ void SamDevice::handle_request(U32 value) {
     if (flags == 0) {
         const auto id = gpr[0];
         switch (id) {
-        case SBL_INT_UNKA202:
+        case SBL_SK_MBOX_READ:
+            // TODO: gpr[2] = mbox_read(addr=gpr[1]);
             assert_always("Unimplemented");
+            gpr[3] = 0;
             break;
-        case SBL_INT_UNKA303:
+        case SBL_SK_MBOX_WRITE:
+            // TODO: mbox_write(addr=gpr[1], value=gpr[2]);
             assert_always("Unimplemented");
+            gpr[3] = 0;
             break;
-        case SBL_INT_SMU_READ:
+        case SBL_SK_SMC_READ:
             gpr[2] = smu.smc_read(gpr[1]);
             gpr[3] = 0;
             break;
-        case SBL_INT_SMU_WRITE:
+        case SBL_SK_SMC_WRITE:
             smu.smc_write(gpr[1], gpr[2]);
             gpr[3] = 0;
             break;
         }
-        ix_data[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;// 1;
+        ix_data[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;
         ix_data[ixSAM_IH_AM32_CPU_INT_STATUS] |= 1;
         return;
     }
@@ -198,7 +202,6 @@ void SamDevice::handle_request(U32 value) {
             return;
         }
 #endif
-
         ix_data[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;//1
         ix_data[ixSAM_IH_AM32_CPU_INT_STATUS] |= 1;
         ih.push_iv(0, IV_SRCID_SAM, 0 /* TODO */);

@@ -96,20 +96,28 @@ enum {
 union PM4Packet {
     U32 value;
     Bitrange<U32, 30, 31> type;
-    struct Type0 {
+    union Type0 {
         Bitrange<U32,  0, 15> reg;
         Bitrange<U32, 16, 29> count;
     } type0;
-    struct Type1 {
+    union Type1 {
     } type1;
-    struct Type2 {
+    union Type2 {
     } type2;
-    struct Type3 {
+    union Type3 {
         Bitrange<U32,  0,  0> pred;
         Bitrange<U32,  1,  1> shtype;
         Bitrange<U32,  8, 15> itop;
         Bitrange<U32, 16, 29> count;
     } type3;
+};
+
+struct PM4_IndirectBuffer {
+    Bitrange<U64, 0, 40> base;
+    union {
+        Bitrange<U32,  0, 20> size;
+        Bitrange<U32, 24, 27> vmid;
+    };
 };
 
 // Debugging

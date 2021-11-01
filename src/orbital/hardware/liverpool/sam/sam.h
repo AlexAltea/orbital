@@ -154,8 +154,8 @@ private:
     std::array<U32, 4> gpr;
     std::array<U32, 0x80> ix_data;
     std::array<U32, 0x40> sab_ix_data;
-    U32 sam_ix_index;
-    U32 sam_sab_ix_index;
+    U32 ix_index;
+    U32 sab_ix_index;
 
     union {
         LE<U64> ih_cpu_am32_int_ctx;

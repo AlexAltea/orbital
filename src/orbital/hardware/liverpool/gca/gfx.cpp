@@ -175,64 +175,72 @@ void GfxDevice::cp_task() {
 }
 
 void GfxDevice::cp_step(GfxRing& rb) {
-    cp_vmid = cp_rb_vmid;
-    auto pm4 = cp_read<PM4Packet>(rb);
-    cp_handle_pm4(rb, pm4);
+    CpBuffer cp = {};
+    cp.vmid = cp_rb_vmid;
+    cp.base = rb.base;
+    cp.rptr = rb.rptr;
+    cp.size = rb.size();
+
+    cp_handle_pm4(cp);
+    rb.rptr += cp.rptr;
+    rb.rptr &= cp.size - 1;
 }
 
-void GfxDevice::cp_read(GfxRing& rb, void* data, U32 size) {
-    auto vm = gmc.get(cp_vmid);
-    auto va = rb.base | rb.rptr;
+void GfxDevice::cp_read(CpBuffer& cp, void* data, U32 size) {
+    auto vm = gmc.get(cp.vmid);
+    auto va = cp.base | cp.rptr;
     vm.read(va, size, data);
-    rb.rptr += size;
-    rb.rptr &= rb.size() - 1;
+    cp.rptr += size;
 }
 
-void GfxDevice::cp_handle_pm4(GfxRing& rb, PM4Packet p) {
-    switch (p.type) {
+void GfxDevice::cp_handle_pm4(CpBuffer& cp) {
+    auto pm4 = cp_read<PM4Packet>(cp);
+    switch (pm4.type) {
     case PM4_PACKET_TYPE0:
-        cp_handle_pm4_type0(rb, p.type0);
+        cp_handle_pm4_type0(cp, pm4.type0);
         break;
     case PM4_PACKET_TYPE1:
-        cp_handle_pm4_type1(rb, p.type1);
+        cp_handle_pm4_type1(cp, pm4.type1);
         break;
     case PM4_PACKET_TYPE2:
-        cp_handle_pm4_type2(rb, p.type2);
+        cp_handle_pm4_type2(cp, pm4.type2);
         break;
     case PM4_PACKET_TYPE3:
-        cp_handle_pm4_type3(rb, p.type3);
+        cp_handle_pm4_type3(cp, pm4.type3);
         break;
     }
 }
 
-void GfxDevice::cp_handle_pm4_type0(GfxRing& rb, PM4Packet::Type0 p) {
+void GfxDevice::cp_handle_pm4_type0(CpBuffer& cp, PM4Packet::Type0 p) {
     std::vector<U32> buf(p.count + 1);
-    cp_read(rb, buf.data(), buf.size() * sizeof(U32));
     assert_always("Unimplemented");
+    cp_read(cp, buf.data(), buf.size() * sizeof(U32));
 }
 
-void GfxDevice::cp_handle_pm4_type1(GfxRing& rb, PM4Packet::Type1 p) {
+void GfxDevice::cp_handle_pm4_type1(CpBuffer& cp, PM4Packet::Type1 p) {
     assert_always("Unsupported packet type");
 }
 
-void GfxDevice::cp_handle_pm4_type2(GfxRing& rb, PM4Packet::Type2 p) {
+void GfxDevice::cp_handle_pm4_type2(CpBuffer& cp, PM4Packet::Type2 p) {
     assert_always("Unsupported packet type");
 }
 
-void GfxDevice::cp_handle_pm4_type3(GfxRing& rb, PM4Packet::Type3 p) {
+void GfxDevice::cp_handle_pm4_type3(CpBuffer& cp, PM4Packet::Type3 p) {
+    const auto rptr_old = cp.rptr;
+
     switch (p.itop) {
+    case PM4_IT_INDIRECT_BUFFER_CONST:
+        cp_handle_pm4_it_indirect_buffer_const(cp);
+        break;
+    case PM4_IT_INDIRECT_BUFFER:
+        cp_handle_pm4_it_indirect_buffer(cp);
+        break;
 #if 0
     case PM4_IT_DRAW_INDEX_AUTO:
         cp_handle_pm4_it_draw_index_auto(s, vmid, packet);
         break;
     case PM4_IT_EVENT_WRITE_EOP:
         cp_handle_pm4_it_event_write_eop(s, vmid, packet);
-        break;
-    case PM4_IT_INDIRECT_BUFFER:
-        cp_handle_pm4_it_indirect_buffer(s, vmid, packet);
-        break;
-    case PM4_IT_INDIRECT_BUFFER_CONST:
-        cp_handle_pm4_it_indirect_buffer_const(s, vmid, packet);
         break;
     case PM4_IT_NUM_INSTANCES:
         cp_handle_pm4_it_num_instances(s, vmid, packet);
@@ -254,6 +262,31 @@ void GfxDevice::cp_handle_pm4_type3(GfxRing& rb, PM4Packet::Type3 p) {
         break;
 #endif
     default:
-        assert_always("Unimplemented");
+        printf("PM4: %s\n", pm4_itop_name(p.itop));
+        //assert_always("Unimplemented");
+    }
+
+    // TODO: Once all commands are implemented, turn this into an assert
+    const auto rptr_new = rptr_old + sizeof(U32) * (p.count + 1);
+    if (cp.rptr != rptr_new) {
+        cp.rptr = rptr_new;
+    }
+}
+
+void GfxDevice::cp_handle_pm4_it_indirect_buffer(CpBuffer& cp) {
+    const auto args = cp_read<PM4_IndirectBuffer>(cp);
+
+    CpBuffer cp_ib = {};
+    cp_ib.base = args.base;
+    cp_ib.size = args.size * sizeof(U32);
+    cp_ib.vmid = args.vmid;
+    while (cp_ib.rptr < cp_ib.size) {
+        cp_handle_pm4(cp_ib);
+    }
+}
+
+void GfxDevice::cp_handle_pm4_it_indirect_buffer_const(CpBuffer& cp) {
+    cp_handle_pm4_it_indirect_buffer(cp);
+}
     }
 }

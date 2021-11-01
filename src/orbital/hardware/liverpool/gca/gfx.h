@@ -30,6 +30,13 @@ struct GfxDeviceConfig : DeviceConfig {
     VulkanManager* vk;
 };
 
+struct CpBuffer {
+    U64 base;
+    U64 size;
+    U32 rptr;
+    U32 vmid;
+};
+
 struct GfxRing {
     U64 base;
     U32 rptr;
@@ -89,19 +96,22 @@ private:
 
     void cp_task();
     void cp_step(GfxRing& rb);
-    void cp_read(GfxRing& rb, void* data, U32 size);
+    void cp_read(CpBuffer& cp, void* data, U32 size);
 
-    void cp_handle_pm4(GfxRing& rb, PM4Packet p);
-    void cp_handle_pm4_type0(GfxRing& rb, PM4Packet::Type0 p);
-    void cp_handle_pm4_type1(GfxRing& rb, PM4Packet::Type1 p);
-    void cp_handle_pm4_type2(GfxRing& rb, PM4Packet::Type2 p);
-    void cp_handle_pm4_type3(GfxRing& rb, PM4Packet::Type3 p);
+    void cp_handle_pm4(CpBuffer& cp);
+    void cp_handle_pm4_type0(CpBuffer& cp, PM4Packet::Type0 p);
+    void cp_handle_pm4_type1(CpBuffer& cp, PM4Packet::Type1 p);
+    void cp_handle_pm4_type2(CpBuffer& cp, PM4Packet::Type2 p);
+    void cp_handle_pm4_type3(CpBuffer& cp, PM4Packet::Type3 p);
+
+    void cp_handle_pm4_it_indirect_buffer(CpBuffer& cp);
+    void cp_handle_pm4_it_indirect_buffer_const(CpBuffer& cp);
 
     template <typename T>
-    T cp_read(GfxRing& rb) {
+    T cp_read(CpBuffer& cp) {
         static_assert(sizeof(T) % 4 == 0);
         T value;
-        cp_read(rb, &value, sizeof(T));
+        cp_read(cp, &value, sizeof(T));
         return value;
     }
 };

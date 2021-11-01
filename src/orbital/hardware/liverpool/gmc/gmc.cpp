@@ -45,8 +45,8 @@ TranslatorResult GmcVmSpace::translate(Offset offset) {
     pte = child->read<U64>(pte_base + pte_index * 8);
 
     // Make translation result
-    res.base_pa = offset & ~UINT64_C(0xFFF);
-    res.base_va = offset & +UINT64_C(0xFFF) | (pte & ~UINT64_C(0xFFF));
+    res.base_va = offset & ~UINT64_C(0xFFF);
+    res.base_pa = offset & +UINT64_C(0xFFF) | (pte & ~UINT64_C(0xFFF));
     res.size = 0x1000; // TODO: How to decode this? (set for now to 4 KB pages)
     if (pte & VM_PTE_PROT_X) {
         res.protection |= TranslatorResult::PROT_X;
