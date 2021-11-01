@@ -63,10 +63,13 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     }
 
     // Initialize Liverpool
+    LiverpoolGCDeviceConfig lvp_gc_config = {};
+    lvp_gc_config.gfx.vk = config.vk;
+
     lvp_host = new LiverpoolHost(this);
     auto lvp_bus = lvp_host->bus();
     lvp_rc       = new LiverpoolRCDevice(lvp_bus);
-    lvp_gc       = new LiverpoolGCDevice(lvp_bus);
+    lvp_gc       = new LiverpoolGCDevice(lvp_bus, lvp_gc_config);
     lvp_hdac     = new LiverpoolHDACDevice(lvp_bus);
     lvp_iommu    = new LiverpoolIOMMUDevice(lvp_bus);
     lvp_rp       = new LiverpoolRPDevice(lvp_bus);

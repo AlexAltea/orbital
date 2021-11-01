@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
     PS4MachineConfig config = {};
     config.aeolia_uart0 = ui.get_uart0_backend();
     config.aeolia_uart1 = ui.get_uart1_backend();
+    config.vk = ui.get_vk();
 
     PS4Machine ps4(config);
     ps4.recover("pups/PS4UPDATE.PUP");

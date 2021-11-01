@@ -18,8 +18,6 @@
 #include "dce/dce_8_0_sh_mask.h"
 #include "gca/gfx_7_2_d.h"
 #include "gca/gfx_7_2_sh_mask.h"
-#include "gmc/gmc_7_1_d.h"
-#include "gmc/gmc_7_1_sh_mask.h"
 #include "oss/oss_2_0_d.h"
 #include "oss/oss_2_0_sh_mask.h"
 
@@ -40,6 +38,7 @@ LiverpoolGCDevice::LiverpoolGCDevice(PCIeBus* bus, const LiverpoolGCDeviceConfig
     : PCIeDevice(bus, config),
     // Engines
     gmc(bus->space_mem()), ih(*this, gmc),
+    gfx(gmc, ih, config.gfx),
     smu(gmc, ih),
     sam(gmc, ih, smu)
 {
@@ -82,6 +81,9 @@ void LiverpoolGCDevice::reset() {
     auto& header = config_header();
     header.command = PCI_COMMAND_IO | PCI_COMMAND_MEMORY; // TODO: Is this needed?
     header.header_type |= PCI_HEADER_TYPE_MULTI_FUNCTION;
+    header.intr_line = 0xFF;
+    header.intr_pin = 0x01;
+    msi_enable(1, true);
 
     mmio.fill(0);
 }
@@ -119,12 +121,13 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
     U64 index_ix = 0;
 
     // Remapped registers
-    if (addr + size <= 0x100) {
+    if (GC_MMIO_PCI.contains(addr)) {
         value = (U32&)config_data[addr];
         return value;
     }
-    else if (GMC_MMIO_VM.contains(index)) {
-        value = gmc.mmio_read(index);
+    else if (GFX_MMIO_CP_0.contains(index)
+          || GFX_MMIO_CP_1.contains(index)) {
+        value = gfx.mmio_read(index);
         return value;
     }
     else if (GMC_MMIO_VM.contains(index)
@@ -185,12 +188,14 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     U64 index_ix = 0;
 
     // Remapped registers
-    if (addr + size <= 0x100) {
+    if (GC_MMIO_PCI.contains(addr)) {
         (U32&)config_data[addr] = value;
         return;
     }
-    else if (GMC_MMIO_VM.contains(index)) {
-        gmc.mmio_write(index, value);
+    else if (GFX_MMIO_CP_0.contains(index)
+          || GFX_MMIO_CP_1.contains(index)) {
+        gfx.mmio_write(index, value);
+        return;
     }
     else if (GMC_MMIO_VM.contains(index)
           || GMC_MMIO_MC.contains(index)) {

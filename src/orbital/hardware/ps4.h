@@ -35,11 +35,12 @@ class LiverpoolNBFnc2Device;
 class LiverpoolNBFnc3Device;
 class LiverpoolNBFnc4Device;
 class LiverpoolNBFnc5Device;
-
+class VulkanManager;
 
 struct PS4MachineConfig : MachineConfig {
     CharHost* aeolia_uart0 = nullptr;
     CharHost* aeolia_uart1 = nullptr;
+    VulkanManager* vk = nullptr;
 
     PS4MachineConfig();
 };

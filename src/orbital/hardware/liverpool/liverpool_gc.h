@@ -13,8 +13,10 @@
 #include <orbital/core.h>
 
  // Engines
+#include "gca/gfx.h"
 #include "gmc/gmc.h"
 #include "oss/ih.h"
+#include "sam/sam.h"
 #include "smu/smu.h"
 
 #include <array>
@@ -29,6 +31,8 @@ constexpr auto LIVERPOOL_GC_VID = static_cast<PCIVendorId>(0x1002);
 constexpr auto LIVERPOOL_GC_DID = static_cast<PCIDeviceId>(0x9920);
 
 struct LiverpoolGCDeviceConfig : PCIeDeviceConfig {
+    GfxDeviceConfig gfx;
+
     LiverpoolGCDeviceConfig(PCI_DF df = PCI_DF(LIVERPOOL_GC_DEV, LIVERPOOL_GC_FNC))
         : PCIeDeviceConfig(df, LIVERPOOL_GC_VID, LIVERPOOL_GC_DID, 0x0, PCI_CLASS_DISPLAY_VGA) {
     }
@@ -70,6 +74,7 @@ private:
     // Engines
     GmcDevice gmc;
     IhDevice ih;
+    GfxDevice gfx;
     SmuDevice smu;
     SamDevice sam;
 };

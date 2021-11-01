@@ -38,6 +38,10 @@ public:
     CharHost* get_uart0_backend() { return ui.get_uart0_backend(); }
     CharHost* get_uart1_backend() { return ui.get_uart1_backend(); }
 
+    VulkanManager* get_vk() {
+        return vk;
+    }
+
 private:
     VulkanManager* vk;
     VkSurfaceKHR surface;
