@@ -12,6 +12,9 @@
 
 #include <orbital/core.h>
 
+// Forward declarations
+class SmuDevice;
+
 enum {
     LIVERPOOL_RC_DEV = 0x0,
     LIVERPOOL_RC_FNC = 0x0,
@@ -35,4 +38,13 @@ public:
 
     void config_write(U32 offset, U64 value, size_t size) override;
     U64 config_read(U32 offset, size_t size) override;
+
+    void set_smu(SmuDevice* smu) {
+        this->smu = smu;
+    }
+
+private:
+    SmuDevice* smu;
+
+    U32 smc_ix;
 };

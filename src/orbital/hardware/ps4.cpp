@@ -95,8 +95,9 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
     aeolia_mem   = new AeoliaMemDevice(lvp_bus);
     aeolia_xhci  = new AeoliaXHCIDevice(lvp_bus);
 
-    // HACK: Wiring Aeolia subdevices should happen at Aeolia-level, not PS4-level
+    // HACK: Wiring subdevices should happen at device level, not machine level
     aeolia_pcie->set_spm(aeolia_mem->get_spm());
+    lvp_rc->set_smu(lvp_gc->get_smu());
 
     // Init RAM:0x600000
     auto ram = reinterpret_cast<U08*>(space_ram->ptr());

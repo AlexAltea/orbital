@@ -67,41 +67,45 @@ Liverpool
 
 | Name   | Description                                                         |
 |--------|---------------------------------------------------------------------|
-| _BIF_  | Bus Interface.                                                      |
-| _CB_   | Color Buffer.                                                       |
-| _CP_   | Command Processor.                                                  |
-| _CPC_  | Command Processor for Compute.                                      |
-| _CPF_  | Command Processor Fetcher.                                          |
-| _CPG_  | Command Processor for Graphics.                                     |
-| _CRTC_ | CRT Controller.                                                     |
-| _DB_   | Depth Buffer.                                                       |
-| _DCE_  | Display Core Engine.                                                |
-| _DCP_  | ???                                                                 |
-| _GCA_  | Graphics/Compute Array (same as GFX?).                              |
-| _GDS_  | Global Data Share.                                                  |
-| _GFX_  | Graphics/Compute Engine (same as GCA?).                             |
-| _GMC_  | Graphics Memory Controller.                                         |
-| _GRBM_ | Graphics Register Backbone Manager.                                 |
-| _IA_   | Input Assembly.                                                     |
-| _IH_   | Interrupt Handler.                                                  |
-| _LDS_  | Local Data Share.                                                   |
-| _MC_   | Memory Controller.                                                  |
-| _PA_   | Primitive Assembly.                                                 |
-| _RB_   | Ring Buffer.                                                        |
-| _RLC_  | Run List Controller.                                                |
-| _SAMU_ | Secure Asset Management Unit.                                       |
-| _SC_   | Scan Converter.                                                     |
-| _SDMA_ | System Direct Memory Access.                                        |
-| _SMC_  | System Management Controller.                                       |
-| _SPI_  | Shader Processor Input.                                             |
-| _SRBM_ | System Register Backbone Manager.                                   |
-| _SX_   | Shader Export.                                                      |
-| _TA_   | Texture Addressing.                                                 |
-| _UVD_  | Universal Video Decoder.                                            |
-| _VCE_  | Video Compression Engine.                                           |
-| _VGT_  | Vertex Geometry Tesselator.                                         |
-| _WD_   | Work Distributor.                                                   |
-|        |                                                                     |
+| _BIF_  | Bus Interface                                                       |
+| _CB_   | Color Buffer                                                        |
+| _CP_   | Command Processor                                                   |
+| _CPC_  | Command Processor for Compute                                       |
+| _CPF_  | Command Processor Fetcher                                           |
+| _CPG_  | Command Processor for Graphics                                      |
+| _CRTC_ | CRT Controller                                                      |
+| _DB_   | Depth Buffer                                                        |
+| _DCE_  | Display Core Engine                                                 |
+| _DCP_  | Display Core Pipe (?)                                               |
+| _EOP_  | ???                                                                 |
+| _GCA_  | Graphics/Compute Array (same as GFX?)                               |
+| _GDS_  | Global Data Share                                                   |
+| _GFX_  | Graphics/Compute Engine (same as GCA?)                              |
+| _GMC_  | Graphics Memory Controller                                          |
+| _GRBM_ | Graphics Register Backbone Manager                                  |
+| _HDP_  | ???                                                                 |
+| _IA_   | Input Assembly                                                      |
+| _IH_   | Interrupt Handler                                                   |
+| _LDS_  | Local Data Share                                                    |
+| _MC_   | Memory Controller                                                   |
+| _MDMA_ | ???                                                                 |
+| _MEC_  | ???                                                                 |
+| _PA_   | Primitive Assembly                                                  |
+| _RB_   | Ring Buffer                                                         |
+| _RLC_  | Run List Controller                                                 |
+| _SAMU_ | Secure Asset Management Unit                                        |
+| _SC_   | Scan Converter                                                      |
+| _SDMA_ | System Direct Memory Access                                         |
+| _SMC_  | System Management Controller                                        |
+| _SPI_  | Shader Processor Input                                              |
+| _SRBM_ | System Register Backbone Manager                                    |
+| _SX_   | Shader Export                                                       |
+| _TA_   | Texture Addressing                                                  |
+| _UVD_  | Universal Video Decoder                                             |
+| _VCE_  | Video Compression Engine                                            |
+| _VGT_  | Vertex Geometry Tesselator                                          |
+| _WD_   | Work Distributor                                                    |
+| _XDMA_ | ???                                                                 |
 
 ### PCI Configuration Space
 

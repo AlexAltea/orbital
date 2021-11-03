@@ -22,9 +22,6 @@
 #include <array>
 #include <memory>
 
-// Forward declarations
-class SAMUDevice;
-
 constexpr auto LIVERPOOL_GC_DEV = 0x1;
 constexpr auto LIVERPOOL_GC_FNC = 0x0;
 constexpr auto LIVERPOOL_GC_VID = static_cast<PCIVendorId>(0x1002);
@@ -48,6 +45,10 @@ public:
 
     const auto& get_mmio() const noexcept {
         return mmio;
+    }
+
+    SmuDevice* get_smu() {
+        return &smu;
     }
 
 private:
