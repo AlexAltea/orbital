@@ -38,7 +38,7 @@
 #define ixSMU_IOC_READ_0      0xC2100134
 
 /**
- * Clocks Domains:
+ * Clocks:
  * - SCLK:    ???
  * - LCLK:    ???
  * - DCLK:    UVD D-clock

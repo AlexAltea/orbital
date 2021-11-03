@@ -1,6 +1,8 @@
 /**
  * AMD Secure Asset Management Unit (SAMU) device.
  *
+ * Based on research from: Alexey Kulaev (@flatz).
+ *
  * Copyright 2017-2021. Orbital project.
  * Released under MIT license. Read LICENSE for more details.
  *
@@ -65,6 +67,9 @@ U32 SamDevice::mmio_read(U32 index) {
         case ixSAM_IH_AM32_CPU_INT_CTX_LOW:
             value = ih_am32_cpu_int_ctx_low;
             break;
+        case ixSAM_IH_CPU_AM32_INT_STATUS:
+            value = ih_cpu_am32_int_status;
+            break;
         default:
             DPRINTF("mmSAM_IX_DATA_read { index: %X }", ix_index);
             value = ix_data[ix_index];
@@ -120,7 +125,7 @@ void SamDevice::mmio_write(U32 index, U32 value) {
             break;
         case ixSAM_IH_AM32_CPU_INT_ACK:
             //ix_data[ixSAM_IH_AM32_CPU_INT_STATUS] = 0;
-            ix_data[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;
+            ih_cpu_am32_int_status = 0;
             break;
         default:
             DPRINTF("mmSAM_IX_DATA_write { index: %X, value: %llX }", ix_index, value);
@@ -184,8 +189,8 @@ void SamDevice::handle_request(U32 value) {
             gpr[3] = 0;
             break;
         }
-        ix_data[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;
-        ix_data[ixSAM_IH_AM32_CPU_INT_STATUS] |= 1;
+        ih_cpu_am32_int_status = 0;
+        ih_am32_cpu_int_status |= 1;
         return;
     }
     else {
@@ -202,8 +207,8 @@ void SamDevice::handle_request(U32 value) {
             return;
         }
 #endif
-        ix_data[ixSAM_IH_CPU_AM32_INT_STATUS] = 0;//1
-        ix_data[ixSAM_IH_AM32_CPU_INT_STATUS] |= 1;
+        ih_cpu_am32_int_status = 0;//1
+        ih_am32_cpu_int_status |= 1;
         ih.push_iv(0, IV_SRCID_SAM, 0 /* TODO */);
     }
 }
