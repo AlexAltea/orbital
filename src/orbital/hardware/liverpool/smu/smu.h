@@ -36,4 +36,9 @@ private:
     IhDevice& ih;
 
     U32 smc_ix;
+
+    // IOC
+    U32 ioc_arg;
+
+    void update_ioc(U32 req);
 };

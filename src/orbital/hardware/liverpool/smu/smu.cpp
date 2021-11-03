@@ -1,6 +1,8 @@
 /**
  * AMD System Management Unit (SMU) device.
  *
+ * Based on research from: Jevin Sweval (@jevinskie).
+ *
  * Copyright 2017-2021. Orbital project.
  * Released under MIT license. Read LICENSE for more details.
  *
@@ -16,8 +18,35 @@
 #include "smu_7_1_2_sh_mask.h"
 
 // Undocumented register definitions
-// Disclaimer: Most are just guesses based on reverse engineering and common sense.
-#define ixCG_ACLK_STATUS 0xC05000E0
+#define ixCG_SCLK_CNTL        0xC050008C
+#define ixCG_SCLK_STATUS      0xC0500090
+#define ixCG_LCLK_CNTL        0xC0500094
+#define ixCG_LCLK_STATUS      0xC0500098
+#define ixCG_ACLK_STATUS      0xC05000E0
+#define ixCG_SAMCLK_CNTL      0xC05000E4
+#define ixCG_SAMCLK_STATUS    0xC05000E8
+
+#define ixSMU_IOC_REQ         0xC2100000
+#define ixSMU_IOC_STATUS      0xC2100004
+#define ixSMU_IOC_CTRL        0xC2100008
+#define ixSMU_IOC_RDDATA      0xC210000C
+#define ixSMU_IOC_PHASE1      0xC2100014
+#define ixSMU_IOC_PHASE2      0xC2100018
+#define ixSMU_IOC_PHASE3      0xC210001C
+#define ixSMU_IOC_ARG         0xC210003C
+#define ixSMU_IOC_RES         0xC2100040
+#define ixSMU_IOC_READ_0      0xC2100134
+
+/**
+ * Clocks Domains:
+ * - SCLK:    ???
+ * - LCLK:    ???
+ * - DCLK:    UVD D-clock
+ * - VCLK:    UVD V-clock
+ * - ECLK:    VCE clock
+ * - ACLK:    ACP clock
+ * - SAMCLK:  SAM clock
+ */
 
 SmuDevice::SmuDevice(GmcDevice& gmc, IhDevice& ih)
     : Device(nullptr), gmc(gmc), ih(ih) {
@@ -61,13 +90,11 @@ U32 SmuDevice::smc_read(U32 index) {
     U32 value = 0;
 
     switch (index) {
-    case 0xC2100004:
-        value = 0x2 | 0x1;
-        break;
-    case 0xC0500090:
+    // Clocks
+    case ixCG_SCLK_STATUS:
         value = 0x1;
         break;
-    case 0xC0500098:
+    case ixCG_LCLK_STATUS:
         value = 0x1;
         break;
     case ixCG_DCLK_STATUS:
@@ -82,8 +109,26 @@ U32 SmuDevice::smc_read(U32 index) {
     case ixCG_ACLK_STATUS:
         value = 0x1;
         break;
-    case 0xC05000E8:
+    case ixCG_SAMCLK_STATUS:
         value = 0x1;
+        break;
+    case ixCG_SCLK_CNTL:
+    case ixCG_LCLK_CNTL:
+    case ixCG_DCLK_CNTL:
+    case ixCG_VCLK_CNTL:
+    case ixCG_ECLK_CNTL:
+    case ixCG_ACLK_CNTL:
+        break;
+
+    // IOC
+    case ixSMU_IOC_REQ:
+        value = 0;
+        break;
+    case ixSMU_IOC_STATUS:
+        value = 0x2 | 0x1;
+        break;
+    case ixSMU_IOC_ARG:
+        value = ioc_arg;
         break;
 
     // Ignored registers
@@ -116,17 +161,6 @@ U32 SmuDevice::smc_read(U32 index) {
         break;
     case 0xC0200200:
         break;
-    case 0xC050008C:
-    case 0xC0500094:
-    case ixCG_DCLK_CNTL:
-    case ixCG_VCLK_CNTL:
-    case ixCG_ECLK_CNTL:
-    case ixCG_ACLK_CNTL:
-    case 0xC05000E4:
-        break;
-    case 0xC2100000:
-    case 0xC210003C:
-        break;
 
     // Unknown registers (Kernel)
     case 0xC0104068:
@@ -142,6 +176,13 @@ U32 SmuDevice::smc_read(U32 index) {
 
 void SmuDevice::smc_write(U32 index, U32 value) {
     switch (index) {
+    case ixSMU_IOC_REQ:
+        update_ioc(value);
+        break;
+    case ixSMU_IOC_ARG:
+        ioc_arg = value;
+        break;
+
     // Unknown registers (BIOS)
     case 0xC0200000:
     case 0xC0200200:
@@ -154,12 +195,13 @@ void SmuDevice::smc_write(U32 index, U32 value) {
     case 0xC05000DC:
     case 0xC05000E4:
         break;
-    case 0xC2100000:
-    case 0xC210003C:
-        break;
 
     default:
         assert_always("Unimplemented");
         break;
     }
+}
+
+void SmuDevice::update_ioc(U32 req) {
+    printf("SmuDevice::update_ioc: req=0x%08X, arg=0x%08X\n", req, ioc_arg);
 }
