@@ -11,6 +11,7 @@
  */
 
 #include "sam.h"
+#include "sam_regs.h"
 #include <orbital/hardware/liverpool/gmc/gmc.h>
 #include <orbital/hardware/liverpool/oss/ih.h>
 #include <orbital/hardware/liverpool/smu/smu.h>
@@ -40,6 +41,7 @@ SamDevice::SamDevice(GmcDevice& gmc, IhDevice& ih, SmuDevice& smu)
 void SamDevice::reset() {
     gpr.fill(0);
     ih_cpu_am32_int_ctx = 0;
+    ih_cpu_am32_int_status = 0;
     ih_am32_cpu_int_ctx = 0;
 
     ix_data.fill(0);
@@ -61,14 +63,14 @@ U32 SamDevice::mmio_read(U32 index) {
         case ixSAM_IH_CPU_AM32_INT_CTX_LOW:
             value = ih_cpu_am32_int_ctx_low;
             break;
+        case ixSAM_IH_CPU_AM32_INT_STATUS:
+            value = ih_cpu_am32_int_status;
+            break;
         case ixSAM_IH_AM32_CPU_INT_CTX_HIGH:
             value = ih_am32_cpu_int_ctx_high;
             break;
         case ixSAM_IH_AM32_CPU_INT_CTX_LOW:
             value = ih_am32_cpu_int_ctx_low;
-            break;
-        case ixSAM_IH_CPU_AM32_INT_STATUS:
-            value = ih_cpu_am32_int_status;
             break;
         default:
             DPRINTF("mmSAM_IX_DATA_read { index: %X }", ix_index);
