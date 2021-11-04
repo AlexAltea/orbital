@@ -112,12 +112,22 @@ union PM4Packet {
     } type3;
 };
 
+// PM4_IT_INDIRECT_BUFFER
+// PM4_IT_INDIRECT_BUFFER_CONST
 struct PM4_IndirectBuffer {
     Bitrange<U64, 0, 40> base;
     union {
         Bitrange<U32,  0, 20> size;
         Bitrange<U32, 24, 27> vmid;
     };
+};
+
+// PM4_IT_SET_CONFIG_REG
+// PM4_IT_SET_CONTEXT_REG
+// PM4_IT_SET_SH_REG
+// PM4_IT_SET_UCONFIG_REG
+struct PM4_SetReg {
+    Bitrange<U64, 0, 16> offset;
 };
 
 // Debugging

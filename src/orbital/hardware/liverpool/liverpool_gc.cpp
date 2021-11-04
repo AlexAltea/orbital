@@ -24,7 +24,7 @@
 constexpr auto GC_MMIO_PCI  = OffsetRange(0x0000, 0x100);
 
 // Logging
-#define DEBUG_GC 0
+#define DEBUG_GC 1
 #define DPRINTF(...) \
 do { \
     if (DEBUG_GC) { \
@@ -38,9 +38,9 @@ LiverpoolGCDevice::LiverpoolGCDevice(PCIeBus* bus, const LiverpoolGCDeviceConfig
     : PCIeDevice(bus, config),
     // Engines
     gmc(bus->space_mem()), ih(*this, gmc),
-    gfx(gmc, ih, config.gfx),
     smu(gmc, ih),
-    sam(gmc, ih, smu)
+    sam(gmc, ih, smu),
+    gfx(gmc, ih, config.gfx)
 {
     // Define BARs
     space_bar0 = new MemorySpace(this, 0x4000000, {
@@ -125,8 +125,7 @@ U64 LiverpoolGCDevice::mmio_read(U64 addr, U64 size) {
         value = (U32&)config_data[addr];
         return value;
     }
-    else if (GFX_MMIO_CP_0.contains(index)
-          || GFX_MMIO_CP_1.contains(index)) {
+    else if (gfx_mmio_contains(index)) {
         value = gfx.mmio_read(index);
         return value;
     }
@@ -204,8 +203,7 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
         (U32&)config_data[addr] = value;
         return;
     }
-    else if (GFX_MMIO_CP_0.contains(index)
-          || GFX_MMIO_CP_1.contains(index)) {
+    else if (gfx_mmio_contains(index)) {
         gfx.mmio_write(index, value);
         return;
     }
@@ -242,6 +240,16 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
         mmio[mmACP_SOFT_RESET] = (value << 16);
         break;
 
+    // BIF
+    case mmBIF_FB_EN:
+    case mmBIOS_SCRATCH_7:
+    case mmGARLIC_FLUSH_CNTL:
+    case mmGARLIC_FLUSH_REQ:
+    case mmCC_BIF_SECURE_CNTL:
+    case mmCONFIG_MEMSIZE:
+    case mmHDP_MEM_COHERENCY_FLUSH_CNTL:
+        break;
+
     // OSS
     case mmSRBM_CNTL:
         break;
@@ -252,25 +260,35 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
             REG_GET_FIELD(value, SRBM_GFX_CNTL, QUEUEID),
             REG_GET_FIELD(value, SRBM_GFX_CNTL, VMID));
         break;
+    case mmHDP_HOST_PATH_CNTL:
+    case mmHDP_NONSURFACE_BASE:
+    case mmHDP_NONSURFACE_INFO:
+    case mmHDP_NONSURFACE_SIZE:
+    case mmHDP_DEBUG0:
+    case mmHDP_ADDR_CONFIG:
+    case mmHDP_MISC_CNTL:
+    case mmSEM_CHICKEN_BITS:
+    case mmUVD_CONFIG:
+        break;
 
+    // Unknown registers
+    case 0x615:
+    case 0x618:
+    case 0x619:
+    case 0x61B:
+    case 0x3BD3:
+    case 0x3BD4:
+    case 0x3BD5:
+        break;
 #ifdef NEEDSPORTING
+    /* gfx */
+    case mmCP_ME_RAM_DATA: {
+        uint32_t offset = mmio[mmCP_ME_RAM_WADDR];
+        assert(offset < sizeof(s->gfx.cp_me_ram));
+        stl_le_p(&s->gfx.cp_me_ram[offset], value);
+        mmio[mmCP_ME_RAM_WADDR] += 4;
         break;
-
-    case mmCP_PFP_UCODE_DATA:
-        liverpool_gc_ucode_load(s, mmCP_PFP_UCODE_ADDR, value);
-        break;
-    case mmCP_CE_UCODE_DATA:
-        liverpool_gc_ucode_load(s, mmCP_CE_UCODE_ADDR, value);
-        break;
-    case mmCP_MEC_ME1_UCODE_DATA:
-        liverpool_gc_ucode_load(s, mmCP_MEC_ME1_UCODE_ADDR, value);
-        break;
-    case mmCP_MEC_ME2_UCODE_DATA:
-        liverpool_gc_ucode_load(s, mmCP_MEC_ME2_UCODE_ADDR, value);
-        break;
-    case mmRLC_GPM_UCODE_DATA:
-        liverpool_gc_ucode_load(s, mmRLC_GPM_UCODE_ADDR, value);
-        break;
+    }
     /* oss */
     case mmSDMA0_UCODE_DATA:
         liverpool_gc_ucode_load(s, mmSDMA0_UCODE_ADDR, value);

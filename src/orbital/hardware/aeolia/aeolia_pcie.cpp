@@ -123,7 +123,6 @@ void AeoliaPCIeDevice::bar0_write(U64 addr, U64 value, U64 size) {
 
 U64 AeoliaPCIeDevice::bar2_read(U64 addr, U64 size) {
     U64 value = 0;
-    assert_always("Unimplemented");
     switch (addr) {
     case APCIE_RTC_STATUS:
         value = 0

@@ -67,6 +67,43 @@ U32 GfxDevice::mmio_read(U32 index) {
         value = cp_rb[1].int_cntl;
         break;
 
+    case mmGRBM_STATUS:
+        grbm_status.gui_active = grbm_status.gui_active ^ 1; // HACK
+        value = grbm_status.value;
+        break;
+    case mmGRBM_STATUS2:
+        value = 0; // TODO
+        break;
+    case mmGRBM_GFX_INDEX:
+        value = 0; // TODO
+        break;
+    case mmVGT_EVENT_INITIATOR:
+        value = vgt_event_initiator;
+        break;
+    case mmRLC_GPM_STAT:
+        value = 2; // TODO
+        break;
+    case mmRLC_GPU_CLOCK_32_RES_SEL:
+        value = 0; // TODO
+        break;
+    case mmRLC_GPU_CLOCK_32:
+        value = Clock::now().time_since_epoch().count();
+        value /= 1LL; // TODO
+        value &= 0x7FFFFFFF;
+        break;
+    case mmRLC_PG_CNTL:
+        value = 0; // TODO
+        break;
+    case mmRLC_MAX_PG_CU:
+        value = 0; // TODO
+        break;
+    case mmRLC_SERDES_CU_MASTER_BUSY:
+        value = 0; // TODO
+        break;
+    case mmCP_HQD_ACTIVE:
+        value = 0; // TODO
+        break;
+
     // Ignored access
     case mmCP_MEM_SLP_CNTL:
     case mmCP_IQ_WAIT_TIME1:
@@ -116,10 +153,47 @@ void GfxDevice::mmio_write(U32 index, U32 value) {
         cp_rb[1].int_cntl = value;
         break;
 
+    // Microcode
+    case mmCP_PFP_UCODE_ADDR:
+        cp_pfp_ucode.addr = value;
+        break;
+    case mmCP_CE_UCODE_ADDR:
+        cp_ce_ucode.addr = value;
+        break;
+    case mmCP_MEC_ME1_UCODE_ADDR:
+        cp_mec_me1_ucode.addr = value;
+        break;
+    case mmCP_MEC_ME2_UCODE_ADDR:
+        cp_mec_me2_ucode.addr = value;
+        break;
+    case mmRLC_GPM_UCODE_ADDR:
+        rlc_gpm_ucode.addr = value;
+        break;
+    case mmCP_PFP_UCODE_DATA:
+        cp_pfp_ucode.push(value);
+        break;
+    case mmCP_CE_UCODE_DATA:
+        cp_ce_ucode.push(value);
+        break;
+    case mmCP_MEC_ME1_UCODE_DATA:
+        cp_mec_me1_ucode.push(value);
+        break;
+    case mmCP_MEC_ME2_UCODE_DATA:
+        cp_mec_me2_ucode.push(value);
+        break;
+    case mmRLC_GPM_UCODE_DATA:
+        rlc_gpm_ucode.push(value);
+        break;
+
     // Ignored registers
     case mmCP_RB_WPTR_POLL_CNTL:
     case mmCP_MEM_SLP_CNTL:
     case mmCP_IQ_WAIT_TIME1:
+        break;
+    case mmGRBM_GFX_INDEX:
+    case mmRLC_PG_ALWAYS_ON_CU_MASK:
+    case mmRLC_MAX_PG_CU:
+    case mmRLC_PG_CNTL:
         break;
 
     default:
@@ -186,11 +260,18 @@ void GfxDevice::cp_step(GfxRing& rb) {
     rb.rptr &= cp.size - 1;
 }
 
-void GfxDevice::cp_read(CpBuffer& cp, void* data, U32 size) {
+void GfxDevice::cp_read(CpBuffer& cp, U32* dwords, U32 count) {
     auto vm = gmc.get(cp.vmid);
     auto va = cp.base | cp.rptr;
-    vm.read(va, size, data);
+    const auto size = count * sizeof(U32);
+    vm.read(va, size, dwords);
     cp.rptr += size;
+}
+
+std::vector<U32> GfxDevice::cp_read(CpBuffer& cp, U32 count) {
+    std::vector<U32> dwords(count);
+    cp_read(cp, dwords.data(), dwords.size());
+    return dwords;
 }
 
 void GfxDevice::cp_handle_pm4(CpBuffer& cp) {
@@ -212,9 +293,13 @@ void GfxDevice::cp_handle_pm4(CpBuffer& cp) {
 }
 
 void GfxDevice::cp_handle_pm4_type0(CpBuffer& cp, PM4Packet::Type0 p) {
-    std::vector<U32> buf(p.count + 1);
-    assert_always("Unimplemented");
-    cp_read(cp, buf.data(), buf.size() * sizeof(U32));
+    const auto size = p.count + 1;
+    const auto data = cp_read(cp, size);
+
+    U32 index = p.reg;
+    for (auto reg : data) {
+        mmio_write(index++, reg);
+    }
 }
 
 void GfxDevice::cp_handle_pm4_type1(CpBuffer& cp, PM4Packet::Type1 p) {
@@ -235,6 +320,19 @@ void GfxDevice::cp_handle_pm4_type3(CpBuffer& cp, PM4Packet::Type3 p) {
     case PM4_IT_INDIRECT_BUFFER:
         cp_handle_pm4_it_indirect_buffer(cp);
         break;
+    case PM4_IT_SET_CONFIG_REG:
+    case PM4_IT_SET_CONTEXT_REG:
+    case PM4_IT_SET_SH_REG:
+    case PM4_IT_SET_UCONFIG_REG:
+        cp_handle_pm4_it_set_reg(cp, p);
+        break;
+
+    // Ignored commands
+    case PM4_IT_PREAMBLE_CNTL:
+    case PM4_IT_CONTEXT_CONTROL:
+    case PM4_IT_CLEAR_STATE:
+    case PM4_IT_SET_BASE:
+        break;
 #if 0
     case PM4_IT_DRAW_INDEX_AUTO:
         cp_handle_pm4_it_draw_index_auto(s, vmid, packet);
@@ -245,25 +343,13 @@ void GfxDevice::cp_handle_pm4_type3(CpBuffer& cp, PM4Packet::Type3 p) {
     case PM4_IT_NUM_INSTANCES:
         cp_handle_pm4_it_num_instances(s, vmid, packet);
         break;
-    case PM4_IT_SET_CONFIG_REG:
-        cp_handle_pm4_it_set_config_reg(s, vmid, packet, count);
-        break;
-    case PM4_IT_SET_CONTEXT_REG:
-        cp_handle_pm4_it_set_context_reg(s, vmid, packet, count);
-        break;
-    case PM4_IT_SET_SH_REG:
-        cp_handle_pm4_it_set_sh_reg(s, vmid, packet, count);
-        break;
-    case PM4_IT_SET_UCONFIG_REG:
-        cp_handle_pm4_it_set_uconfig_reg(s, vmid, packet, count);
-        break;
     case PM4_IT_WAIT_REG_MEM:
         cp_handle_pm4_it_wait_reg_mem(s, vmid, packet);
         break;
 #endif
     default:
         printf("PM4: %s\n", pm4_itop_name(p.itop));
-        //assert_always("Unimplemented");
+        assert_always("Unimplemented");
     }
 
     // TODO: Once all commands are implemented, turn this into an assert
@@ -287,6 +373,42 @@ void GfxDevice::cp_handle_pm4_it_indirect_buffer(CpBuffer& cp) {
 
 void GfxDevice::cp_handle_pm4_it_indirect_buffer_const(CpBuffer& cp) {
     cp_handle_pm4_it_indirect_buffer(cp);
+}
+
+void GfxDevice::cp_handle_pm4_it_set_reg(CpBuffer& cp, PM4Packet::Type3 p) {
+    auto block_base = 0;
+    auto block_size = 0;
+    switch (p.itop) {
+    case PM4_IT_SET_CONFIG_REG:
+        block_base = 0x2000;
+        block_size = 0xC00;
+        break;
+    case PM4_IT_SET_CONTEXT_REG:
+        block_base = 0xA000;
+        block_size = 0x400;
+        break;
+    case PM4_IT_SET_SH_REG:
+        block_base = 0x2C00;
+        block_size = 0x400;
+        break;
+    case PM4_IT_SET_UCONFIG_REG:
+        block_base = 0xC000;
+        block_size = 0x2000;
+        break;
+    default:
+        assert_always("Unknown region");
+    }
+
+    const auto args = cp_read<PM4_SetReg>(cp);
+    const auto reg_size = p.count - 1;
+    const auto reg_data = cp_read(cp, reg_size);
+
+    U32 reg_offset = args.offset;
+    assert(reg_offset + reg_size <= block_size);
+    for (auto reg : reg_data) {
+        mmio_write(block_base + reg_offset, reg);
+        reg_offset += 1;
+    }
 }
     }
 }

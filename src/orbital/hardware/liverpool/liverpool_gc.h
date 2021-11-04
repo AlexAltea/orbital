@@ -75,7 +75,7 @@ private:
     // Engines
     GmcDevice gmc;
     IhDevice ih;
-    GfxDevice gfx;
     SmuDevice smu;
     SamDevice sam;
+    GfxDevice gfx;
 };
