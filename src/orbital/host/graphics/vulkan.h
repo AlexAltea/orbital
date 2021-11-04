@@ -12,7 +12,9 @@
 
 #include <vulkan/vulkan.h>
 
+#include <iostream>
 #include <set>
+#include <source_location>
 #include <string>
 #include <vector>
 
@@ -81,3 +83,14 @@ private:
      */
     uint32_t find_queue_graphics(const std::vector<VkQueueFamilyProperties>& qprops, VkSurfaceKHR surface);
 };
+
+static inline void vk_assert(VkResult res, const std::source_location location = std::source_location::current()) {
+    if (res != VK_SUCCESS) {
+        std::cerr << "Error: "
+            << location.file_name() << "("
+            << location.line() << ":"
+            << location.column() << ") `"
+            << location.function_name() << "`: "
+            << "Failed!" << std::endl;
+    }
+}
