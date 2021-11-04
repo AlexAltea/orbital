@@ -77,7 +77,7 @@ Liverpool
 | _DB_   | Depth Buffer                                                        |
 | _DCE_  | Display Core Engine                                                 |
 | _DCP_  | Display Core Pipe (?)                                               |
-| _EOP_  | ???                                                                 |
+| _EOP_  | End Of Pipe                                                         |
 | _GCA_  | Graphics/Compute Array (same as GFX?)                               |
 | _GDS_  | Global Data Share                                                   |
 | _GFX_  | Graphics/Compute Engine (same as GCA?)                              |

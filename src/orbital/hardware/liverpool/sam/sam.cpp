@@ -73,7 +73,7 @@ U32 SamDevice::mmio_read(U32 index) {
             value = ih_am32_cpu_int_ctx_low;
             break;
         default:
-            DPRINTF("mmSAM_IX_DATA_read { index: %X }", ix_index);
+            assert_always("Unimplemented");
             value = ix_data[ix_index];
         }
         break;
@@ -81,8 +81,11 @@ U32 SamDevice::mmio_read(U32 index) {
         value = sab_ix_index;
         break;
     case mmSAM_SAB_IX_DATA:
-        DPRINTF("mmSAM_SAB_IX_DATA_read { index: %X }", sab_ix_index);
-        value = sab_ix_data[sab_ix_index];
+        switch (sab_ix_index) {
+        default:
+            assert_always("Unimplemented");
+            value = sab_ix_data[sab_ix_index];
+        }
         break;
     case mmSAM_GPR_SCRATCH_0:
         value = gpr[0];
@@ -130,7 +133,7 @@ void SamDevice::mmio_write(U32 index, U32 value) {
             ih_cpu_am32_int_status = 0;
             break;
         default:
-            DPRINTF("mmSAM_IX_DATA_write { index: %X, value: %llX }", ix_index, value);
+            assert_always("Unimplemented");
             ix_data[ix_index] = value;
         }
         break;
@@ -140,7 +143,7 @@ void SamDevice::mmio_write(U32 index, U32 value) {
     case mmSAM_SAB_IX_DATA:
         switch (sab_ix_index) {
         default:
-            DPRINTF("mmSAM_SAB_IX_DATA_write { index: %X, value: %llX }", sab_ix_index, value);
+            assert_always("Unimplemented");
             ix_data[sab_ix_index] = value;
         }
         break;
@@ -161,14 +164,13 @@ void SamDevice::mmio_write(U32 index, U32 value) {
     }
 }
 
-
 void SamDevice::handle_request(U32 value) {
     const auto query_addr = ih_cpu_am32_int_ctx & UINT64_C(0xFFFFFFFFFFFF);
     const auto reply_addr = ih_am32_cpu_int_ctx & UINT64_C(0xFFFFFFFFFFFF);
 
     assert(value == 1);
     const U16 flags = ih_cpu_am32_int_flags;
-    DPRINTF("flags=0x%llX, query=0x%llX, reply=0x%llX\n", flags, query_addr, reply_addr);
+    DPRINTF("flags=0x%llX, query=0x%llX, reply=0x%llX", flags, query_addr, reply_addr);
     if (flags == 0) {
         const auto id = gpr[0];
         switch (id) {
