@@ -18,6 +18,9 @@
 #include "smu_7_1_2_sh_mask.h"
 
 // Undocumented register definitions
+#define ixCG_CGTT_OVERRIDE_0  0xC0200200
+#define ixCG_CGTT_OVERRIDE_1  0xC0200204
+
 #define ixCG_SCLK_CNTL        0xC050008C
 #define ixCG_SCLK_STATUS      0xC0500090
 #define ixCG_LCLK_CNTL        0xC0500094
@@ -26,16 +29,15 @@
 #define ixCG_SAMCLK_CNTL      0xC05000E4
 #define ixCG_SAMCLK_STATUS    0xC05000E8
 
-#define ixSMU_IOC_REQ         0xC2100000
-#define ixSMU_IOC_STATUS      0xC2100004
+#define ixCPU_INT_REQ         0xC2100000
+#define ixCPU_INT_STATUS      0xC2100004
 #define ixSMU_IOC_CTRL        0xC2100008
 #define ixSMU_IOC_RDDATA      0xC210000C
 #define ixSMU_IOC_PHASE1      0xC2100014
 #define ixSMU_IOC_PHASE2      0xC2100018
 #define ixSMU_IOC_PHASE3      0xC210001C
-#define ixSMU_IOC_ARG         0xC210003C
-#define ixSMU_IOC_RES         0xC2100040
-#define ixSMU_IOC_READ_0      0xC2100134
+#define ixCPU_INT_ARGUMENT    0xC210003C
+#define ixCPU_INT_RESPONSE    0xC2100040
 
 /**
  * Clocks:
@@ -118,24 +120,27 @@ U32 SmuDevice::smc_read(U32 index) {
     case ixCG_VCLK_CNTL:
     case ixCG_ECLK_CNTL:
     case ixCG_ACLK_CNTL:
+    case ixCG_SAMCLK_CNTL:
         break;
 
-    // IOC
-    case ixSMU_IOC_REQ:
+    // CPU
+    case ixCPU_INT_REQ:
         value = 0;
         break;
-    case ixSMU_IOC_STATUS:
+    case ixCPU_INT_STATUS:
         value = 0x2 | 0x1;
         break;
-    case ixSMU_IOC_ARG:
+    case ixCPU_INT_ARGUMENT:
         value = ioc_arg;
         break;
 
     // Ignored registers
     case ixGENERAL_PWRMGT:
         break;
+    case ixCG_CGTT_OVERRIDE_0:
+        break;
 
-    // Unknown registers (BIOS)
+    // Unknown EFUSE registers (BIOS)
     case 0x00020014:
         break;
     case 0xC0104000:
@@ -159,10 +164,8 @@ U32 SmuDevice::smc_read(U32 index) {
     case 0xC0107080:
     case 0xC0107084:
         break;
-    case 0xC0200200:
-        break;
 
-    // Unknown registers (Kernel)
+    // Unknown EFUSE registers (Kernel)
     case 0xC0104068:
         break;
 
@@ -176,24 +179,26 @@ U32 SmuDevice::smc_read(U32 index) {
 
 void SmuDevice::smc_write(U32 index, U32 value) {
     switch (index) {
-    case ixSMU_IOC_REQ:
+    // CPU
+    case ixCPU_INT_REQ:
         update_ioc(value);
         break;
-    case ixSMU_IOC_ARG:
+    case ixCPU_INT_ARGUMENT:
         ioc_arg = value;
         break;
 
-    // Unknown registers (BIOS)
-    case 0xC0200000:
-    case 0xC0200200:
+    // Ignored registers
+    case ixGENERAL_PWRMGT:
         break;
-    case 0xC050008C:
-    case 0xC0500094:
-    case 0xC050009C:
-    case 0xC05000A4:
-    case 0xC05000AC:
-    case 0xC05000DC:
-    case 0xC05000E4:
+    case ixCG_CGTT_OVERRIDE_0:
+        break;
+    case ixCG_SCLK_CNTL:
+    case ixCG_LCLK_CNTL:
+    case ixCG_DCLK_CNTL:
+    case ixCG_VCLK_CNTL:
+    case ixCG_ECLK_CNTL:
+    case ixCG_ACLK_CNTL:
+    case ixCG_SAMCLK_CNTL:
         break;
 
     default:
