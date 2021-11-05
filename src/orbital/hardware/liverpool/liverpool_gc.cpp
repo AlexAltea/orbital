@@ -260,6 +260,18 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
             REG_GET_FIELD(value, SRBM_GFX_CNTL, QUEUEID),
             REG_GET_FIELD(value, SRBM_GFX_CNTL, VMID));
         break;
+    case mmSDMA0_UCODE_ADDR:
+        sdma0_ucode.addr = value;
+        break;
+    case mmSDMA1_UCODE_ADDR:
+        sdma1_ucode.addr = value;
+        break;
+    case mmSDMA0_UCODE_DATA:
+        sdma0_ucode.push(value);
+        break;
+    case mmSDMA1_UCODE_DATA:
+        sdma1_ucode.push(value);
+        break;
     case mmHDP_HOST_PATH_CNTL:
     case mmHDP_NONSURFACE_BASE:
     case mmHDP_NONSURFACE_INFO:
@@ -280,23 +292,7 @@ void LiverpoolGCDevice::mmio_write(U64 addr, U64 value, U64 size) {
     case 0x3BD4:
     case 0x3BD5:
         break;
-#ifdef NEEDSPORTING
-    /* gfx */
-    case mmCP_ME_RAM_DATA: {
-        uint32_t offset = mmio[mmCP_ME_RAM_WADDR];
-        assert(offset < sizeof(s->gfx.cp_me_ram));
-        stl_le_p(&s->gfx.cp_me_ram[offset], value);
-        mmio[mmCP_ME_RAM_WADDR] += 4;
-        break;
-    }
-    /* oss */
-    case mmSDMA0_UCODE_DATA:
-        liverpool_gc_ucode_load(s, mmSDMA0_UCODE_ADDR, value);
-        break;
-    case mmSDMA1_UCODE_DATA:
-        liverpool_gc_ucode_load(s, mmSDMA1_UCODE_ADDR, value);
-        break;
-#endif
+
     default:
         DPRINTF("index=0x%llX, size=0x%llX, value=0x%llX }", index, size, value);
         assert_always("Unimplemented");

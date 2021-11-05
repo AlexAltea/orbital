@@ -11,6 +11,7 @@
 #pragma once
 
 #include <orbital/core.h>
+#include <orbital/hardware/liverpool/amd_ucode.h>
 
  // Engines
 #include "gca/gfx.h"
@@ -59,6 +60,8 @@ private:
 
     // State
     std::array<U32, 0x10000> mmio;
+    AmdUcode<0x2000> sdma0_ucode;
+    AmdUcode<0x2000> sdma1_ucode;
 
     U64 bar0_read(U64 addr, U64 size);
     void bar0_write(U64 addr, U64 value, U64 size);
