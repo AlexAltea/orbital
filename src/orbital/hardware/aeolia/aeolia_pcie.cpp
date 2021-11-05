@@ -106,6 +106,9 @@ void AeoliaPCIeDevice::reset() {
     header.command = PCI_COMMAND_MEMORY;
     header.header_type |= PCI_HEADER_TYPE_MULTI_FUNCTION;
     header.class_prog = 0x04;
+    header.intr_line = 0xFF;
+    header.intr_pin = 0x00;
+    msi_enable(1, true);
 
     // ICC
     icc_doorbell = 0;

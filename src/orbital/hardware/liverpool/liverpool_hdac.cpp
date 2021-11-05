@@ -11,6 +11,7 @@
 #include "liverpool_hdac.h"
 
 enum {
+    HDAC_UNK08 = 0x08,
     /* The following three registers are involved in muting audio */
     HDAC_UNK60 = 0x60, // Command?
     HDAC_UNK64 = 0x64, // Size?
@@ -51,9 +52,11 @@ void LiverpoolHDACDevice::reset() {
 
 U64 LiverpoolHDACDevice::mmio_read(U64 addr, U64 size) {
     U64 value = 0;
-    assert_always("Unimplemented");
 
     switch (addr) {
+    case HDAC_UNK08:
+        value = 0;
+        break;
     case HDAC_UNK68:
         value = 0;
         break;
@@ -65,6 +68,11 @@ U64 LiverpoolHDACDevice::mmio_read(U64 addr, U64 size) {
 }
 
 void LiverpoolHDACDevice::mmio_write(U64 addr, U64 value, U64 size) {
-    assert_always("Unimplemented");
-    // TODO: Previous implementation was memory-like.
+    switch (addr) {
+    case HDAC_UNK08:
+        break;
+    default:
+        assert_always("Unimplemented");
+        // TODO: Previous implementation was memory-like.
+    }
 }

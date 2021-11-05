@@ -62,11 +62,14 @@ PS4Machine::PS4Machine(const PS4MachineConfig& config) : Machine(config) {
         _cpus.push_back(cpu);
     }
 
+    // Initialize IOAPIC
+    ioapic = new IOAPICDevice(this);
+
     // Initialize Liverpool
     LiverpoolGCDeviceConfig lvp_gc_config = {};
     lvp_gc_config.gfx.vk = config.vk;
 
-    lvp_host = new LiverpoolHost(this);
+    lvp_host = new LiverpoolHost(this, ioapic);
     auto lvp_bus = lvp_host->bus();
     lvp_rc       = new LiverpoolRCDevice(lvp_bus);
     lvp_gc       = new LiverpoolGCDevice(lvp_bus, lvp_gc_config);

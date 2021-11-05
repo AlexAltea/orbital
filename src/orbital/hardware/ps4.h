@@ -87,6 +87,7 @@ private:
 
     // Liverpool
     std::vector<X86CPUDevice*> cpus;
+    IOAPICDevice* ioapic;
     LiverpoolHost* lvp_host;
     LiverpoolRCDevice* lvp_rc;
     LiverpoolGCDevice* lvp_gc;

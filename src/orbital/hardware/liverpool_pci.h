@@ -15,18 +15,21 @@
 // Liverpool PCI Bus
 class LiverpoolBus : public PCIeBus {
 public:
-    LiverpoolBus(Device* parent, const PCIeBusConfig& config = {});
+    LiverpoolBus(Device* parent, IOAPICDevice* ioapic, const PCIeBusConfig& config = {});
     ~LiverpoolBus();
 
     void set_irq(void* opaque, int irq, int level) override;
     int map_irq(PCI_DF df, int irq) override;
     void route_irq(PCIDevice* opaque, int pin) override;
+
+private:
+    IOAPICDevice* ioapic;
 };
 
 // Liverpool PCI Host
 class LiverpoolHost final : public PCIeHost {
 public:
-    LiverpoolHost(Device* parent, const PCIeHostConfig& config = {});
+    LiverpoolHost(Device* parent, IOAPICDevice* ioapic, const PCIeHostConfig& config = {});
     ~LiverpoolHost();
 
     LiverpoolBus* bus() {

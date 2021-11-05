@@ -11,16 +11,20 @@
 #include "liverpool_pci.h"
 
  // Liverpool Bus
-LiverpoolBus::LiverpoolBus(Device* parent, const PCIeBusConfig& config) : PCIeBus(parent, config) {}
+LiverpoolBus::LiverpoolBus(Device* parent, IOAPICDevice* ioapic, const PCIeBusConfig& config)
+    : PCIeBus(parent, config), ioapic(ioapic) {}
 
 LiverpoolBus::~LiverpoolBus() {}
 
 void LiverpoolBus::set_irq(void* opaque, int pirq, int level) {
-    assert_always("Unimplemented");
+    const int gsi = pirq + 16; // TODO
+
+    auto* irq = ioapic->irq(gsi);
+    irq->set(level);
 }
 
 int LiverpoolBus::map_irq(PCI_DF df, int intx) {
-    assert_always("Unimplemented");
+    int pirq = ((df.d + intx) % 4) + 4; // TODO
     return 0;
 }
 
@@ -29,9 +33,10 @@ void LiverpoolBus::route_irq(PCIDevice* opaque, int pin) {
 }
 
 // Liverpool Host
-LiverpoolHost::LiverpoolHost(Device* parent, const PCIeHostConfig& config) : PCIeHost(parent, config) {
+LiverpoolHost::LiverpoolHost(Device* parent, IOAPICDevice* ioapic, const PCIeHostConfig& config)
+    : PCIeHost(parent, config) {
     // Create PCIe bus
-    _bus = new LiverpoolBus(this);
+    _bus = new LiverpoolBus(this, ioapic);
 
     // Create PCI IO ports
     const MemorySpaceOps config_data_ops = {
