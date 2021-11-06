@@ -11,6 +11,7 @@
 #pragma once
 
 #include "icc/icc.h"
+#include "msic/aeolia_msic.h"
 #include "nvs/aeolia_nvs.h"
 
 #include <orbital/core.h>
@@ -59,6 +60,7 @@ private:
     std::unique_ptr<AeoliaUARTDevice> uart1;
 
     // State
+    AeoliaMsic msic;
     AeoliaNVS nvs{};
     uint32_t icc_doorbell;
     uint32_t icc_status;

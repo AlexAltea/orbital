@@ -65,7 +65,7 @@ static U16 icc_checksum(const IccMessageHeader& message) {
 }
 
 AeoliaPCIeDevice::AeoliaPCIeDevice(PCIeBus* bus, const AeoliaPCIeDeviceConfig& config)
-    : PCIeDevice(bus, config) {
+    : PCIeDevice(bus, config), msic(bus->space_mem()) {
     // Create sub-devices
     AeoliaUARTDeviceConfig uart0_config(config.backend_uart0);
     AeoliaUARTDeviceConfig uart1_config(config.backend_uart1);
@@ -208,7 +208,9 @@ U64 AeoliaPCIeDevice::peripherals_read(U64 addr, U64 size) {
             value = ((addr & 0x4) == 0) ? bars[index].size : bars[index].base;
         }
         else if (range_msi.contains(addr)) {
-            assert_always("Unimplemented");
+            addr -= range_msi.base;
+            assert_true(size == 4);
+            value = msic.mmio_read(addr);
         }
         else {
             assert_always("Unimplemented");
@@ -277,7 +279,9 @@ void AeoliaPCIeDevice::peripherals_write(U64 addr, U64 value, U64 size) {
             update_bars();
         }
         else if (range_msi.contains(addr)) {
-            assert_always("Unimplemented");
+            addr -= range_msi.base;
+            assert_true(size == 4);
+            msic.mmio_write(addr, value);
         }
         else {
             assert_always("Unimplemented");
