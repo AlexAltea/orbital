@@ -50,10 +50,11 @@ void AeoliaACPIDevice::reset() {
     header.command = PCI_COMMAND_IO | PCI_COMMAND_MEMORY; // TODO: Is this needed?
     header.header_type |= PCI_HEADER_TYPE_MULTI_FUNCTION;
     header.class_prog = 0x00;
+    msi_enable(1, true);
 
     // Add PCIe capability
     // TODO: Refactor this code
-    const auto cap_off = add_capability(PCI_CAP_ID_EXP, 0x14 /* V1 */);
+    const auto cap_off = add_capability(PCI_CAP_ID_EXP, 0x14 /* V1 */, 0x70);
     (U16&)config_data[cap_off +  2 /*PCI_EXP_FLAGS*/ ] = 0x0001;
     (U32&)config_data[cap_off +  4 /*PCI_EXP_DEVCAP*/] = 0;
     (U16&)config_data[cap_off +  8 /*PCI_EXP_DEVCTL*/] = 0;

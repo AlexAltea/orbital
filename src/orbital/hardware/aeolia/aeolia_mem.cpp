@@ -53,6 +53,8 @@ void AeoliaMemDevice::reset() {
     header.command = PCI_COMMAND_MEMORY; // TODO: Is this needed?
     header.header_type |= PCI_HEADER_TYPE_MULTI_FUNCTION;
     header.class_prog = 0x06;
+    header.intr_line = 0xFF;
+    header.intr_pin = 0x00;
 
     // Init SPM
     auto data = reinterpret_cast<U08*>(spm->ptr());
