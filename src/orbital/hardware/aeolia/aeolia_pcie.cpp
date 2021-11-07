@@ -65,7 +65,7 @@ static U16 icc_checksum(const IccMessageHeader& message) {
 }
 
 AeoliaPCIeDevice::AeoliaPCIeDevice(PCIeBus* bus, const AeoliaPCIeDeviceConfig& config)
-    : PCIeDevice(bus, config), msic(bus->space_mem()) {
+    : PCIeDevice(bus, config), hpet(bus->space_mem()), msic(bus->space_mem()) {
     // Create sub-devices
     AeoliaUARTDeviceConfig uart0_config(config.backend_uart0);
     AeoliaUARTDeviceConfig uart1_config(config.backend_uart1);
@@ -189,7 +189,8 @@ U64 AeoliaPCIeDevice::peripherals_read(U64 addr, U64 size) {
             fprintf(stderr, "AeoliaPCIeDevice::peripherals_read: addr=0x%llX, size=0x%llX\n", addr, size);
         }
         else if (range_hpet.contains(addr)) {
-            assert_always("Unimplemented");
+            addr -= range_hpet.base;
+            value = hpet.mmio_read(addr, size);
         }
         else if (range_unk3c.contains(addr)) {
             fprintf(stderr, "AeoliaPCIeDevice::peripherals_read: addr=0x%llX, size=0x%llX\n", addr, size);
@@ -254,7 +255,8 @@ void AeoliaPCIeDevice::peripherals_write(U64 addr, U64 value, U64 size) {
             fprintf(stderr, "AeoliaPCIeDevice::peripherals_write: addr=0x%llX, value=0x%llX, size=0x%llX\n", addr, value, size);
         }
         else if (range_hpet.contains(addr)) {
-            assert_always("Unimplemented");
+            addr -= range_hpet.base;
+            hpet.mmio_write(addr, value, size);
         }
         else if (range_unk3c.contains(addr)) {
             fprintf(stderr, "AeoliaPCIeDevice::peripherals_write: addr=0x%llX, value=0x%llX, size=0x%llX\n", addr, value, size);
@@ -349,12 +351,6 @@ void AeoliaPCIeDevice::update_icc() {
             fprintf(stderr, "icc: Unknown buzzer query 0x%04X!\n", query.minor);
         }
         break;
-    case ICC_CMD_UNK0D:
-        switch (query.minor) {
-        default:
-            fprintf(stderr, "icc: Unknown unk_0D query 0x%04X!\n", query.minor);
-        }
-        break;
     case ICC_CMD_NVRAM:
         switch (query.minor) {
         case ICC_CMD_NVRAM_OP_WRITE:
@@ -386,7 +382,7 @@ void AeoliaPCIeDevice::update_icc() {
     spm_data[ASPM_ICC_REPLY_R] = 0;
     icc_status |= APCIE_ICC_MSG_PENDING | APCIE_ICC_IRQ_PENDING;
     icc_doorbell &= ~APCIE_ICC_MSG_PENDING;
-    // apcie_msi_trigger(&s->msic, 4, APCIE_MSI_FNC4_ICC);
+    msic.msi_trigger(4, APCIE_MSI_FNC4_ICC);
 }
 
 AeoliaPCIeDevice::IccReply AeoliaPCIeDevice::icc_cmd_service_version() {

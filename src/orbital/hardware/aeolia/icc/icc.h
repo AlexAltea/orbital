@@ -17,12 +17,10 @@ enum IccCommand : U16 {
     ICC_CMD_SERVICE                             = 0x01,
     ICC_CMD_BOARD                               = 0x02,
     ICC_CMD_NVRAM                               = 0x03,
-    ICC_CMD_UNK04                               = 0x04, // icc_power_init
+    ICC_CMD_POWER                               = 0x04,
     ICC_CMD_BUTTONS                             = 0x08,
     ICC_CMD_BUZZER                              = 0x09,
-    ICC_CMD_SAVE_CONTEXT                        = 0x0B, // thermal
-    ICC_CMD_LOAD_CONTEXT                        = 0x0C,
-    ICC_CMD_UNK0D                               = 0x0D, // icc_configuration_get_devlan_setting
+    ICC_CMD_THERMAL                             = 0x0B,
     ICC_CMD_UNK70                               = 0x70, // sceControlEmcHdmiService
     ICC_CMD_SNVRAM_READ                         = 0x8D,
 };
@@ -64,6 +62,7 @@ enum IccCommandBoardOp : U16 {
 enum IccCommandNvramOp : U16 {
     ICC_CMD_NVRAM_OP_WRITE                      = 0x0000,
     ICC_CMD_NVRAM_OP_READ                       = 0x0001,
+    ICC_CMD_NVRAM_OP_FLUSH                      = 0x0002,
 };
 
 enum IccCommandButtonsOp : U16 {

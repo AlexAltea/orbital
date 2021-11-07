@@ -11,6 +11,7 @@
 #pragma once
 
 #include "icc/icc.h"
+#include "hpet/aeolia_hpet.h"
 #include "msic/aeolia_msic.h"
 #include "nvs/aeolia_nvs.h"
 
@@ -60,6 +61,7 @@ private:
     std::unique_ptr<AeoliaUARTDevice> uart1;
 
     // State
+    AeoliaHpet hpet;
     AeoliaMsic msic;
     AeoliaNVS nvs{};
     uint32_t icc_doorbell;
