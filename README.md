@@ -5,7 +5,7 @@ Virtualization-based PlayStation 4 emulator.
 
 ## Status
 
-The current state of Orbital at booting decrypted kernels can be followed in the issue tracker: both [PS4 4.55](https://github.com/AlexAltea/orbital/issues/3) and [PS4 5.00](https://github.com/AlexAltea/orbital/issues/4) have been tested. You can also get occasional updates and news via [Twitter](https://twitter.com/AlexAltea). Support this project at [Patreon](https://www.patreon.com/AlexAltea).
+The current state of Orbital at booting decrypted kernels can be followed in the issue tracker: both [PS4 4.55](https://github.com/AlexAltea/orbital/issues/3) and [PS4 5.00](https://github.com/AlexAltea/orbital/issues/4) have been tested. You can also get occasional updates and news via [Twitter](https://twitter.com/AlexAltea).
 
 Future plans for the emulator can be found at the [Roadmap](https://github.com/AlexAltea/orbital/wiki/Roadmap) page.
 
